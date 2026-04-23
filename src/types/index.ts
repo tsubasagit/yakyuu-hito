@@ -34,6 +34,9 @@ export interface LineupPlayer {
   // 投手用（10番目）
   appearances?: string  // 登板数
   record?: string       // 勝敗（例: "5勝3敗"）
+  // 大学野球向け（yakyuu-hito 拡張）
+  grade?: string        // 学年（"3年"など自由文字列）
+  comment?: string      // 代打時の一行コメント（"少年クラブ優勝経験あり"など）
 }
 
 export interface InningScore {
@@ -88,6 +91,57 @@ export interface OverlayPosition {
   scale?: number
 }
 
+/** yakyuu-hito の7要素ID（モックアップ 2026-04-23 準拠） */
+export type ElementId =
+  | 'miniScore'
+  | 'pinchHitter'
+  | 'lineup'
+  | 'tournamentHeader'
+  | 'bigScore'
+  | 'inningScoreboard'
+  | 'statusPanel'
+
+/** 大会情報（tournamentHeader 用） */
+export interface Tournament {
+  title: string      // 大会名（例: "全国クラブ野球選手権大会"）
+  subtitle: string   // 副題（例: "決勝戦"）
+  venue: string      // 会場（例: "ドリーム競技場"）
+  date: string       // 日付（例: "2022年1月1日"、自由文字列）
+}
+
+/** 代打情報（pinchHitter 用） */
+export interface PinchHitter {
+  team: 'away' | 'home'
+  name: string
+  grade: string      // 学年
+  comment: string    // 一行コメント
+}
+
+/** 7要素＋statusPanel サブトグルの表示フラグ */
+export interface Visibility {
+  miniScore: boolean
+  pinchHitter: boolean
+  lineup: boolean
+  tournamentHeader: boolean
+  bigScore: boolean
+  inningScoreboard: boolean
+  statusPanel: boolean
+  statusPanel_diamond: boolean
+  statusPanel_bso: boolean
+  statusPanel_quickScore: boolean
+}
+
+/** モックアップ準拠の7要素デフォルト座標（1920x1080基準） */
+export const DEFAULT_ELEMENT_POSITIONS: Record<ElementId, OverlayPosition> = {
+  miniScore:        { x: 40,   y: 40   },
+  pinchHitter:      { x: 1100, y: 40   },
+  lineup:           { x: 40,   y: 140  },
+  tournamentHeader: { x: 820,  y: 280  },
+  bigScore:         { x: 820,  y: 420  },
+  inningScoreboard: { x: 40,   y: 800  },
+  statusPanel:      { x: 1600, y: 830  },
+}
+
 export interface GameState {
   awayTeam: Team
   homeTeam: Team
@@ -129,6 +183,13 @@ export interface GameState {
   lineupDisplayTeam: 'away' | 'home'
   /** 両チームの打順を同時にオーバーレイに表示するか */
   showBothLineups: boolean
+  // --- yakyuu-hito 拡張（2026-04-23 キックオフ） ---
+  /** 大会情報（tournamentHeader 用） */
+  tournament: Tournament
+  /** 代打情報（pinchHitter 用、nullなら代打なし） */
+  pinchHitter: PinchHitter | null
+  /** 7要素の表示フラグ */
+  visibility: Visibility
 }
 
 export const initialPlayerInfo: PlayerInfo = {
@@ -235,6 +296,25 @@ export const initialGameState: GameState = {
   overlayScale: 1,
   lineupDisplayTeam: 'away',
   showBothLineups: false,
+  tournament: {
+    title: '',
+    subtitle: '',
+    venue: '',
+    date: '',
+  },
+  pinchHitter: null,
+  visibility: {
+    miniScore: true,
+    pinchHitter: false,
+    lineup: true,
+    tournamentHeader: false,
+    bigScore: false,
+    inningScoreboard: true,
+    statusPanel: true,
+    statusPanel_diamond: true,
+    statusPanel_bso: true,
+    statusPanel_quickScore: true,
+  },
 }
 
 export { emptyLineup }

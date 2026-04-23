@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { EffectType, GameState, HalfInning, LineupPlayer, MascotMode, OverlayPosition, PitcherAppearance, PlayerInfo, Runners } from '../types'
+import type { EffectType, GameState, HalfInning, LineupPlayer, MascotMode, OverlayPosition, PinchHitter, PitcherAppearance, PlayerInfo, Runners, Tournament, Visibility } from '../types'
 import { initialGameState, initialPlayerInfo, formatBatterStat, DEFAULT_OVERLAY_POSITIONS } from '../types'
 import { broadcastState } from '../lib/sync'
 import { backupToIDB, restoreFromIDB } from '../lib/idbBackup'
@@ -42,6 +42,8 @@ const DATA_KEYS: (keyof GameState)[] = [
   'gameStartTime', 'ticker', 'activeEffect', 'effectTimestamp',
   'showMascot', 'mascotMode', 'mascotImages', 'autoChangeEffect', 'showWaitingScreen',
   'overlayPositions', 'overlayScale', 'lineupDisplayTeam', 'showBothLineups',
+  // yakyuu-hito 拡張
+  'tournament', 'pinchHitter', 'visibility',
 ]
 
 export function extractGameState(store: GameState): GameState {
@@ -141,6 +143,11 @@ interface GameActions {
   setOverlayScale: (scale: number) => void
   setLineupDisplayTeam: (team: 'away' | 'home') => void
   setShowBothLineups: (show: boolean) => void
+  // --- yakyuu-hito 拡張 ---
+  toggleVisibility: (id: keyof Visibility) => void
+  setVisibility: (id: keyof Visibility, value: boolean) => void
+  setTournament: (partial: Partial<Tournament>) => void
+  setPinchHitter: (value: PinchHitter | null) => void
 }
 
 type GameStore = GameState & GameActions
@@ -590,6 +597,30 @@ export const useGameStore = create<GameStore>()(
       setLineupDisplayTeam: (team) => set({ lineupDisplayTeam: team }),
 
       setShowBothLineups: (show) => set({ showBothLineups: show }),
+
+      // --- yakyuu-hito 拡張 ---
+      toggleVisibility: (id) =>
+        set((s) => ({
+          visibility: {
+            ...s.visibility,
+            [id]: !s.visibility[id],
+          },
+        })),
+
+      setVisibility: (id, value) =>
+        set((s) => ({
+          visibility: {
+            ...s.visibility,
+            [id]: value,
+          },
+        })),
+
+      setTournament: (partial) =>
+        set((s) => ({
+          tournament: { ...s.tournament, ...partial },
+        })),
+
+      setPinchHitter: (value) => set({ pinchHitter: value }),
     }),
     {
       name: 'yakyuu-game-state',
