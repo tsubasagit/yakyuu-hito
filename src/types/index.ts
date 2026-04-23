@@ -2,6 +2,14 @@ export type HalfInning = 'top' | 'bottom'
 
 export type Position = '投' | '捕' | '一' | '二' | '三' | '遊' | '左' | '中' | '右' | 'DH' | ''
 
+/**
+ * DH制モード（2026-04-23 追加）
+ * - 'dh'     : DHあり。10名（1-9番打者＋10番目投手）
+ * - 'none'   : DHなし。9名（投手が1-9番の打席に立つ。10番目行は非表示）
+ * - 'twoWay' : 二刀流（大谷ルール）。10名だが、DH打者と投手が同一選手可（重複OK）
+ */
+export type DhMode = 'dh' | 'none' | 'twoWay'
+
 export interface Count {
   balls: number
   strikes: number
@@ -183,6 +191,9 @@ export interface GameState {
   lineupDisplayTeam: 'away' | 'home'
   /** 両チームの打順を同時にオーバーレイに表示するか */
   showBothLineups: boolean
+  /** DH制モード（チーム別） */
+  awayDhMode: DhMode
+  homeDhMode: DhMode
   // --- yakyuu-hito 拡張（2026-04-23 キックオフ） ---
   /** 大会情報（tournamentHeader 用） */
   tournament: Tournament
@@ -296,6 +307,8 @@ export const initialGameState: GameState = {
   overlayScale: 1,
   lineupDisplayTeam: 'away',
   showBothLineups: false,
+  awayDhMode: 'dh',
+  homeDhMode: 'dh',
   tournament: {
     title: '',
     subtitle: '',

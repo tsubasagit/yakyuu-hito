@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { EffectType, GameState, HalfInning, LineupPlayer, MascotMode, OverlayPosition, PinchHitter, PitcherAppearance, PlayerInfo, Runners, Tournament, Visibility } from '../types'
+import type { DhMode, EffectType, GameState, HalfInning, LineupPlayer, MascotMode, OverlayPosition, PinchHitter, PitcherAppearance, PlayerInfo, Runners, Tournament, Visibility } from '../types'
 import { initialGameState, initialPlayerInfo, formatBatterStat, DEFAULT_OVERLAY_POSITIONS } from '../types'
 import { broadcastState } from '../lib/sync'
 import { backupToIDB, restoreFromIDB } from '../lib/idbBackup'
@@ -42,6 +42,7 @@ const DATA_KEYS: (keyof GameState)[] = [
   'gameStartTime', 'ticker', 'activeEffect', 'effectTimestamp',
   'showMascot', 'mascotMode', 'mascotImages', 'autoChangeEffect', 'showWaitingScreen',
   'overlayPositions', 'overlayScale', 'lineupDisplayTeam', 'showBothLineups',
+  'awayDhMode', 'homeDhMode',
   // yakyuu-hito 拡張
   'tournament', 'pinchHitter', 'visibility',
 ]
@@ -143,6 +144,8 @@ interface GameActions {
   setOverlayScale: (scale: number) => void
   setLineupDisplayTeam: (team: 'away' | 'home') => void
   setShowBothLineups: (show: boolean) => void
+  setDhMode: (team: 'away' | 'home', mode: DhMode) => void
+  copyDhToPitcher: (team: 'away' | 'home') => void
   // --- yakyuu-hito 拡張 ---
   toggleVisibility: (id: keyof Visibility) => void
   setVisibility: (id: keyof Visibility, value: boolean) => void
@@ -597,6 +600,34 @@ export const useGameStore = create<GameStore>()(
       setLineupDisplayTeam: (team) => set({ lineupDisplayTeam: team }),
 
       setShowBothLineups: (show) => set({ showBothLineups: show }),
+
+      setDhMode: (team, mode) =>
+        set((s) => {
+          const modeKey = team === 'away' ? 'awayDhMode' : 'homeDhMode'
+          const lineupKey = team === 'away' ? 'awayLineup' : 'homeLineup'
+          const lineup = [...s[lineupKey]]
+          // 'none' に切り替えた時、1-9番内に '投' が無ければ10番目の投手情報を失うため
+          // データ自体は残し、UI 側で10番目を非表示にする（モード切替で再表示できるように）
+          // 'dh' / 'twoWay' に戻したとき、1-9番に 'DH' が無ければユーザーが選び直す前提
+          return { [modeKey]: mode, [lineupKey]: lineup }
+        }),
+
+      copyDhToPitcher: (team) =>
+        set((s) => {
+          const key = team === 'away' ? 'awayLineup' : 'homeLineup'
+          const lineup = [...s[key]]
+          // 1-9番から position === 'DH' の選手を探す
+          const dhIdx = lineup.slice(0, 9).findIndex((p) => p.position === 'DH')
+          if (dhIdx === -1) return s
+          const dh = lineup[dhIdx]!
+          lineup[9] = {
+            ...lineup[9]!,
+            name: dh.name,
+            number: dh.number,
+            position: '投',
+          }
+          return { [key]: lineup }
+        }),
 
       // --- yakyuu-hito 拡張 ---
       toggleVisibility: (id) =>

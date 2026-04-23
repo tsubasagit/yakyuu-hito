@@ -1,22 +1,26 @@
 import { useRef, useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
-import type { LineupPlayer, Position } from '../../types'
+import type { DhMode, LineupPlayer, Position } from '../../types'
 import { CARP_LINEUP, HAWKS_LINEUP, formatInningsPitched } from '../../types'
 import { parseLineupCsv } from '../../lib/csvImport'
 
-const POSITIONS: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右', 'DH']
+const POSITIONS_WITH_DH: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右', 'DH']
+const POSITIONS_NO_DH: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右']
 
 function BatterRow({
   player,
   isCurrent,
+  dhMode,
   onSelect,
   onChange,
 }: {
   player: LineupPlayer
   isCurrent: boolean
+  dhMode: DhMode
   onSelect: () => void
   onChange: (p: LineupPlayer) => void
 }) {
+  const positions = dhMode === 'none' ? POSITIONS_NO_DH : POSITIONS_WITH_DH
   return (
     <div
       className={`flex items-center gap-1.5 text-sm rounded px-1.5 py-1 ${
@@ -32,7 +36,7 @@ function BatterRow({
         onChange={(e) => onChange({ ...player, position: e.target.value as Position })}
       >
         <option value="">--</option>
-        {POSITIONS.map((p) => (
+        {positions.map((p) => (
           <option key={p} value={p}>{p}</option>
         ))}
       </select>
@@ -189,12 +193,20 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
   const lineup = useGameStore((s) => side === 'away' ? s.awayLineup : s.homeLineup)
   const batterIdx = useGameStore((s) => side === 'away' ? s.awayBatterIndex : s.homeBatterIndex)
   const currentHalf = useGameStore((s) => s.currentHalf)
+  const dhMode = useGameStore((s) => side === 'away' ? s.awayDhMode : s.homeDhMode)
   const setLineupPlayer = useGameStore((s) => s.setLineupPlayer)
   const setLineup = useGameStore((s) => s.setLineup)
   const selectBatter = useGameStore((s) => s.selectBatter)
   const nextBatter = useGameStore((s) => s.nextBatter)
   const prevBatter = useGameStore((s) => s.prevBatter)
   const setLineupDisplayTeam = useGameStore((s) => s.setLineupDisplayTeam)
+  const setDhMode = useGameStore((s) => s.setDhMode)
+  const copyDhToPitcher = useGameStore((s) => s.copyDhToPitcher)
+
+  // DHなしモード: 投手が1-9番に居ないと警告
+  const hasPitcherInBatters = lineup.slice(0, 9).some((p) => p.position === '投')
+  // DHあり/二刀流モード: DH指名選手が1-9番に居ないと警告
+  const hasDhInBatters = lineup.slice(0, 9).some((p) => p.position === 'DH')
 
   const isAttacking = (side === 'away' && currentHalf === 'top') ||
     (side === 'home' && currentHalf === 'bottom')
@@ -291,6 +303,43 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
         </div>
       )}
 
+      {/* DH制モード切替 */}
+      <div className="flex items-center gap-2 bg-gray-900/40 rounded px-2 py-1.5 border border-gray-700">
+        <span className="text-gray-300 text-[11px] font-bold shrink-0">DH制:</span>
+        <div className="flex gap-1">
+          {([
+            { key: 'dh', label: 'DHあり（10名）', hint: '10番目=投手' },
+            { key: 'none', label: 'DHなし（9名）', hint: '投手も打席' },
+            { key: 'twoWay', label: '二刀流（10名）', hint: '大谷ルール' },
+          ] as { key: DhMode; label: string; hint: string }[]).map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setDhMode(side, opt.key)}
+              title={opt.hint}
+              className={`text-[11px] px-2 py-1 rounded font-bold transition-colors ${
+                dhMode === opt.key
+                  ? 'bg-accent text-white'
+                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* バリデーション警告 */}
+      {dhMode === 'none' && !hasPitcherInBatters && (
+        <div className="bg-yellow-900/40 border border-yellow-600/60 rounded px-3 py-1.5 text-yellow-200 text-[11px]">
+          ⚠ DHなしモードでは 1-9番のいずれかに <span className="font-bold">投</span> を指定してください
+        </div>
+      )}
+      {(dhMode === 'dh' || dhMode === 'twoWay') && !hasDhInBatters && (
+        <div className="bg-yellow-900/40 border border-yellow-600/60 rounded px-3 py-1.5 text-yellow-200 text-[11px]">
+          ⚠ DHありモードでは 1-9番のいずれかに <span className="font-bold">DH</span> を指定してください
+        </div>
+      )}
+
       {/* ラインナップ（1-9番打者） */}
       <div className="space-y-0.5">
         {lineup.slice(0, 9).map((player, idx) => (
@@ -298,20 +347,32 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
             key={player.order}
             player={player}
             isCurrent={idx === batterIdx && isAttacking}
+            dhMode={dhMode}
             onSelect={() => selectBatter(side, idx)}
             onChange={(p) => setLineupPlayer(side, idx, p)}
           />
         ))}
       </div>
 
-      {/* 投手（10番目） */}
-      {lineup[9] && (
-        <PitcherRow
-          player={lineup[9]}
-          side={side}
-          onSelect={() => selectBatter(side, 9)}
-          onChange={(p) => setLineupPlayer(side, 9, p)}
-        />
+      {/* 投手（10番目）— DHなしモードでは非表示 */}
+      {dhMode !== 'none' && lineup[9] && (
+        <>
+          {dhMode === 'twoWay' && hasDhInBatters && (
+            <button
+              onClick={() => copyDhToPitcher(side)}
+              className="w-full bg-purple-700 hover:bg-purple-600 text-white px-2 py-1 rounded text-[11px] font-bold"
+              title="DH打者と投手を同一人物にする（大谷ルール）"
+            >
+              ⚾ DH打者を投手行にコピー（大谷ルール）
+            </button>
+          )}
+          <PitcherRow
+            player={lineup[9]}
+            side={side}
+            onSelect={() => selectBatter(side, 9)}
+            onChange={(p) => setLineupPlayer(side, 9, p)}
+          />
+        </>
       )}
     </div>
   )
