@@ -92,7 +92,7 @@ function TeamLineupCard({
   const showPitcherRow = dhMode !== 'none' && pitcher && pitcher.name.length > 0
 
   return (
-    <div className="bg-black/85 backdrop-blur-sm rounded-lg text-white min-w-[340px] overflow-hidden">
+    <div className="bg-black/85 backdrop-blur-sm rounded-lg text-white min-w-[372px] overflow-hidden">
       {/* ヘッダー: チーム略称 + 先攻/後攻 */}
       <div
         className="flex items-center gap-2 px-2 py-1"
@@ -124,7 +124,7 @@ function TeamLineupCard({
               <td className="px-2 py-0.5 text-gray-400 font-bold w-[24px] text-center">
                 {player.order}
               </td>
-              <td className="px-2 py-0.5 text-yellow-300 w-[80px]">
+              <td className="px-2 py-0.5 text-yellow-300 w-[112px] whitespace-nowrap">
                 {positionLabel(player.position)}
               </td>
               <td className="px-2 py-0.5 font-bold">{player.name || '　'}</td>
@@ -145,7 +145,7 @@ function TeamLineupCard({
                 <td className="px-2 py-0.5 text-red-300 font-bold w-[24px] text-center">
                   P
                 </td>
-                <td className="px-2 py-0.5 text-red-300 w-[80px] font-bold">
+                <td className="px-2 py-0.5 text-red-300 w-[112px] font-bold whitespace-nowrap">
                   ピッチャー
                 </td>
                 <td className="px-2 py-0.5 font-bold">{pitcher!.name}</td>
