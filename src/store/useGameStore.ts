@@ -439,7 +439,13 @@ export const useGameStore = create<GameStore>()(
 
       newGame: () => set({ ...initialGameState }),
 
-      replaceState: (state) => set(state),
+      replaceState: (state) =>
+        set((s) => ({
+          ...state,
+          // 受信した state に新キーが欠けている場合に備えて
+          // 現行の visibility を下敷きに上書きする（点滅・初動不整合の防止）
+          visibility: { ...s.visibility, ...(state.visibility ?? {}) },
+        })),
 
       subtractBall: () =>
         set((s) => ({
@@ -634,7 +640,10 @@ export const useGameStore = create<GameStore>()(
         set((s) => ({
           visibility: {
             ...s.visibility,
-            [id]: !s.visibility[id],
+            // 新キー追加直後は s.visibility[id] が undefined のケースがある。
+            // !undefined=true となり初回トグルで意図と逆方向になるのを防ぐため
+            // デフォルトを true 扱いで反転する。
+            [id]: !(s.visibility[id] ?? true),
           },
         })),
 
@@ -708,13 +717,21 @@ export const useGameStore = create<GameStore>()(
           localStorage.removeItem(name)
         },
       },
-      merge: (persisted, current) => ({
-        ...current,
-        ...(persisted as Partial<GameStore>),
-        // エフェクトは一時的な表示状態なので、リロード時にリセット
-        activeEffect: null,
-        effectTimestamp: 0,
-      }),
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<GameStore>
+        return {
+          ...current,
+          ...p,
+          // visibility は新キー追加時に persisted 側で欠落しがちなので
+          // 必ず default(initialGameState.visibility) を下敷きにマージする。
+          // これを怠ると新トグル(currentBatter等)が undefined となり、
+          // !undefined=true でON/OFF初動が逆転して点滅に見える原因になる。
+          visibility: { ...current.visibility, ...(p.visibility ?? {}) },
+          // エフェクトは一時的な表示状態なので、リロード時にリセット
+          activeEffect: null,
+          effectTimestamp: 0,
+        }
+      },
     },
   ),
 )

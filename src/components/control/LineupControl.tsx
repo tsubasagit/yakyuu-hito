@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
 import type { DhMode, LineupPlayer, Position } from '../../types'
 import { CARP_LINEUP, HAWKS_LINEUP, formatInningsPitched } from '../../types'
-import { parseLineupCsv, LINEUP_CSV_HEADER, LINEUP_CSV_SAMPLE } from '../../lib/csvImport'
+import { parseLineupCsv, LINEUP_CSV_SAMPLE } from '../../lib/csvImport'
 
 function downloadCsvSample() {
   // BOM付きでExcelの文字化け回避
@@ -330,15 +330,6 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
             プリセット：ソフトバンク
           </button>
         </div>
-        <div className="text-[10px] text-gray-400 leading-relaxed">
-          <div>項目名（1行目に必要）:</div>
-          <code className="text-[10px] text-emerald-300 font-mono break-all">
-            {LINEUP_CSV_HEADER}
-          </code>
-          <div className="text-gray-500">
-            1〜9行目=野手 / 10行目=投手（守備=投）。投手の打率〜OPS は空欄、野手の登板数・勝敗は空欄でOK。
-          </div>
-        </div>
       </div>
       {csvError && (
         <div className="bg-red-900/50 border border-red-500 rounded px-3 py-1.5 text-red-300 text-xs">
@@ -385,6 +376,18 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
 
       {/* ラインナップ（1-9番打者） */}
       <div className="space-y-0.5">
+        {/* 列ヘッダ（CSV項目名と一致） */}
+        <div className="flex items-center gap-1.5 text-[10px] text-gray-400 px-1.5 pt-1 pb-0.5 border-b border-gray-700">
+          <span className="w-4 text-center shrink-0">順番</span>
+          <span className="w-12 text-center shrink-0">守備</span>
+          <span className="w-12 text-center shrink-0">背番号</span>
+          <span className="flex-1 min-w-0">名前</span>
+          <span className="w-12 text-center shrink-0">打率</span>
+          <span className="w-10 text-center shrink-0">HR</span>
+          <span className="w-10 text-center shrink-0">打点</span>
+          <span className="w-14 text-center shrink-0">OPS</span>
+          <span className="shrink-0 w-[40px] text-center">　</span>
+        </div>
         {lineup.slice(0, 9).map((player, idx) => (
           <BatterRow
             key={player.order}
@@ -409,6 +412,16 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
               ⚾ DH打者を投手行にコピー（大谷ルール）
             </button>
           )}
+          {/* 列ヘッダ（投手用 = 順番,守備,背番号,名前,登板数,勝敗） */}
+          <div className="flex items-center gap-1.5 text-[10px] text-red-300/80 px-1.5 pt-1 pb-0.5 border-b border-red-800/40">
+            <span className="w-4 text-center shrink-0">10</span>
+            <span className="w-12 text-center shrink-0">守備</span>
+            <span className="w-12 text-center shrink-0">背番号</span>
+            <span className="flex-1 min-w-0">名前</span>
+            <span className="w-10 text-center shrink-0">登板数</span>
+            <span className="w-20 text-center shrink-0">勝敗</span>
+            <span className="shrink-0 w-[40px] text-center">　</span>
+          </div>
           <PitcherRow
             player={lineup[9]}
             side={side}
