@@ -213,7 +213,9 @@ export default function ControlPage() {
                       title="表示ON/OFFと対応"
                     />
                   )}
-                  {section.component}
+                  <div className={stripe ? 'pl-4' : ''}>
+                    {section.component}
+                  </div>
                 </div>
               </div>
             )

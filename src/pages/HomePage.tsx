@@ -3,11 +3,9 @@ import { Link } from 'react-router-dom'
 const HITO_LOGO = 'https://hito-inc.jp/wp-content/uploads/2023/10/header_title_20231020x.png'
 const HITO_SITE = 'https://hito-inc.jp/'
 const REPO_URL = 'https://github.com/tsubasagit/yakyuu-hito'
-const ATH_SITE = 'https://apptalenthub.co.jp'
 
 /**
- * 株式会社ひと × AppTalentHub のコラボ事例ページ。
- * ATH ミッション「未来を見せて始める」に沿い、
+ * 株式会社ひと 大学野球配信向けトップページ。
  * 大学生スタッフが「初めての配信でも迷わない」と感じられるストーリー導線。
  */
 export default function HomePage() {
@@ -196,45 +194,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* ATH 事例としての位置づけ */}
-        <div className="mb-14">
-          <h2 className="text-xl font-bold mb-1 tracking-tight">この案件について</h2>
-          <p className="text-slate-500 text-xs mb-5">
-            ATH の三位一体（IT人材紹介 × DX研修 × プロトタイプ開発）の「プロトタイプ開発」事例。
-          </p>
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-5 space-y-3 text-sm leading-relaxed">
-            <p className="text-slate-300">
-              ATH のミッションは{' '}
-              <span className="text-amber-300 font-bold">「未来を見せて始める」</span>。
-              本ツールは、株式会社ひと様が実現したい「大学野球をより多くの人に届ける配信運用」の未来を、
-              実際に学生スタッフが触れる形でお見せし、合意の上で開発を進めるアプローチで作っています。
-            </p>
-            <p className="text-slate-400 text-xs">
-              <span className="text-white font-medium">顧客0号原則</span>：
-              開発者自身（AppTalentHub）も同等のオーバーレイを毎日触りながらフィードバックを反映。
-              リリース時には「3ヶ月毎日使えるもの」になっている状態を目指しています。
-            </p>
-            <div className="grid grid-cols-2 gap-3 text-xs pt-2">
-              <div>
-                <div className="text-slate-500 mb-0.5">体制</div>
-                <div className="text-white">株式会社ひと × ATH</div>
-              </div>
-              <div>
-                <div className="text-slate-500 mb-0.5">スコープ</div>
-                <div className="text-white">大学野球リーグ配信向け OBS オーバーレイ</div>
-              </div>
-              <div>
-                <div className="text-slate-500 mb-0.5">本番投入</div>
-                <div className="text-white">2026年 秋季リーグ予定</div>
-              </div>
-              <div>
-                <div className="text-slate-500 mb-0.5">運用形態</div>
-                <div className="text-white">学生スタッフが現場で操作</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* 更新履歴 */}
         <div className="mb-14">
           <h2 className="text-xl font-bold mb-5 tracking-tight">更新履歴</h2>
@@ -294,18 +253,6 @@ export default function HomePage() {
             >
               株式会社ひと 公式サイト →
             </a>
-            <p className="text-slate-600 text-xs mt-4">
-              開発・技術提供:{' '}
-              <a
-                href={ATH_SITE}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#538bb0] hover:underline"
-              >
-                株式会社AppTalentHub
-              </a>
-              {' '}（ミッション「未来を見せて始める」）
-            </p>
           </div>
         </div>
 
@@ -332,10 +279,6 @@ export default function HomePage() {
           <p>
             <a href={HITO_SITE} target="_blank" rel="noopener noreferrer" className="text-[#538bb0] hover:underline">
               株式会社ひと
-            </a>
-            {' × '}
-            <a href={ATH_SITE} target="_blank" rel="noopener noreferrer" className="text-[#538bb0] hover:underline">
-              AppTalentHub
             </a>
           </p>
           <p className="text-xs">
