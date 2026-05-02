@@ -96,10 +96,31 @@ export default function ControlPage() {
   return (
     <div className="min-h-screen bg-gray-900 p-2 sm:p-4">
       <div className="max-w-5xl mx-auto space-y-3 sm:space-y-4">
-        <header className="flex items-center justify-between gap-2">
-          <h1 className="text-white text-lg sm:text-2xl font-bold">
-            yakyuu-hito コントロール
-          </h1>
+        <header className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <a
+              href="https://hito-inc.jp/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white rounded px-3 py-1.5 hover:opacity-80 transition-opacity inline-flex items-center"
+              title="株式会社ひと 公式サイト"
+            >
+              <img
+                src="https://hito-inc.jp/wp-content/uploads/2023/10/header_title_20231020x.png"
+                alt="株式会社ひと"
+                className="h-7 sm:h-8 w-auto"
+                loading="eager"
+              />
+            </a>
+            <div className="leading-tight">
+              <h1 className="text-white text-base sm:text-xl font-bold">
+                配信コントロールパネル
+              </h1>
+              <p className="text-gray-400 text-[10px] sm:text-xs">
+                大学野球オンライン配信オーバーレイ
+              </p>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <SyncStatus />
             <a
