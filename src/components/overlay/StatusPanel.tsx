@@ -48,7 +48,7 @@ export default function StatusPanel() {
         <div className="flex items-center gap-2 pl-2 ml-auto bg-[#0f7a3a] rounded-lg px-2 py-1 shadow-inner border border-[#0a5a2a]">
           <Diamond first={runners.first} second={runners.second} third={runners.third} />
           <div className="flex flex-col gap-0.5">
-            <BSORow label="B" count={count.balls} max={3} color="#3b8df5" />
+            <BSORow label="B" count={count.balls} max={3} color="#22c55e" />
             <BSORow label="S" count={count.strikes} max={2} color="#fbbf24" />
             <BSORow label="O" count={count.outs} max={2} color="#ef4444" />
           </div>
