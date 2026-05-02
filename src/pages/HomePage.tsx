@@ -26,7 +26,7 @@ export default function HomePage() {
             <img src={HITO_LOGO} alt="株式会社ひと" className="h-7 w-auto" />
           </a>
           <span className="text-slate-500 text-xs tracking-widest">
-            v0.4.0-alpha
+            v0.1
           </span>
         </div>
 
@@ -194,49 +194,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 更新履歴 */}
-        <div className="mb-14">
-          <h2 className="text-xl font-bold mb-5 tracking-tight">更新履歴</h2>
-          <div className="space-y-4 text-sm">
-            <ChangelogEntry version="v0.4.0-alpha" date="2026-04-23 〜 開発中">
-              <p className="text-slate-300 mb-2">
-                株式会社ひと 大学野球配信向けに{' '}
-                <a
-                  href="https://github.com/tsubasagit/yakyuu"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#538bb0] hover:underline"
-                >
-                  tsubasagit/yakyuu
-                </a>{' '}
-                v0.3.0 から分岐し、学生運用向けに最適化。
-              </p>
-              <p className="text-emerald-400 text-xs font-bold mb-1">主な変更</p>
-              <ul className="text-slate-400 space-y-0.5 ml-3 text-xs">
-                <li>・ オーバーレイ全体をプロ野球中継風にリファイン</li>
-                <li>・ 必須4要素（BSO・スコアボード・打者名・スタメン）を個別ON/OFF・ドラッグ配置</li>
-                <li>・ DH制モード切替（DHあり/なし/二刀流）と両チーム並列スタメン表示</li>
-                <li>・ 状況パネルを青地ベース＋緑のグラウンド地（BSO/ダイヤ）で視認性UP</li>
-                <li>・ チームカラーHEX入力 + コピー対応、デフォルト黒</li>
-                <li>・ サンプルCSVダウンロード + 列ヘッダ表示で取込みをシンプル化</li>
-                <li>・ 代打入力を選手名のみに簡素化（攻撃中チーム自動採用）</li>
-                <li>・ 日本語フォントを Inter + Noto Sans JP に統一</li>
-                <li>・ 不要機能（マスコット・経過ログ・経過時間タイマー・詳細スタッツ）を削除</li>
-              </ul>
-            </ChangelogEntry>
-            <ChangelogEntry version="v0.3.0" date="2026-04-17 (派生元 yakyuu)">
-              <p className="text-slate-300">
-                両チーム打順の同時オーバーレイ表示トグル。yakyuu-hitoの基盤。
-              </p>
-            </ChangelogEntry>
-            <ChangelogEntry version="v0.1.0" date="2026-03-17 (派生元 yakyuu)">
-              <p className="text-slate-300">
-                初回リリース。スコアボード・BSO・走者・打順カード・BroadcastChannel同期。
-              </p>
-            </ChangelogEntry>
-          </div>
-        </div>
-
         {/* 問い合わせ CTA */}
         <div className="mb-14">
           <div className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-[#538bb0]/30 rounded-xl p-6 text-center">
@@ -324,22 +281,3 @@ function FeatureCard({ title, desc }: { title: string; desc: string }) {
   )
 }
 
-function ChangelogEntry({
-  version,
-  date,
-  children,
-}: {
-  version: string
-  date: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-[#538bb0] font-bold">{version}</span>
-        <span className="text-slate-500 text-xs">{date}</span>
-      </div>
-      {children}
-    </div>
-  )
-}
