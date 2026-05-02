@@ -2,7 +2,20 @@ import { useRef, useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
 import type { DhMode, LineupPlayer, Position } from '../../types'
 import { CARP_LINEUP, HAWKS_LINEUP, formatInningsPitched } from '../../types'
-import { parseLineupCsv } from '../../lib/csvImport'
+import { parseLineupCsv, LINEUP_CSV_HEADER, LINEUP_CSV_SAMPLE } from '../../lib/csvImport'
+
+function downloadCsvSample() {
+  // BOM付きでExcelの文字化け回避
+  const blob = new Blob(['﻿' + LINEUP_CSV_SAMPLE], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'lineup_sample.csv'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
 
 const POSITIONS_WITH_DH: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右', 'DH']
 const POSITIONS_NO_DH: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右']
@@ -40,6 +53,12 @@ function BatterRow({
           <option key={p} value={p}>{p}</option>
         ))}
       </select>
+      <input
+        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-12 shrink-0 text-center"
+        placeholder="背番号"
+        value={player.number}
+        onChange={(e) => onChange({ ...player, number: e.target.value })}
+      />
       <input
         className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-0"
         placeholder="名前"
@@ -112,6 +131,12 @@ function PitcherRow({
         <span className="text-red-400 text-xs w-12 shrink-0 text-center font-bold">
           投
         </span>
+        <input
+          className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-12 shrink-0 text-center"
+          placeholder="背番号"
+          value={player.number}
+          onChange={(e) => onChange({ ...player, number: e.target.value })}
+        />
         <input
           className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-0"
           placeholder="投手名"
@@ -270,32 +295,50 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
       </div>
 
       {/* CSV / プリセット */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv,text/csv"
-          className="hidden"
-          onChange={handleCsvImport}
-        />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold"
-        >
-          CSV読込
-        </button>
-        <button
-          onClick={() => setLineup(side, [...CARP_LINEUP])}
-          className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
-        >
-          サンプル：広島カープ
-        </button>
-        <button
-          onClick={() => setLineup(side, [...HAWKS_LINEUP])}
-          className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
-        >
-          サンプル：ソフトバンク
-        </button>
+      <div className="bg-gray-900/40 rounded p-2 space-y-1.5 border border-gray-700">
+        <div className="flex flex-wrap gap-2 items-center">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={handleCsvImport}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold"
+          >
+            CSV読込
+          </button>
+          <button
+            onClick={downloadCsvSample}
+            className="bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold"
+            title="入力例つきのサンプルCSVをダウンロード"
+          >
+            ⬇ サンプルCSV
+          </button>
+          <button
+            onClick={() => setLineup(side, [...CARP_LINEUP])}
+            className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
+          >
+            プリセット：広島カープ
+          </button>
+          <button
+            onClick={() => setLineup(side, [...HAWKS_LINEUP])}
+            className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
+          >
+            プリセット：ソフトバンク
+          </button>
+        </div>
+        <div className="text-[10px] text-gray-400 leading-relaxed">
+          <div>項目名（1行目に必要）:</div>
+          <code className="text-[10px] text-emerald-300 font-mono break-all">
+            {LINEUP_CSV_HEADER}
+          </code>
+          <div className="text-gray-500">
+            1〜9行目=野手 / 10行目=投手（守備=投）。投手の打率〜OPS は空欄、野手の登板数・勝敗は空欄でOK。
+          </div>
+        </div>
       </div>
       {csvError && (
         <div className="bg-red-900/50 border border-red-500 rounded px-3 py-1.5 text-red-300 text-xs">

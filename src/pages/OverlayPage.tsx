@@ -12,6 +12,7 @@ import TournamentHeader from '../components/overlay/TournamentHeader'
 import BigScore from '../components/overlay/BigScore'
 import InningScoreboard from '../components/overlay/InningScoreboard'
 import StatusPanel from '../components/overlay/StatusPanel'
+import CurrentBatter from '../components/overlay/CurrentBatter'
 
 const CANVAS_W = 1920
 const CANVAS_H = 1080
@@ -116,6 +117,11 @@ export default function OverlayPage() {
       {/* [7] 状況パネル — 右下 */}
       <OverlayPanel id="statusPanel" defaultPos={DEFAULT_ELEMENT_POSITIONS.statusPanel} scale={overlayScale}>
         <StatusPanel />
+      </OverlayPanel>
+
+      {/* [8] 現在の打者 — 中央下（ロワーサード） */}
+      <OverlayPanel id="currentBatter" defaultPos={DEFAULT_ELEMENT_POSITIONS.currentBatter} scale={overlayScale}>
+        <CurrentBatter />
       </OverlayPanel>
     </div>
   )

@@ -6,7 +6,7 @@ import CountControl from '../components/control/CountControl'
 import RunnerControl from '../components/control/RunnerControl'
 import ScoreControl from '../components/control/ScoreControl'
 import LineupControl from '../components/control/LineupControl'
-import VisibilityControl from '../components/control/VisibilityControl'
+import VisibilityControl, { stripeForSection } from '../components/control/VisibilityControl'
 import TournamentControl from '../components/control/TournamentControl'
 import PinchHitterControl from '../components/control/PinchHitterControl'
 import TickerControl from '../components/control/TickerControl'
@@ -74,6 +74,10 @@ export default function ControlPage() {
     { id: 'ticker',      label: '速報テロップ',      component: <TickerControl /> },
     { id: 'tournament',  label: '大会情報',          component: <TournamentControl /> },
   ]
+
+  /** 表示トグルとの対応色（左帯）— stripeForSection の引数は section-{id} 形式 */
+  const sectionStripe = (id: string): string | null =>
+    stripeForSection(`section-${id}`)
 
   const defaultOrder = orderableSections.map((s) => s.id)
   const [order, setOrder] = useState<string[]>(() => mergeOrder(loadOrder(), defaultOrder))
@@ -174,33 +178,46 @@ export default function ControlPage() {
 
         {/* セクション群（2カラムレイアウト・並び替え可能） */}
         <div className="columns-1 lg:columns-2 gap-4 space-y-3">
-          {sorted.map((section, idx) => (
-            <div key={section.id} className="relative break-inside-avoid">
-              {editMode && (
-                <div className="absolute -left-1 top-1 flex flex-col gap-0.5 z-10">
-                  <button
-                    onClick={() => move(idx, -1)}
-                    disabled={idx === 0}
-                    className="text-gray-400 hover:text-white disabled:opacity-20 text-xs leading-none px-1.5 py-0.5 bg-gray-800 rounded"
-                    title="上へ移動"
-                  >
-                    ▲
-                  </button>
-                  <button
-                    onClick={() => move(idx, 1)}
-                    disabled={idx === sorted.length - 1}
-                    className="text-gray-400 hover:text-white disabled:opacity-20 text-xs leading-none px-1.5 py-0.5 bg-gray-800 rounded"
-                    title="下へ移動"
-                  >
-                    ▼
-                  </button>
+          {sorted.map((section, idx) => {
+            const stripe = sectionStripe(section.id)
+            return (
+              <div
+                key={section.id}
+                id={`section-${section.id}`}
+                className="relative break-inside-avoid scroll-mt-4"
+              >
+                {editMode && (
+                  <div className="absolute -left-1 top-1 flex flex-col gap-0.5 z-10">
+                    <button
+                      onClick={() => move(idx, -1)}
+                      disabled={idx === 0}
+                      className="text-gray-400 hover:text-white disabled:opacity-20 text-xs leading-none px-1.5 py-0.5 bg-gray-800 rounded"
+                      title="上へ移動"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      onClick={() => move(idx, 1)}
+                      disabled={idx === sorted.length - 1}
+                      className="text-gray-400 hover:text-white disabled:opacity-20 text-xs leading-none px-1.5 py-0.5 bg-gray-800 rounded"
+                      title="下へ移動"
+                    >
+                      ▼
+                    </button>
+                  </div>
+                )}
+                <div className={`relative ${editMode ? 'ml-6' : ''}`}>
+                  {stripe && (
+                    <div
+                      className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-lg ${stripe} z-10 pointer-events-none`}
+                      title="表示ON/OFFと対応"
+                    />
+                  )}
+                  {section.component}
                 </div>
-              )}
-              <div className={editMode ? 'ml-6' : ''}>
-                {section.component}
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>
