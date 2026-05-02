@@ -44,12 +44,12 @@ export default function StatusPanel() {
           />
         </div>
 
-        {/* 右: ダイヤ + BSO（グラウンドのミドリ地） */}
-        <div className="flex items-center gap-2 pl-2 ml-auto bg-[#0f7a3a] rounded-lg px-2 py-1 shadow-inner border border-[#0a5a2a]">
+        {/* 右: ダイヤ + BSO（中継らしい白地） */}
+        <div className="flex items-center gap-2 pl-2 ml-auto bg-white rounded-lg px-2 py-1 shadow-inner">
           <Diamond first={runners.first} second={runners.second} third={runners.third} />
           <div className="flex flex-col gap-0.5">
             <BSORow label="B" count={count.balls} max={3} color="#22c55e" />
-            <BSORow label="S" count={count.strikes} max={2} color="#fbbf24" />
+            <BSORow label="S" count={count.strikes} max={2} color="#eab308" />
             <BSORow label="O" count={count.outs} max={2} color="#ef4444" />
           </div>
         </div>
@@ -97,13 +97,13 @@ function Diamond({
   third: boolean
 }) {
   const cls = (on: boolean) =>
-    `w-2.5 h-2.5 rotate-45 ${on ? 'bg-[#fde047] shadow-[0_0_4px_rgba(253,224,71,0.9)]' : 'bg-transparent border border-white/60'}`
+    `w-2.5 h-2.5 rotate-45 ${on ? 'bg-[#facc15] shadow-[0_0_3px_rgba(250,204,21,0.7)]' : 'bg-transparent border border-gray-400'}`
   return (
     <div className="relative w-[36px] h-[36px]">
       <div className={`absolute top-0 left-1/2 -translate-x-1/2 ${cls(second)}`} />
       <div className={`absolute top-1/2 left-0 -translate-y-1/2 ${cls(third)}`} />
       <div className={`absolute top-1/2 right-0 -translate-y-1/2 ${cls(first)}`} />
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 bg-transparent border border-white/60" />
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 bg-transparent border border-gray-400" />
     </div>
   )
 }
@@ -121,7 +121,7 @@ function BSORow({
 }) {
   return (
     <div className="flex items-center gap-1">
-      <span className="text-[10px] font-bold text-white/90 w-3">{label}</span>
+      <span className="text-[10px] font-bold text-gray-700 w-3">{label}</span>
       <div className="flex gap-0.5">
         {Array.from({ length: max }, (_, i) => (
           <span
@@ -129,7 +129,7 @@ function BSORow({
             className="w-2.5 h-2.5 rounded-full"
             style={{
               backgroundColor: i < count ? color : 'transparent',
-              border: i < count ? 'none' : '1px solid rgba(255,255,255,0.55)',
+              border: i < count ? 'none' : '1px solid #cbd5e1',
             }}
           />
         ))}
