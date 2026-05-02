@@ -9,6 +9,7 @@ import LineupControl from '../components/control/LineupControl'
 import VisibilityControl from '../components/control/VisibilityControl'
 import TournamentControl from '../components/control/TournamentControl'
 import PinchHitterControl from '../components/control/PinchHitterControl'
+import TickerControl from '../components/control/TickerControl'
 import { useGameStore, extractGameState } from '../store/useGameStore'
 import { broadcastState, onStateRequest } from '../lib/sync'
 
@@ -58,28 +59,34 @@ export default function ControlPage() {
 
   usePeriodicBroadcast()
 
-  const allSections: Section[] = [
-    { id: 'count',       label: 'カウント',    component: <CountControl /> },
-    { id: 'runner',      label: '走者',        component: <RunnerControl /> },
-    { id: 'inning',      label: 'イニング',    component: <InningControl /> },
-    { id: 'score',       label: '得点・安打',  component: <ScoreControl /> },
-    { id: 'pinchhitter', label: '代打',        component: <PinchHitterControl /> },
-    { id: 'lineup',      label: '打順・選手',  component: <LineupControl /> },
-    { id: 'tournament',  label: '大会情報',    component: <TournamentControl /> },
-    { id: 'game',        label: '試合管理',    component: <GameControl /> },
+  /** 試合管理は最上段固定（並び替え不可）。それ以外を試合進行順にデフォルト配置 */
+  const PINNED: Section = {
+    id: 'game', label: '試合管理', component: <GameControl />,
+  }
+
+  const orderableSections: Section[] = [
+    { id: 'inning',      label: 'イニング',          component: <InningControl /> },
+    { id: 'count',       label: 'カウント',          component: <CountControl /> },
+    { id: 'runner',      label: '走者',              component: <RunnerControl /> },
+    { id: 'score',       label: '得点・安打・失策',  component: <ScoreControl /> },
+    { id: 'lineup',      label: '打順・選手',        component: <LineupControl /> },
+    { id: 'pinchhitter', label: '代打',              component: <PinchHitterControl /> },
+    { id: 'ticker',      label: '速報テロップ',      component: <TickerControl /> },
+    { id: 'tournament',  label: '大会情報',          component: <TournamentControl /> },
   ]
 
-  const defaultOrder = allSections.map((s) => s.id)
+  const defaultOrder = orderableSections.map((s) => s.id)
   const [order, setOrder] = useState<string[]>(() => mergeOrder(loadOrder(), defaultOrder))
+  const [editMode, setEditMode] = useState(false)
 
-  // 初期化時に古い並び順を正規化
+  // 初期化時に古い並び順を正規化（旧 'game' エントリは固定化に伴い除去）
   useEffect(() => {
     saveOrder(order)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const sorted = order
-    .map((id) => allSections.find((s) => s.id === id))
+    .map((id) => orderableSections.find((s) => s.id === id))
     .filter((s): s is Section => !!s)
 
   const move = (idx: number, dir: -1 | 1) => {
@@ -121,8 +128,17 @@ export default function ControlPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <SyncStatus />
+            <a
+              href="./guide.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-300 hover:text-white text-xs sm:text-sm underline whitespace-nowrap"
+              title="OBS設定ガイド"
+            >
+              使い方 ?
+            </a>
             <a
               href="#/overlay"
               target="_blank"
@@ -134,32 +150,53 @@ export default function ControlPage() {
           </div>
         </header>
 
-        {/* 最上段固定: 7要素の表示トグル */}
+        {/* 最上段固定: 表示ON/OFFトグル */}
         <VisibilityControl />
+
+        {/* 試合管理（最上段固定・並び替え不可） */}
+        <div>{PINNED.component}</div>
+
+        {/* 並び替えモードトグル */}
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setEditMode((v) => !v)}
+            className={`text-xs px-3 py-1.5 rounded border transition-colors ${
+              editMode
+                ? 'bg-accent text-white border-accent'
+                : 'bg-gray-800 text-gray-400 border-gray-700 hover:text-white'
+            }`}
+            title="セクションの並び替えを有効化"
+          >
+            {editMode ? '✓ 並び替えモード' : '⇅ 並び替え'}
+          </button>
+        </div>
 
         {/* セクション群（2カラムレイアウト・並び替え可能） */}
         <div className="columns-1 lg:columns-2 gap-4 space-y-3">
           {sorted.map((section, idx) => (
             <div key={section.id} className="relative break-inside-avoid">
-              <div className="absolute -left-1 top-1 flex flex-col gap-0.5 z-10">
-                <button
-                  onClick={() => move(idx, -1)}
-                  disabled={idx === 0}
-                  className="text-gray-500 hover:text-white disabled:opacity-20 text-xs leading-none px-1"
-                  title="上へ移動"
-                >
-                  ▲
-                </button>
-                <button
-                  onClick={() => move(idx, 1)}
-                  disabled={idx === sorted.length - 1}
-                  className="text-gray-500 hover:text-white disabled:opacity-20 text-xs leading-none px-1"
-                  title="下へ移動"
-                >
-                  ▼
-                </button>
-              </div>
-              <div className="ml-4">
+              {editMode && (
+                <div className="absolute -left-1 top-1 flex flex-col gap-0.5 z-10">
+                  <button
+                    onClick={() => move(idx, -1)}
+                    disabled={idx === 0}
+                    className="text-gray-400 hover:text-white disabled:opacity-20 text-xs leading-none px-1.5 py-0.5 bg-gray-800 rounded"
+                    title="上へ移動"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    onClick={() => move(idx, 1)}
+                    disabled={idx === sorted.length - 1}
+                    className="text-gray-400 hover:text-white disabled:opacity-20 text-xs leading-none px-1.5 py-0.5 bg-gray-800 rounded"
+                    title="下へ移動"
+                  >
+                    ▼
+                  </button>
+                </div>
+              )}
+              <div className={editMode ? 'ml-6' : ''}>
                 {section.component}
               </div>
             </div>

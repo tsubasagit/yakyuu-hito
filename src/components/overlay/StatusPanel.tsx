@@ -1,13 +1,11 @@
 import { useGameStore } from '../../store/useGameStore'
 
 /**
- * 状況パネル: イニング表記 + 走者ダイヤ + BSOランプ + A/X簡易スコア。
+ * 状況パネル: イニング表記 + 簡易スコア + 走者ダイヤ + BSOランプ。
  * モックアップ右下相当。
  *
- * サブトグル:
- * - visibility.statusPanel_diamond
- * - visibility.statusPanel_bso
- * - visibility.statusPanel_quickScore
+ * 簡易スコア / ダイヤ / BSO は親トグル（visibility.statusPanel）で
+ * 一括 ON/OFF（原田様要望: 2026-05-02）。
  */
 export default function StatusPanel() {
   const awayTeam = useGameStore((s) => s.awayTeam)
@@ -18,9 +16,6 @@ export default function StatusPanel() {
   const currentHalf = useGameStore((s) => s.currentHalf)
   const count = useGameStore((s) => s.count)
   const runners = useGameStore((s) => s.runners)
-  const showDiamond = useGameStore((s) => s.visibility?.statusPanel_diamond ?? true)
-  const showBSO = useGameStore((s) => s.visibility?.statusPanel_bso ?? true)
-  const showQuickScore = useGameStore((s) => s.visibility?.statusPanel_quickScore ?? true)
 
   return (
     <div className="bg-black/85 backdrop-blur-sm rounded-lg text-white min-w-[220px] select-none p-2">
@@ -30,29 +25,20 @@ export default function StatusPanel() {
       </div>
 
       <div className="flex gap-3 items-start">
-        {/* 左: 簡易スコア */}
-        {showQuickScore && (
-          <div className="flex flex-col gap-0.5 text-sm font-mono">
-            <ScoreLine shortName={awayTeam.shortName || 'A'} color={awayTeam.color} total={awayTotal} />
-            <ScoreLine shortName={homeTeam.shortName || 'X'} color={homeTeam.color} total={homeTotal} />
-          </div>
-        )}
+        <div className="flex flex-col gap-0.5 text-sm font-mono">
+          <ScoreLine shortName={awayTeam.shortName || 'A'} color={awayTeam.color} total={awayTotal} />
+          <ScoreLine shortName={homeTeam.shortName || 'X'} color={homeTeam.color} total={homeTotal} />
+        </div>
 
-        {/* 中: ダイヤモンド */}
-        {showDiamond && (
-          <div className="flex items-center justify-center">
-            <Diamond first={runners.first} second={runners.second} third={runners.third} />
-          </div>
-        )}
+        <div className="flex items-center justify-center">
+          <Diamond first={runners.first} second={runners.second} third={runners.third} />
+        </div>
 
-        {/* 右: BSO */}
-        {showBSO && (
-          <div className="flex flex-col gap-1 text-xs ml-auto">
-            <BSORow label="B" count={count.balls} max={4} color="bg-green-500" />
-            <BSORow label="S" count={count.strikes} max={3} color="bg-yellow-400" />
-            <BSORow label="O" count={count.outs} max={3} color="bg-red-500" />
-          </div>
-        )}
+        <div className="flex flex-col gap-1 text-xs ml-auto">
+          <BSORow label="B" count={count.balls} max={4} color="bg-green-500" />
+          <BSORow label="S" count={count.strikes} max={3} color="bg-yellow-400" />
+          <BSORow label="O" count={count.outs} max={3} color="bg-red-500" />
+        </div>
       </div>
     </div>
   )
