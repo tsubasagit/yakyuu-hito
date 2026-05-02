@@ -2,7 +2,11 @@ import { useGameStore } from '../../store/useGameStore'
 import type { DhMode, LineupPlayer, Team } from '../../types'
 
 /**
- * スタメン一覧: 対戦2チームを左右に並べて表示（モックアップ画像1準拠）。
+ * スタメン一覧。コントロールパネルの「オーバーレイの打順表示」トグルに応じて
+ * 表示モードを切り替える:
+ *  - showBothLineups=true  : 両チーム並列表示（モックアップ画像1準拠）
+ *  - showBothLineups=false : 攻撃中チーム1つのみ表示（currentHalf で自動切替）
+ *
  * DHモードに応じて行数を切り替える:
  *  - 'dh'     : 10行（1-9 打者 + 10 投手）
  *  - 'none'   : 9行（投手は1-9のどこかに含まれる）
@@ -15,11 +19,46 @@ export default function LineupPanel() {
   const homeLineup = useGameStore((s) => s.homeLineup)
   const awayDhMode = useGameStore((s) => s.awayDhMode ?? 'dh')
   const homeDhMode = useGameStore((s) => s.homeDhMode ?? 'dh')
+  const showBothLineups = useGameStore((s) => s.showBothLineups ?? false)
+  const currentHalf = useGameStore((s) => s.currentHalf)
 
   const awayHasPlayers = awayLineup.slice(0, 9).some((p) => p.name.length > 0)
   const homeHasPlayers = homeLineup.slice(0, 9).some((p) => p.name.length > 0)
   if (!awayHasPlayers && !homeHasPlayers) return null
 
+  // 単独表示モード: 攻撃中チームのみ表示
+  if (!showBothLineups) {
+    const attackingSide = currentHalf === 'top' ? 'away' : 'home'
+    if (attackingSide === 'away' && awayHasPlayers) {
+      return (
+        <div className="select-none">
+          <TeamLineupCard team={awayTeam} lineup={awayLineup} dhMode={awayDhMode} label="先攻" />
+        </div>
+      )
+    }
+    if (attackingSide === 'home' && homeHasPlayers) {
+      return (
+        <div className="select-none">
+          <TeamLineupCard team={homeTeam} lineup={homeLineup} dhMode={homeDhMode} label="後攻" />
+        </div>
+      )
+    }
+    // 攻撃中チームに選手未登録 → 反対側でフォールバック
+    if (awayHasPlayers) {
+      return (
+        <div className="select-none">
+          <TeamLineupCard team={awayTeam} lineup={awayLineup} dhMode={awayDhMode} label="先攻" />
+        </div>
+      )
+    }
+    return (
+      <div className="select-none">
+        <TeamLineupCard team={homeTeam} lineup={homeLineup} dhMode={homeDhMode} label="後攻" />
+      </div>
+    )
+  }
+
+  // 両チーム並列表示モード
   return (
     <div className="flex items-stretch gap-3 select-none">
       {awayHasPlayers && (

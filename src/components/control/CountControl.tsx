@@ -9,7 +9,6 @@ export default function CountControl() {
   const subtractBall = useGameStore((s) => s.subtractBall)
   const subtractStrike = useGameStore((s) => s.subtractStrike)
   const subtractOut = useGameStore((s) => s.subtractOut)
-  const applyStrikeout = useGameStore((s) => s.applyStrikeout)
   const applyWalkPreset = useGameStore((s) => s.applyWalkPreset)
 
   return (
@@ -93,19 +92,14 @@ export default function CountControl() {
         </div>
       </div>
 
-      {/* プリセット */}
-      <div className="flex gap-2 pt-2 border-t border-gray-700">
-        <button
-          onClick={applyStrikeout}
-          className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-xs font-bold"
-        >
-          三振
-        </button>
+      {/* プリセット — いきなりカウントが変わる場面用 */}
+      <div className="flex gap-2 pt-2 border-t border-gray-700 flex-wrap">
         <button
           onClick={applyWalkPreset}
-          className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-xs font-bold"
+          className="bg-orange-700 hover:bg-orange-600 text-white px-3 py-1.5 rounded text-xs font-bold"
+          title="打者を1塁へ進塁・走者押し出し・カウントリセット"
         >
-          四球
+          デッドボール
         </button>
         <button
           onClick={resetCount}
