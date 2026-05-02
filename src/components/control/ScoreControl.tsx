@@ -16,8 +16,6 @@ export default function ScoreControl() {
   const addRun = useGameStore((s) => s.addRun)
   const subtractRun = useGameStore((s) => s.subtractRun)
   const setInningScore = useGameStore((s) => s.setInningScore)
-  const addHit = useGameStore((s) => s.addHit)
-  const addError = useGameStore((s) => s.addError)
   const setHits = useGameStore((s) => s.setHits)
   const setErrors = useGameStore((s) => s.setErrors)
 
@@ -66,24 +64,6 @@ export default function ScoreControl() {
         >
           {awayTeam.name} +1点
         </button>
-        <button
-          onClick={() => addHit('away')}
-          className="bg-green-700 hover:bg-green-600 text-white px-2 py-2 rounded text-xs font-bold"
-        >
-          +1H
-        </button>
-        <button
-          onClick={() => addError('away')}
-          className="bg-red-700 hover:bg-red-600 text-white px-2 py-2 rounded text-xs font-bold"
-        >
-          +1E
-        </button>
-        <button
-          onClick={() => setErrors('away', Math.max(0, awayErrors - 1))}
-          className="bg-gray-600 hover:bg-gray-500 text-white px-2 py-2 rounded text-xs font-bold"
-        >
-          -1E
-        </button>
       </div>
       {/* クイック操作ボタン — ホーム */}
       <div className="flex flex-wrap gap-1.5">
@@ -98,24 +78,6 @@ export default function ScoreControl() {
           className="bg-accent hover:bg-accent/80 text-white px-2 py-2 rounded text-xs font-bold"
         >
           {homeTeam.name} +1点
-        </button>
-        <button
-          onClick={() => addHit('home')}
-          className="bg-green-700 hover:bg-green-600 text-white px-2 py-2 rounded text-xs font-bold"
-        >
-          +1H
-        </button>
-        <button
-          onClick={() => addError('home')}
-          className="bg-red-700 hover:bg-red-600 text-white px-2 py-2 rounded text-xs font-bold"
-        >
-          +1E
-        </button>
-        <button
-          onClick={() => setErrors('home', Math.max(0, homeErrors - 1))}
-          className="bg-gray-600 hover:bg-gray-500 text-white px-2 py-2 rounded text-xs font-bold"
-        >
-          -1E
         </button>
       </div>
 

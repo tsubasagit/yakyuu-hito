@@ -269,8 +269,8 @@ export const DEFAULT_OVERLAY_POSITIONS: Record<string, OverlayPosition> = {
 }
 
 export const initialGameState: GameState = {
-  awayTeam: { name: '楽天', shortName: '楽天', color: '#860012' },
-  homeTeam: { name: 'ソフトバンク', shortName: 'ソフトバンク', color: '#F5C51C' },
+  awayTeam: { name: '楽天', shortName: '楽天', color: '#000000' },
+  homeTeam: { name: 'ソフトバンク', shortName: 'ソフトバンク', color: '#000000' },
   currentInning: 1,
   currentHalf: 'top',
   isGameOver: false,
