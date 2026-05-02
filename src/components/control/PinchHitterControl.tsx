@@ -1,10 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
 import type { PinchHitter } from '../../types'
 
 /**
- * 代打コントロール: チーム選択・選手名・学年・コメントを入力して
- * 代打カードに反映する。「代打として表示」で visibility.pinchHitter を ON。
+ * 代打コントロール: チーム選択・選手名を入力して代打カードに反映する。
+ * 「代打として表示」で visibility.pinchHitter を ON。
+ *
+ * 学生運用のため、入力は最小（チーム + 名前のみ）。
+ * 学年・コメント・サンプル補完は野手側に存在しないため不要（2026-05-02 削除）。
  */
 export default function PinchHitterControl() {
   const pinchHitter = useGameStore((s) => s.pinchHitter)
@@ -12,22 +15,14 @@ export default function PinchHitterControl() {
   const setVisibility = useGameStore((s) => s.setVisibility)
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
-  const awayLineup = useGameStore((s) => s.awayLineup)
-  const homeLineup = useGameStore((s) => s.homeLineup)
 
   const [team, setTeam] = useState<'away' | 'home'>(pinchHitter?.team ?? 'away')
   const [name, setName] = useState(pinchHitter?.name ?? '')
-  const [grade, setGrade] = useState(pinchHitter?.grade ?? '')
-  const [comment, setComment] = useState(pinchHitter?.comment ?? '')
 
   const teamLabel = team === 'away' ? awayTeam.name : homeTeam.name
-  const candidates = useMemo(() => {
-    const lineup = team === 'away' ? awayLineup : homeLineup
-    return lineup.filter((p) => p.name.length > 0).slice(0, 9)
-  }, [team, awayLineup, homeLineup])
 
   const applyAndShow = () => {
-    const payload: PinchHitter = { team, name: name.trim(), grade: grade.trim(), comment: comment.trim() }
+    const payload: PinchHitter = { team, name: name.trim() }
     if (!payload.name) return
     setPinchHitter(payload)
     setVisibility('pinchHitter', true)
@@ -48,28 +43,7 @@ export default function PinchHitterControl() {
         <TeamRadio label={homeTeam.name} active={team === 'home'} onClick={() => setTeam('home')} />
       </div>
 
-      {/* 既存打順から選択（クイック補完） */}
-      {candidates.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {candidates.map((p) => (
-            <button
-              key={p.order}
-              type="button"
-              onClick={() => {
-                setName(p.name)
-                if (p.grade) setGrade(p.grade)
-              }}
-              className="text-[11px] bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded"
-            >
-              {p.order}.{p.name}
-            </button>
-          ))}
-        </div>
-      )}
-
       <Field label="選手名" value={name} onChange={setName} placeholder="例: 加藤 陸" />
-      <Field label="学年" value={grade} onChange={setGrade} placeholder="例: 3年" />
-      <Field label="コメント" value={comment} onChange={setComment} placeholder="例: 少年クラブ優勝経験あり" />
 
       <div className="flex gap-2 pt-1">
         <button
@@ -92,7 +66,6 @@ export default function PinchHitterControl() {
       {pinchHitter && (
         <div className="text-[11px] text-gray-400">
           表示中: {pinchHitter.team === 'away' ? awayTeam.name : homeTeam.name} / {pinchHitter.name}
-          {pinchHitter.grade && ` (${pinchHitter.grade})`}
         </div>
       )}
     </div>

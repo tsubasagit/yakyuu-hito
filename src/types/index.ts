@@ -122,8 +122,6 @@ export interface Tournament {
 export interface PinchHitter {
   team: 'away' | 'home'
   name: string
-  grade: string      // 学年
-  comment: string    // 一行コメント
 }
 
 /** 8要素＋statusPanel サブトグルの表示フラグ */
