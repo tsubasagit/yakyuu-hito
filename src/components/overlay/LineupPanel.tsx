@@ -2,10 +2,12 @@ import { useGameStore } from '../../store/useGameStore'
 import type { DhMode, LineupPlayer, Team } from '../../types'
 
 /**
- * スタメン一覧。コントロールパネルの「オーバーレイの打順表示」トグルに応じて
- * 表示モードを切り替える:
- *  - showBothLineups=true  : 両チーム並列表示（モックアップ画像1準拠）
- *  - showBothLineups=false : 攻撃中チーム1つのみ表示（currentHalf で自動切替）
+ * スタメン一覧。コントロールパネルの「オーバーレイの打順表示」モードに応じて
+ * 表示を切り替える:
+ *  - 'attacking' : 攻撃中チーム1つのみ（currentHalf で自動切替・デフォルト）
+ *  - 'away'      : 先攻チームのみ（常時固定）
+ *  - 'home'      : 後攻チームのみ（常時固定）
+ *  - 'both'      : 両チーム並列＋VS表示
  *
  * DHモードに応じて行数を切り替える:
  *  - 'dh'     : 10行（1-9 打者 + 10 投手）
@@ -19,61 +21,47 @@ export default function LineupPanel() {
   const homeLineup = useGameStore((s) => s.homeLineup)
   const awayDhMode = useGameStore((s) => s.awayDhMode ?? 'dh')
   const homeDhMode = useGameStore((s) => s.homeDhMode ?? 'dh')
-  const showBothLineups = useGameStore((s) => s.showBothLineups ?? false)
+  const mode = useGameStore((s) => s.lineupDisplayMode ?? 'attacking')
   const currentHalf = useGameStore((s) => s.currentHalf)
 
   const awayHasPlayers = awayLineup.slice(0, 9).some((p) => p.name.length > 0)
   const homeHasPlayers = homeLineup.slice(0, 9).some((p) => p.name.length > 0)
   if (!awayHasPlayers && !homeHasPlayers) return null
 
-  // 単独表示モード: 攻撃中チームのみ表示
-  if (!showBothLineups) {
-    const attackingSide = currentHalf === 'top' ? 'away' : 'home'
-    if (attackingSide === 'away' && awayHasPlayers) {
-      return (
-        <div className="select-none">
-          <TeamLineupCard team={awayTeam} lineup={awayLineup} dhMode={awayDhMode} label="先攻" />
-        </div>
-      )
-    }
-    if (attackingSide === 'home' && homeHasPlayers) {
-      return (
-        <div className="select-none">
-          <TeamLineupCard team={homeTeam} lineup={homeLineup} dhMode={homeDhMode} label="後攻" />
-        </div>
-      )
-    }
-    // 攻撃中チームに選手未登録 → 反対側でフォールバック
-    if (awayHasPlayers) {
-      return (
-        <div className="select-none">
-          <TeamLineupCard team={awayTeam} lineup={awayLineup} dhMode={awayDhMode} label="先攻" />
-        </div>
-      )
-    }
+  const awayCard = (
+    <TeamLineupCard team={awayTeam} lineup={awayLineup} dhMode={awayDhMode} label="先攻" />
+  )
+  const homeCard = (
+    <TeamLineupCard team={homeTeam} lineup={homeLineup} dhMode={homeDhMode} label="後攻" />
+  )
+
+  if (mode === 'both') {
     return (
-      <div className="select-none">
-        <TeamLineupCard team={homeTeam} lineup={homeLineup} dhMode={homeDhMode} label="後攻" />
+      <div className="flex items-stretch gap-3 select-none">
+        {awayHasPlayers && awayCard}
+        {awayHasPlayers && homeHasPlayers && (
+          <div className="flex items-center justify-center text-white font-black text-3xl drop-shadow-[0_0_6px_rgba(0,0,0,0.8)]">
+            VS
+          </div>
+        )}
+        {homeHasPlayers && homeCard}
       </div>
     )
   }
 
-  // 両チーム並列表示モード
-  return (
-    <div className="flex items-stretch gap-3 select-none">
-      {awayHasPlayers && (
-        <TeamLineupCard team={awayTeam} lineup={awayLineup} dhMode={awayDhMode} label="先攻" />
-      )}
-      {awayHasPlayers && homeHasPlayers && (
-        <div className="flex items-center justify-center text-white font-black text-3xl drop-shadow-[0_0_6px_rgba(0,0,0,0.8)]">
-          VS
-        </div>
-      )}
-      {homeHasPlayers && (
-        <TeamLineupCard team={homeTeam} lineup={homeLineup} dhMode={homeDhMode} label="後攻" />
-      )}
-    </div>
-  )
+  if (mode === 'away') {
+    return <div className="select-none">{awayHasPlayers ? awayCard : homeCard}</div>
+  }
+  if (mode === 'home') {
+    return <div className="select-none">{homeHasPlayers ? homeCard : awayCard}</div>
+  }
+
+  // 'attacking': 攻撃中チームのみ表示。未登録ならフォールバック
+  const attackingSide = currentHalf === 'top' ? 'away' : 'home'
+  if (attackingSide === 'away') {
+    return <div className="select-none">{awayHasPlayers ? awayCard : homeCard}</div>
+  }
+  return <div className="select-none">{homeHasPlayers ? homeCard : awayCard}</div>
 }
 
 function TeamLineupCard({

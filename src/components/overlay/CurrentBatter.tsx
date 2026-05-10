@@ -2,7 +2,7 @@ import { useGameStore } from '../../store/useGameStore'
 
 /**
  * 現在の打者: プロ野球中継風ロワーサード（2026-05-02 リファイン）。
- * 左にチーム色バッジ（打順 + ポジション）、右に背番号・名前・学年。
+ * 左にチーム色バッジ（打順 + ポジション）、右に名前・学年。
  */
 export default function CurrentBatter() {
   const currentHalf = useGameStore((s) => s.currentHalf)
@@ -42,11 +42,6 @@ export default function CurrentBatter() {
 
         {/* 中央: 名前 */}
         <div className="flex items-center gap-3 px-5 py-2 flex-1">
-          {batter.number && (
-            <span className="font-mono text-amber-300 font-black text-2xl tabular-nums leading-none">
-              {batter.number}
-            </span>
-          )}
           <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-[10px] tracking-[0.2em] text-gray-400 uppercase">
               {positionLong || '　'}

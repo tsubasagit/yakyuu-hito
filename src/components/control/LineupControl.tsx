@@ -24,12 +24,14 @@ function BatterRow({
   player,
   isCurrent,
   dhMode,
+  currentBatterVisible,
   onSelect,
   onChange,
 }: {
   player: LineupPlayer
   isCurrent: boolean
   dhMode: DhMode
+  currentBatterVisible: boolean
   onSelect: () => void
   onChange: (p: LineupPlayer) => void
 }) {
@@ -53,12 +55,6 @@ function BatterRow({
           <option key={p} value={p}>{p}</option>
         ))}
       </select>
-      <input
-        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-12 shrink-0 text-center"
-        placeholder="背番号"
-        value={player.number}
-        onChange={(e) => onChange({ ...player, number: e.target.value })}
-      />
       <input
         className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-0"
         placeholder="名前"
@@ -91,14 +87,27 @@ function BatterRow({
       />
       <button
         onClick={onSelect}
-        className={`text-xs px-2 py-1 rounded shrink-0 ${
-          isCurrent
-            ? 'bg-accent text-white font-bold'
+        className={`text-xs px-2 py-1 rounded shrink-0 font-bold ${
+          isCurrent && currentBatterVisible
+            ? 'bg-accent text-white'
+            : isCurrent && !currentBatterVisible
+            ? 'bg-gray-600 text-gray-300 ring-1 ring-accent'
             : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
         }`}
-        title="この打者を選択"
+        title={
+          isCurrent && currentBatterVisible
+            ? '打者パネルを非表示にする'
+            : isCurrent && !currentBatterVisible
+            ? '打者パネルを表示する'
+            : 'この打者を選択して表示'
+        }
       >
         打席
+        {isCurrent && (
+          <span className="ml-1 text-[9px] opacity-80">
+            {currentBatterVisible ? 'ON' : 'OFF'}
+          </span>
+        )}
       </button>
     </div>
   )
@@ -131,12 +140,6 @@ function PitcherRow({
         <span className="text-red-400 text-xs w-12 shrink-0 text-center font-bold">
           投
         </span>
-        <input
-          className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-12 shrink-0 text-center"
-          placeholder="背番号"
-          value={player.number}
-          onChange={(e) => onChange({ ...player, number: e.target.value })}
-        />
         <input
           className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-0"
           placeholder="投手名"
@@ -227,6 +230,8 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
   const setLineupDisplayTeam = useGameStore((s) => s.setLineupDisplayTeam)
   const setDhMode = useGameStore((s) => s.setDhMode)
   const copyDhToPitcher = useGameStore((s) => s.copyDhToPitcher)
+  const currentBatterVisible = useGameStore((s) => s.visibility?.currentBatter ?? false)
+  const toggleVisibility = useGameStore((s) => s.toggleVisibility)
 
   // DHなしモード: 投手が1-9番に居ないと警告
   const hasPitcherInBatters = lineup.slice(0, 9).some((p) => p.position === '投')
@@ -236,6 +241,18 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
   const isAttacking = (side === 'away' && currentHalf === 'top') ||
     (side === 'home' && currentHalf === 'bottom')
   const label = side === 'away' ? '先攻' : '後攻'
+
+  // 打席ボタン: 同じ打者が現在選択中なら currentBatter パネルを ON/OFF 切替、
+  // 別打者なら選択 + パネルを ON。
+  const handleBatterButton = (idx: number) => {
+    const isAlreadyCurrent = idx === batterIdx && isAttacking
+    if (isAlreadyCurrent) {
+      toggleVisibility('currentBatter')
+    } else {
+      selectBatter(side, idx)
+      if (!currentBatterVisible) toggleVisibility('currentBatter')
+    }
+  }
 
   const handleCsvImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCsvError(null)
@@ -380,7 +397,6 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
         <div className="flex items-center gap-1.5 text-[10px] text-gray-400 px-1.5 pt-1 pb-0.5 border-b border-gray-700">
           <span className="w-4 text-center shrink-0">順番</span>
           <span className="w-12 text-center shrink-0">守備</span>
-          <span className="w-12 text-center shrink-0">背番号</span>
           <span className="flex-1 min-w-0">名前</span>
           <span className="w-12 text-center shrink-0">打率</span>
           <span className="w-10 text-center shrink-0">HR</span>
@@ -394,7 +410,8 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
             player={player}
             isCurrent={idx === batterIdx && isAttacking}
             dhMode={dhMode}
-            onSelect={() => selectBatter(side, idx)}
+            currentBatterVisible={currentBatterVisible}
+            onSelect={() => handleBatterButton(idx)}
             onChange={(p) => setLineupPlayer(side, idx, p)}
           />
         ))}
@@ -412,11 +429,10 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
               ⚾ DH打者を投手行にコピー（大谷ルール）
             </button>
           )}
-          {/* 列ヘッダ（投手用 = 順番,守備,背番号,名前,登板数,勝敗） */}
+          {/* 列ヘッダ（投手用 = 順番,守備,名前,登板数,勝敗） */}
           <div className="flex items-center gap-1.5 text-[10px] text-red-300/80 px-1.5 pt-1 pb-0.5 border-b border-red-800/40">
             <span className="w-4 text-center shrink-0">10</span>
             <span className="w-12 text-center shrink-0">守備</span>
-            <span className="w-12 text-center shrink-0">背番号</span>
             <span className="flex-1 min-w-0">名前</span>
             <span className="w-10 text-center shrink-0">登板数</span>
             <span className="w-20 text-center shrink-0">勝敗</span>
@@ -435,31 +451,39 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
 }
 
 function LineupDisplayModeToggle() {
-  const showBothLineups = useGameStore((s) => s.showBothLineups ?? false)
-  const setShowBothLineups = useGameStore((s) => s.setShowBothLineups)
+  const mode = useGameStore((s) => s.lineupDisplayMode ?? 'attacking')
+  const setMode = useGameStore((s) => s.setLineupDisplayMode)
+
+  const modes: { key: 'attacking' | 'away' | 'home' | 'both'; label: string; hint: string }[] = [
+    { key: 'attacking', label: '自動（攻撃中）', hint: '攻撃中チームのみ自動表示' },
+    { key: 'away',      label: '先攻のみ',       hint: '先攻チームの打順を常時表示' },
+    { key: 'home',      label: '後攻のみ',       hint: '後攻チームの打順を常時表示' },
+    { key: 'both',      label: '両チーム（VS）', hint: '両チーム並列＋VS表示' },
+  ]
+  const current = modes.find((m) => m.key === mode) ?? modes[0]!
 
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 flex items-center justify-between">
+    <div className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 space-y-2">
       <div>
         <div className="text-white text-sm font-bold">オーバーレイの打順表示</div>
-        <div className="text-gray-400 text-[11px]">
-          {showBothLineups ? '両チーム同時に表示中（ドラッグで位置調整）' : '攻撃中チームのみ表示（自動切替）'}
-        </div>
+        <div className="text-gray-400 text-[11px]">{current.hint}</div>
       </div>
-      <button
-        onClick={() => setShowBothLineups(!showBothLineups)}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-          showBothLineups ? 'bg-accent' : 'bg-gray-600'
-        }`}
-        aria-pressed={showBothLineups}
-        aria-label="両チーム同時表示"
-      >
-        <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-            showBothLineups ? 'translate-x-6' : 'translate-x-1'
-          }`}
-        />
-      </button>
+      <div className="flex flex-wrap gap-1">
+        {modes.map((m) => (
+          <button
+            key={m.key}
+            onClick={() => setMode(m.key)}
+            title={m.hint}
+            className={`text-[11px] px-2 py-1 rounded font-bold transition-colors ${
+              mode === m.key
+                ? 'bg-accent text-white'
+                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+            }`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

@@ -3,21 +3,21 @@ import type { LineupPlayer, Position } from '../types'
 const VALID_POSITIONS: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右', 'DH']
 
 /** CSV ヘッダー行（順番固定。インポートも同じ列順を期待） */
-export const LINEUP_CSV_HEADER = '順番,名前,背番号,守備,打率,HR,打点,OPS,登板数,勝敗'
+export const LINEUP_CSV_HEADER = '順番,名前,守備,打率,HR,打点,OPS,登板数,勝敗'
 
 /** ダウンロード用のサンプルCSV（10名・DHあり想定） */
 export const LINEUP_CSV_SAMPLE = [
   LINEUP_CSV_HEADER,
-  '1,秋山 翔吾,55,左,.278,4,28,.735,,',
-  '2,野間 峻祥,37,中,.265,3,22,.698,,',
-  '3,小園 海斗,51,遊,.291,14,58,.815,,',
-  '4,坂倉 将吾,31,捕,.288,16,62,.838,,',
-  '5,末包 昇大,64,右,.258,20,60,.798,,',
-  '6,マクブルーム,42,一,.272,22,68,.825,,',
-  '7,菊池 涼介,33,二,.248,5,30,.672,,',
-  '8,上本 崇司,0,三,.242,3,18,.655,,',
-  '9,田村 俊介,38,DH,.240,2,15,.638,,',
-  '10,森下 暢仁,18,投,,,,,22,10勝5敗',
+  '1,秋山 翔吾,左,.278,4,28,.735,,',
+  '2,野間 峻祥,中,.265,3,22,.698,,',
+  '3,小園 海斗,遊,.291,14,58,.815,,',
+  '4,坂倉 将吾,捕,.288,16,62,.838,,',
+  '5,末包 昇大,右,.258,20,60,.798,,',
+  '6,マクブルーム,一,.272,22,68,.825,,',
+  '7,菊池 涼介,二,.248,5,30,.672,,',
+  '8,上本 崇司,三,.242,3,18,.655,,',
+  '9,田村 俊介,DH,.240,2,15,.638,,',
+  '10,森下 暢仁,投,,,,,22,10勝5敗',
   '',
 ].join('\n')
 
@@ -25,7 +25,7 @@ export const LINEUP_CSV_SAMPLE = [
  * CSV テキストから LineupPlayer[] をパースする。
  *
  * 期待フォーマット（ヘッダー行あり）:
- *   順番,名前,背番号,守備,打率,HR,打点,OPS,登板数,勝敗
+ *   順番,名前,守備,打率,HR,打点,OPS,登板数,勝敗
  *
  * - 1〜9行目: 野手（打率・HR・打点・OPS を使用）
  * - 10行目: 投手（登板数・勝敗を使用）
@@ -57,8 +57,7 @@ export function parseLineupCsv(text: string): LineupPlayer[] {
     if (isNaN(order) || order < 1 || order > 10) continue
 
     const name = cols[1] ?? ''
-    const number = cols[2] ?? ''
-    const posRaw = cols[3] ?? ''
+    const posRaw = cols[2] ?? ''
     const position = (VALID_POSITIONS.includes(posRaw as Position) ? posRaw : '') as Position
 
     if (order === 10) {
@@ -66,22 +65,22 @@ export function parseLineupCsv(text: string): LineupPlayer[] {
       players.push({
         order,
         name,
-        number,
+        number: '',
         position: position || '投',
-        appearances: cols[8] ?? '',
-        record: cols[9] ?? '',
+        appearances: cols[7] ?? '',
+        record: cols[8] ?? '',
       })
     } else {
       // 野手
       players.push({
         order,
         name,
-        number,
+        number: '',
         position,
-        battingAvg: cols[4] ?? '',
-        homeRuns: cols[5] ?? '',
-        rbi: cols[6] ?? '',
-        ops: cols[7] ?? '',
+        battingAvg: cols[3] ?? '',
+        homeRuns: cols[4] ?? '',
+        rbi: cols[5] ?? '',
+        ops: cols[6] ?? '',
       })
     }
   }

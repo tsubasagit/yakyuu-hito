@@ -14,6 +14,22 @@ const PANEL_LABELS: Record<string, string> = {
 
 const PANEL_IDS = Object.keys(PANEL_LABELS)
 
+/** チームカラー プリセット（大学野球で使われやすい色を厳選） */
+const COLOR_PRESETS: { label: string; hex: string }[] = [
+  { label: 'レッド',     hex: '#e60033' },
+  { label: 'ネイビー',   hex: '#1c4e88' },
+  { label: 'ブルー',     hex: '#2563eb' },
+  { label: 'スカイ',     hex: '#0ea5e9' },
+  { label: 'グリーン',   hex: '#16a34a' },
+  { label: 'イエロー',   hex: '#f59e0b' },
+  { label: 'オレンジ',   hex: '#ea580c' },
+  { label: 'パープル',   hex: '#7c3aed' },
+  { label: 'マルーン',   hex: '#7f1d1d' },
+  { label: 'ブラック',   hex: '#111827' },
+  { label: 'グレー',     hex: '#6b7280' },
+  { label: 'ホワイト',   hex: '#f3f4f6' },
+]
+
 export default function GameControl() {
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
@@ -152,6 +168,7 @@ export default function GameControl() {
             const label = team === 'away' ? 'アウェイ（先攻）' : 'ホーム（後攻）'
             const value = team === 'away' ? awayColor : homeColor
             const setLocal = team === 'away' ? setAwayColor : setHomeColor
+            const apply = (v: string) => { setLocal(v); setTeamColor(team, v) }
             return (
               <div key={team} className="space-y-2">
                 <span className="text-gray-400 text-xs">{label}</span>
@@ -160,7 +177,7 @@ export default function GameControl() {
                     type="color"
                     className="w-8 h-8 rounded cursor-pointer bg-transparent border-0"
                     value={value}
-                    onChange={(e) => { setLocal(e.target.value); setTeamColor(team, e.target.value) }}
+                    onChange={(e) => apply(e.target.value)}
                   />
                   <input
                     type="text"
@@ -179,6 +196,25 @@ export default function GameControl() {
                   >
                     {copiedKey === team ? '✓' : 'コピー'}
                   </button>
+                </div>
+                {/* プリセット色パッチ（クリックで一発適用） */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {COLOR_PRESETS.map((preset) => {
+                    const selected = value.toLowerCase() === preset.hex.toLowerCase()
+                    return (
+                      <button
+                        key={preset.hex}
+                        type="button"
+                        onClick={() => apply(preset.hex)}
+                        title={`${preset.label} ${preset.hex}`}
+                        className={`w-6 h-6 rounded border-2 transition-transform hover:scale-110 ${
+                          selected ? 'border-white ring-2 ring-accent' : 'border-gray-600'
+                        }`}
+                        style={{ backgroundColor: preset.hex }}
+                        aria-label={preset.label}
+                      />
+                    )
+                  })}
                 </div>
               </div>
             )

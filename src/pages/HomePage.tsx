@@ -108,7 +108,7 @@ export default function HomePage() {
             />
             <Reason
               title="CSVで一括登録"
-              desc="背番号・打順・守備のサンプルCSVをDLボタンから取得。Excelで編集して読込ですぐスタメン完成。"
+              desc="打順・守備のサンプルCSVをDLボタンから取得。Excelで編集して読込ですぐスタメン完成。"
             />
             <Reason
               title="本番中の修正も自由"
@@ -125,12 +125,12 @@ export default function HomePage() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <FeatureCard title="ミニスコア" desc="左上の小型2行スコア。試合中の常設表示向け。" />
-            <FeatureCard title="現在の打者" desc="打順・守備・背番号・名前を中継風ロワーサードで表示。" />
+            <FeatureCard title="現在の打者" desc="打順・守備・名前を中継風ロワーサードで表示。" />
             <FeatureCard title="スタメン一覧" desc="DH制（あり/なし/二刀流）対応。両チーム並列表示も可能。" />
             <FeatureCard title="大会名" desc="大会名・副題・対戦カード・会場・日付。試合前のオープニング向け。" />
             <FeatureCard title="大型スコア" desc="中継切替時の大判スコア。チーム色フルバンド + 大きな数字。" />
             <FeatureCard title="イニング別スコア" desc="9回基本＋延長12回まで自動拡張。R列強調。" />
-            <FeatureCard title="状況パネル" desc="イニング表記＋スコア＋走者ダイヤ＋BSO（緑のグラウンド地）を1セットで。" />
+            <FeatureCard title="BSOパネル" desc="イニング表記＋スコア＋走者ダイヤ＋BSO（緑のグラウンド地）を1セットで。" />
             <FeatureCard title="代打 / 速報テロップ" desc="代打選手の発表表示と、自由テロップ。" />
           </div>
         </div>

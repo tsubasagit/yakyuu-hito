@@ -7,17 +7,11 @@ export default function ScoreControl() {
   const homeTeam = useGameStore((s) => s.homeTeam)
   const awayTotal = useGameStore((s) => s.awayTotal)
   const homeTotal = useGameStore((s) => s.homeTotal)
-  const awayHits = useGameStore((s) => s.awayHits)
-  const homeHits = useGameStore((s) => s.homeHits)
-  const awayErrors = useGameStore((s) => s.awayErrors)
-  const homeErrors = useGameStore((s) => s.homeErrors)
   const currentInning = useGameStore((s) => s.currentInning)
   const currentHalf = useGameStore((s) => s.currentHalf)
   const addRun = useGameStore((s) => s.addRun)
   const subtractRun = useGameStore((s) => s.subtractRun)
   const setInningScore = useGameStore((s) => s.setInningScore)
-  const setHits = useGameStore((s) => s.setHits)
-  const setErrors = useGameStore((s) => s.setErrors)
 
   const handleScoreClick = (inning: number, half: HalfInning) => {
     const inn = innings.find((i) => i.inning === inning)
@@ -31,24 +25,9 @@ export default function ScoreControl() {
     }
   }
 
-  const handleStatClick = (team: 'away' | 'home', stat: 'hits' | 'errors') => {
-    const current = stat === 'hits'
-      ? (team === 'away' ? awayHits : homeHits)
-      : (team === 'away' ? awayErrors : homeErrors)
-    const label = stat === 'hits' ? 'ヒット数' : 'エラー数'
-    const teamLabel = team === 'away' ? awayTeam.name : homeTeam.name
-    const input = prompt(`${teamLabel} ${label}:`, String(current))
-    if (input === null) return
-    const val = parseInt(input, 10)
-    if (!isNaN(val) && val >= 0) {
-      if (stat === 'hits') setHits(team, val)
-      else setErrors(team, val)
-    }
-  }
-
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
-      <h2 className="text-white font-bold text-lg">得点・安打・失策</h2>
+      <h2 className="text-white font-bold text-lg">得点</h2>
 
       {/* クイック操作ボタン — アウェイ */}
       <div className="flex flex-wrap gap-1.5">
@@ -100,8 +79,6 @@ export default function ScoreControl() {
                 </th>
               ))}
               <th className="px-2 py-1 text-center text-yellow-400">R</th>
-              <th className="px-2 py-1 text-center text-green-400">H</th>
-              <th className="px-2 py-1 text-center text-red-400">E</th>
             </tr>
           </thead>
           <tbody>
@@ -123,18 +100,6 @@ export default function ScoreControl() {
               <td className="px-2 py-1 text-center text-yellow-400 font-bold">
                 {awayTotal}
               </td>
-              <td
-                className="px-2 py-1 text-center text-green-400 font-bold cursor-pointer hover:bg-gray-600 rounded"
-                onClick={() => handleStatClick('away', 'hits')}
-              >
-                {awayHits}
-              </td>
-              <td
-                className="px-2 py-1 text-center text-red-400 font-bold cursor-pointer hover:bg-gray-600 rounded"
-                onClick={() => handleStatClick('away', 'errors')}
-              >
-                {awayErrors}
-              </td>
             </tr>
             <tr>
               <td className="px-2 py-1 font-bold">{homeTeam.name}</td>
@@ -153,18 +118,6 @@ export default function ScoreControl() {
               ))}
               <td className="px-2 py-1 text-center text-yellow-400 font-bold">
                 {homeTotal}
-              </td>
-              <td
-                className="px-2 py-1 text-center text-green-400 font-bold cursor-pointer hover:bg-gray-600 rounded"
-                onClick={() => handleStatClick('home', 'hits')}
-              >
-                {homeHits}
-              </td>
-              <td
-                className="px-2 py-1 text-center text-red-400 font-bold cursor-pointer hover:bg-gray-600 rounded"
-                onClick={() => handleStatClick('home', 'errors')}
-              >
-                {homeErrors}
               </td>
             </tr>
           </tbody>

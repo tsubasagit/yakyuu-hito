@@ -8,8 +8,8 @@ import type { Visibility } from '../../types'
  * 各トグルに左帯の色＋編集元サブラベルを表示し、
  * 下の編集セクションも同色の左帯で対応関係を視覚化する（2026-05-02 改善）。
  *
- * 状況パネル内（簡易スコア/ダイヤ/BSO）は単独トグルにせず、
- * 状況パネル ON/OFF でまとめて切替（原田様要望: 2026-05-02）。
+ * BSOパネル内（簡易スコア/ダイヤ/BSO）は単独トグルにせず、
+ * BSOパネル ON/OFF でまとめて切替（原田様要望: 2026-05-02）。
  */
 export interface ToggleMeta {
   id: keyof Visibility
@@ -30,7 +30,7 @@ export const TOGGLE_META: ToggleMeta[] = [
   { id: 'tournamentHeader', label: '大会名',      sources: ['大会情報'],                      scrollTarget: 'section-tournament', stripe: 'bg-violet-500'  },
   { id: 'bigScore',         label: '大型スコア',  sources: ['試合管理', '得点・安打・失策'], scrollTarget: 'section-score',      stripe: 'bg-rose-500'    },
   { id: 'inningScoreboard', label: 'イニング別',  sources: ['得点・安打・失策'],              scrollTarget: 'section-score',      stripe: 'bg-emerald-500' },
-  { id: 'statusPanel',      label: '状況パネル',  sources: ['イニング', 'カウント', '走者'], scrollTarget: 'section-count',      stripe: 'bg-cyan-500'    },
+  { id: 'statusPanel',      label: 'BSOパネル',   sources: ['イニング', 'カウント', '走者'], scrollTarget: 'section-count',      stripe: 'bg-cyan-500'    },
 ]
 
 /** scrollTarget → stripe color のマップ（ControlPage で使用） */

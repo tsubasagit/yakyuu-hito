@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { DhMode, EffectType, GameState, HalfInning, LineupPlayer, MascotMode, OverlayPosition, PinchHitter, PitcherAppearance, PlayerInfo, Runners, Tournament, Visibility } from '../types'
+import type { DhMode, EffectType, GameState, HalfInning, LineupDisplayMode, LineupPlayer, MascotMode, OverlayPosition, PinchHitter, PitcherAppearance, PlayerInfo, Runners, Tournament, Visibility } from '../types'
 import { initialGameState, initialPlayerInfo, formatBatterStat, DEFAULT_OVERLAY_POSITIONS } from '../types'
 import { broadcastState } from '../lib/sync'
 import { backupToIDB, restoreFromIDB } from '../lib/idbBackup'
@@ -42,6 +42,7 @@ const DATA_KEYS: (keyof GameState)[] = [
   'gameStartTime', 'ticker', 'activeEffect', 'effectTimestamp',
   'showMascot', 'mascotMode', 'mascotImages', 'autoChangeEffect', 'showWaitingScreen',
   'overlayPositions', 'overlayScale', 'lineupDisplayTeam', 'showBothLineups',
+  'lineupDisplayMode',
   'awayDhMode', 'homeDhMode',
   // yakyuu-hito 拡張
   'tournament', 'pinchHitter', 'visibility',
@@ -144,6 +145,7 @@ interface GameActions {
   setOverlayScale: (scale: number) => void
   setLineupDisplayTeam: (team: 'away' | 'home') => void
   setShowBothLineups: (show: boolean) => void
+  setLineupDisplayMode: (mode: LineupDisplayMode) => void
   setDhMode: (team: 'away' | 'home', mode: DhMode) => void
   copyDhToPitcher: (team: 'away' | 'home') => void
   // --- yakyuu-hito 拡張 ---
@@ -606,6 +608,8 @@ export const useGameStore = create<GameStore>()(
       setLineupDisplayTeam: (team) => set({ lineupDisplayTeam: team }),
 
       setShowBothLineups: (show) => set({ showBothLineups: show }),
+
+      setLineupDisplayMode: (mode) => set({ lineupDisplayMode: mode }),
 
       setDhMode: (team, mode) =>
         set((s) => {

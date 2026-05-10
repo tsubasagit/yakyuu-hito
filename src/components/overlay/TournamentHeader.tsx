@@ -12,10 +12,13 @@ export default function TournamentHeader() {
   return (
     <div className="bg-[#0b1220]/[0.92] backdrop-blur-sm rounded-xl px-8 py-5 text-white text-center min-w-[480px] select-none shadow-[0_6px_24px_rgba(0,0,0,0.5)] border border-white/10">
       {(tournament.title || tournament.subtitle) && (
-        <div className="text-[11px] text-amber-300 tracking-[0.4em] uppercase mb-3 font-medium">
-          {tournament.title}
-          {tournament.title && tournament.subtitle && '　·　'}
-          {tournament.subtitle}
+        <div className="text-amber-300 tracking-[0.4em] uppercase mb-3 font-medium">
+          {tournament.title && (
+            <div className="text-base">{tournament.title}</div>
+          )}
+          {tournament.subtitle && (
+            <div className="text-[11px] mt-1">{tournament.subtitle}</div>
+          )}
         </div>
       )}
       <div className="flex items-center justify-center gap-5 text-3xl font-bold tracking-tight">

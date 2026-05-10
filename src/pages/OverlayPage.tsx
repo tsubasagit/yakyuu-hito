@@ -114,7 +114,7 @@ export default function OverlayPage() {
         <InningScoreboard />
       </OverlayPanel>
 
-      {/* [7] 状況パネル — 右下 */}
+      {/* [7] BSOパネル — 右下 */}
       <OverlayPanel id="statusPanel" defaultPos={DEFAULT_ELEMENT_POSITIONS.statusPanel} scale={overlayScale}>
         <StatusPanel />
       </OverlayPanel>

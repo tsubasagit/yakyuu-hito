@@ -110,6 +110,13 @@ export type ElementId =
   | 'statusPanel'
   | 'currentBatter'
 
+/** スタメンオーバーレイの表示モード */
+export type LineupDisplayMode =
+  | 'attacking'  // 攻撃中チームのみ（自動切替・デフォルト）
+  | 'away'       // 先攻のみ
+  | 'home'       // 後攻のみ
+  | 'both'       // 両チーム並列表示（VS表示付き）
+
 /** 大会情報（tournamentHeader 用） */
 export interface Tournament {
   title: string      // 大会名（例: "全国クラブ野球選手権大会"）
@@ -190,8 +197,10 @@ export interface GameState {
   overlayScale: number
   /** コントロールパネルで選択中のチーム。オーバーレイの打順表示に連動する */
   lineupDisplayTeam: 'away' | 'home'
-  /** 両チームの打順を同時にオーバーレイに表示するか */
+  /** 両チームの打順を同時にオーバーレイに表示するか（旧フィールド・lineupDisplayMode が優先） */
   showBothLineups: boolean
+  /** スタメンオーバーレイの表示モード（先攻/後攻/両方/自動） */
+  lineupDisplayMode: LineupDisplayMode
   /** DH制モード（チーム別） */
   awayDhMode: DhMode
   homeDhMode: DhMode
@@ -308,6 +317,7 @@ export const initialGameState: GameState = {
   overlayScale: 1,
   lineupDisplayTeam: 'away',
   showBothLineups: false,
+  lineupDisplayMode: 'attacking',
   awayDhMode: 'dh',
   homeDhMode: 'dh',
   tournament: {
