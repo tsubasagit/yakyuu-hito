@@ -1,22 +1,41 @@
 import { useRef, useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
-import type { LineupPlayer, Position } from '../../types'
+import type { DhMode, LineupPlayer, Position } from '../../types'
 import { CARP_LINEUP, HAWKS_LINEUP, formatInningsPitched } from '../../types'
-import { parseLineupCsv } from '../../lib/csvImport'
+import { parseLineupCsv, LINEUP_CSV_SAMPLE } from '../../lib/csvImport'
 
-const POSITIONS: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右', 'DH']
+function downloadCsvSample() {
+  // BOM付きでExcelの文字化け回避
+  const blob = new Blob(['﻿' + LINEUP_CSV_SAMPLE], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'lineup_sample.csv'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+const POSITIONS_WITH_DH: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右', 'DH']
+const POSITIONS_NO_DH: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右']
 
 function BatterRow({
   player,
   isCurrent,
+  dhMode,
+  currentBatterVisible,
   onSelect,
   onChange,
 }: {
   player: LineupPlayer
   isCurrent: boolean
+  dhMode: DhMode
+  currentBatterVisible: boolean
   onSelect: () => void
   onChange: (p: LineupPlayer) => void
 }) {
+  const positions = dhMode === 'none' ? POSITIONS_NO_DH : POSITIONS_WITH_DH
   return (
     <div
       className={`flex items-center gap-1.5 text-sm rounded px-1.5 py-1 ${
@@ -32,7 +51,7 @@ function BatterRow({
         onChange={(e) => onChange({ ...player, position: e.target.value as Position })}
       >
         <option value="">--</option>
-        {POSITIONS.map((p) => (
+        {positions.map((p) => (
           <option key={p} value={p}>{p}</option>
         ))}
       </select>
@@ -42,40 +61,29 @@ function BatterRow({
         value={player.name}
         onChange={(e) => onChange({ ...player, name: e.target.value })}
       />
-      <input
-        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-12 shrink-0"
-        placeholder="打率"
-        value={player.battingAvg || ''}
-        onChange={(e) => onChange({ ...player, battingAvg: e.target.value })}
-      />
-      <input
-        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-10 shrink-0"
-        placeholder="HR"
-        value={player.homeRuns || ''}
-        onChange={(e) => onChange({ ...player, homeRuns: e.target.value })}
-      />
-      <input
-        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-10 shrink-0"
-        placeholder="打点"
-        value={player.rbi || ''}
-        onChange={(e) => onChange({ ...player, rbi: e.target.value })}
-      />
-      <input
-        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-14 shrink-0"
-        placeholder="OPS"
-        value={player.ops || ''}
-        onChange={(e) => onChange({ ...player, ops: e.target.value })}
-      />
       <button
         onClick={onSelect}
-        className={`text-xs px-2 py-1 rounded shrink-0 ${
-          isCurrent
-            ? 'bg-accent text-white font-bold'
+        className={`text-xs px-2 py-1 rounded shrink-0 font-bold ${
+          isCurrent && currentBatterVisible
+            ? 'bg-accent text-white'
+            : isCurrent && !currentBatterVisible
+            ? 'bg-gray-600 text-gray-300 ring-1 ring-accent'
             : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
         }`}
-        title="この打者を選択"
+        title={
+          isCurrent && currentBatterVisible
+            ? '打者パネルを非表示にする'
+            : isCurrent && !currentBatterVisible
+            ? '打者パネルを表示する'
+            : 'この打者を選択して表示'
+        }
       >
         打席
+        {isCurrent && (
+          <span className="ml-1 text-[9px] opacity-80">
+            {currentBatterVisible ? 'ON' : 'OFF'}
+          </span>
+        )}
       </button>
     </div>
   )
@@ -113,18 +121,6 @@ function PitcherRow({
           placeholder="投手名"
           value={player.name}
           onChange={(e) => onChange({ ...player, name: e.target.value })}
-        />
-        <input
-          className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-10 shrink-0"
-          placeholder="登板"
-          value={player.appearances || ''}
-          onChange={(e) => onChange({ ...player, appearances: e.target.value })}
-        />
-        <input
-          className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-20 shrink-0"
-          placeholder="勝敗"
-          value={player.record || ''}
-          onChange={(e) => onChange({ ...player, record: e.target.value })}
         />
         <button
           onClick={onSelect}
@@ -189,16 +185,38 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
   const lineup = useGameStore((s) => side === 'away' ? s.awayLineup : s.homeLineup)
   const batterIdx = useGameStore((s) => side === 'away' ? s.awayBatterIndex : s.homeBatterIndex)
   const currentHalf = useGameStore((s) => s.currentHalf)
+  const dhMode = useGameStore((s) => side === 'away' ? s.awayDhMode : s.homeDhMode)
   const setLineupPlayer = useGameStore((s) => s.setLineupPlayer)
   const setLineup = useGameStore((s) => s.setLineup)
   const selectBatter = useGameStore((s) => s.selectBatter)
   const nextBatter = useGameStore((s) => s.nextBatter)
   const prevBatter = useGameStore((s) => s.prevBatter)
   const setLineupDisplayTeam = useGameStore((s) => s.setLineupDisplayTeam)
+  const setDhMode = useGameStore((s) => s.setDhMode)
+  const copyDhToPitcher = useGameStore((s) => s.copyDhToPitcher)
+  const currentBatterVisible = useGameStore((s) => s.visibility?.currentBatter ?? false)
+  const toggleVisibility = useGameStore((s) => s.toggleVisibility)
+
+  // DHなしモード: 投手が1-9番に居ないと警告
+  const hasPitcherInBatters = lineup.slice(0, 9).some((p) => p.position === '投')
+  // DHあり/二刀流モード: DH指名選手が1-9番に居ないと警告
+  const hasDhInBatters = lineup.slice(0, 9).some((p) => p.position === 'DH')
 
   const isAttacking = (side === 'away' && currentHalf === 'top') ||
     (side === 'home' && currentHalf === 'bottom')
   const label = side === 'away' ? '先攻' : '後攻'
+
+  // 打席ボタン: 同じ打者が現在選択中なら currentBatter パネルを ON/OFF 切替、
+  // 別打者なら選択 + パネルを ON。
+  const handleBatterButton = (idx: number) => {
+    const isAlreadyCurrent = idx === batterIdx && isAttacking
+    if (isAlreadyCurrent) {
+      toggleVisibility('currentBatter')
+    } else {
+      selectBatter(side, idx)
+      if (!currentBatterVisible) toggleVisibility('currentBatter')
+    }
+  }
 
   const handleCsvImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCsvError(null)
@@ -258,32 +276,41 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
       </div>
 
       {/* CSV / プリセット */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv,text/csv"
-          className="hidden"
-          onChange={handleCsvImport}
-        />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold"
-        >
-          CSV読込
-        </button>
-        <button
-          onClick={() => setLineup(side, [...CARP_LINEUP])}
-          className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
-        >
-          サンプル：広島カープ
-        </button>
-        <button
-          onClick={() => setLineup(side, [...HAWKS_LINEUP])}
-          className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
-        >
-          サンプル：ソフトバンク
-        </button>
+      <div className="bg-gray-900/40 rounded p-2 space-y-1.5 border border-gray-700">
+        <div className="flex flex-wrap gap-2 items-center">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={handleCsvImport}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold"
+          >
+            CSV読込
+          </button>
+          <button
+            onClick={downloadCsvSample}
+            className="bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold"
+            title="入力例つきのサンプルCSVをダウンロード"
+          >
+            ⬇ サンプルCSV
+          </button>
+          <button
+            onClick={() => setLineup(side, [...CARP_LINEUP])}
+            className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
+          >
+            プリセット：広島カープ
+          </button>
+          <button
+            onClick={() => setLineup(side, [...HAWKS_LINEUP])}
+            className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
+          >
+            プリセット：ソフトバンク
+          </button>
+        </div>
       </div>
       {csvError && (
         <div className="bg-red-900/50 border border-red-500 rounded px-3 py-1.5 text-red-300 text-xs">
@@ -291,58 +318,130 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
         </div>
       )}
 
+      {/* DH制モード切替 */}
+      <div className="flex items-center gap-2 bg-gray-900/40 rounded px-2 py-1.5 border border-gray-700">
+        <span className="text-gray-300 text-[11px] font-bold shrink-0">DH制:</span>
+        <div className="flex gap-1">
+          {([
+            { key: 'dh', label: 'DHあり（10名）', hint: '10番目=投手' },
+            { key: 'none', label: 'DHなし（9名）', hint: '投手も打席' },
+            { key: 'twoWay', label: '二刀流（10名）', hint: '大谷ルール' },
+          ] as { key: DhMode; label: string; hint: string }[]).map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setDhMode(side, opt.key)}
+              title={opt.hint}
+              className={`text-[11px] px-2 py-1 rounded font-bold transition-colors ${
+                dhMode === opt.key
+                  ? 'bg-accent text-white'
+                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* バリデーション警告 */}
+      {dhMode === 'none' && !hasPitcherInBatters && (
+        <div className="bg-yellow-900/40 border border-yellow-600/60 rounded px-3 py-1.5 text-yellow-200 text-[11px]">
+          ⚠ DHなしモードでは 1-9番のいずれかに <span className="font-bold">投</span> を指定してください
+        </div>
+      )}
+      {(dhMode === 'dh' || dhMode === 'twoWay') && !hasDhInBatters && (
+        <div className="bg-yellow-900/40 border border-yellow-600/60 rounded px-3 py-1.5 text-yellow-200 text-[11px]">
+          ⚠ DHありモードでは 1-9番のいずれかに <span className="font-bold">DH</span> を指定してください
+        </div>
+      )}
+
       {/* ラインナップ（1-9番打者） */}
       <div className="space-y-0.5">
+        {/* 列ヘッダ（CSV項目名と一致） */}
+        <div className="flex items-center gap-1.5 text-[10px] text-gray-400 px-1.5 pt-1 pb-0.5 border-b border-gray-700">
+          <span className="w-4 text-center shrink-0">順番</span>
+          <span className="w-12 text-center shrink-0">守備</span>
+          <span className="flex-1 min-w-0">名前</span>
+          <span className="shrink-0 w-[60px] text-center">　</span>
+        </div>
         {lineup.slice(0, 9).map((player, idx) => (
           <BatterRow
             key={player.order}
             player={player}
             isCurrent={idx === batterIdx && isAttacking}
-            onSelect={() => selectBatter(side, idx)}
+            dhMode={dhMode}
+            currentBatterVisible={currentBatterVisible}
+            onSelect={() => handleBatterButton(idx)}
             onChange={(p) => setLineupPlayer(side, idx, p)}
           />
         ))}
       </div>
 
-      {/* 投手（10番目） */}
-      {lineup[9] && (
-        <PitcherRow
-          player={lineup[9]}
-          side={side}
-          onSelect={() => selectBatter(side, 9)}
-          onChange={(p) => setLineupPlayer(side, 9, p)}
-        />
+      {/* 投手（10番目）— DHなしモードでは非表示 */}
+      {dhMode !== 'none' && lineup[9] && (
+        <>
+          {dhMode === 'twoWay' && hasDhInBatters && (
+            <button
+              onClick={() => copyDhToPitcher(side)}
+              className="w-full bg-purple-700 hover:bg-purple-600 text-white px-2 py-1 rounded text-[11px] font-bold"
+              title="DH打者と投手を同一人物にする（大谷ルール）"
+            >
+              ⚾ DH打者を投手行にコピー（大谷ルール）
+            </button>
+          )}
+          {/* 列ヘッダ（投手用 = 順番,守備,名前） */}
+          <div className="flex items-center gap-1.5 text-[10px] text-red-300/80 px-1.5 pt-1 pb-0.5 border-b border-red-800/40">
+            <span className="w-4 text-center shrink-0">10</span>
+            <span className="w-12 text-center shrink-0">守備</span>
+            <span className="flex-1 min-w-0">名前</span>
+            <span className="shrink-0 w-[60px] text-center">　</span>
+          </div>
+          <PitcherRow
+            player={lineup[9]}
+            side={side}
+            onSelect={() => selectBatter(side, 9)}
+            onChange={(p) => setLineupPlayer(side, 9, p)}
+          />
+        </>
       )}
     </div>
   )
 }
 
 function LineupDisplayModeToggle() {
-  const showBothLineups = useGameStore((s) => s.showBothLineups ?? false)
-  const setShowBothLineups = useGameStore((s) => s.setShowBothLineups)
+  const mode = useGameStore((s) => s.lineupDisplayMode ?? 'attacking')
+  const setMode = useGameStore((s) => s.setLineupDisplayMode)
+
+  const modes: { key: 'attacking' | 'away' | 'home' | 'both'; label: string; hint: string }[] = [
+    { key: 'attacking', label: '自動（攻撃中）', hint: '攻撃中チームのみ自動表示' },
+    { key: 'away',      label: '先攻のみ',       hint: '先攻チームの打順を常時表示' },
+    { key: 'home',      label: '後攻のみ',       hint: '後攻チームの打順を常時表示' },
+    { key: 'both',      label: '両チーム（VS）', hint: '両チーム並列＋VS表示' },
+  ]
+  const current = modes.find((m) => m.key === mode) ?? modes[0]!
 
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 flex items-center justify-between">
+    <div className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 space-y-2">
       <div>
         <div className="text-white text-sm font-bold">オーバーレイの打順表示</div>
-        <div className="text-gray-400 text-[11px]">
-          {showBothLineups ? '両チーム同時に表示中（ドラッグで位置調整）' : '攻撃中チームのみ表示（自動切替）'}
-        </div>
+        <div className="text-gray-400 text-[11px]">{current.hint}</div>
       </div>
-      <button
-        onClick={() => setShowBothLineups(!showBothLineups)}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-          showBothLineups ? 'bg-accent' : 'bg-gray-600'
-        }`}
-        aria-pressed={showBothLineups}
-        aria-label="両チーム同時表示"
-      >
-        <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-            showBothLineups ? 'translate-x-6' : 'translate-x-1'
-          }`}
-        />
-      </button>
+      <div className="flex flex-wrap gap-1">
+        {modes.map((m) => (
+          <button
+            key={m.key}
+            onClick={() => setMode(m.key)}
+            title={m.hint}
+            className={`text-[11px] px-2 py-1 rounded font-bold transition-colors ${
+              mode === m.key
+                ? 'bg-accent text-white'
+                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+            }`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

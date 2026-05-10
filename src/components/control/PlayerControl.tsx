@@ -12,35 +12,22 @@ function PlayerForm({
   onApply: (info: PlayerInfo) => void
 }) {
   const [name, setName] = useState(player.name)
-  const [number, setNumber] = useState(player.number)
-  const [stat, setStat] = useState(player.stat)
-  const [statLabel, setStatLabel] = useState(player.statLabel)
 
   useEffect(() => {
     setName(player.name)
-    setNumber(player.number)
-    setStat(player.stat)
-    setStatLabel(player.statLabel)
-  }, [player.name, player.number, player.stat, player.statLabel])
+  }, [player.name])
 
-  const apply = () => onApply({ name, number, stat, statLabel })
+  const apply = () => onApply({ name, number: '', stat: '', statLabel: '' })
 
   return (
     <div className="space-y-2">
       <label className="text-gray-400 text-xs font-bold">{label}</label>
       <div className="grid grid-cols-4 gap-2">
         <input
-          className="bg-gray-700 text-white rounded px-2 py-1.5 text-sm col-span-2"
+          className="bg-gray-700 text-white rounded px-2 py-1.5 text-sm col-span-3"
           placeholder="名前"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          onBlur={apply}
-        />
-        <input
-          className="bg-gray-700 text-white rounded px-2 py-1.5 text-sm"
-          placeholder="背番号"
-          value={number}
-          onChange={(e) => setNumber(e.target.value)}
           onBlur={apply}
         />
         <button
@@ -49,22 +36,6 @@ function PlayerForm({
         >
           反映
         </button>
-      </div>
-      <div className="grid grid-cols-4 gap-2">
-        <input
-          className="bg-gray-700 text-white rounded px-2 py-1.5 text-sm col-span-1"
-          placeholder="ラベル（例: 打率）"
-          value={statLabel}
-          onChange={(e) => setStatLabel(e.target.value)}
-          onBlur={apply}
-        />
-        <input
-          className="bg-gray-700 text-white rounded px-2 py-1.5 text-sm col-span-1"
-          placeholder="値（例: .312）"
-          value={stat}
-          onChange={(e) => setStat(e.target.value)}
-          onBlur={apply}
-        />
       </div>
     </div>
   )

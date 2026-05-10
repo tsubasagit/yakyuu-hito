@@ -2,15 +2,35 @@ import type { LineupPlayer, Position } from '../types'
 
 const VALID_POSITIONS: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右', 'DH']
 
+/** CSV ヘッダー行（順番固定。インポートも同じ列順を期待） */
+export const LINEUP_CSV_HEADER = '順番,名前,守備'
+
+/** ダウンロード用のサンプルCSV（10名・DHあり想定） */
+export const LINEUP_CSV_SAMPLE = [
+  LINEUP_CSV_HEADER,
+  '1,秋山 翔吾,左',
+  '2,野間 峻祥,中',
+  '3,小園 海斗,遊',
+  '4,坂倉 将吾,捕',
+  '5,末包 昇大,右',
+  '6,マクブルーム,一',
+  '7,菊池 涼介,二',
+  '8,上本 崇司,三',
+  '9,田村 俊介,DH',
+  '10,森下 暢仁,投',
+  '',
+].join('\n')
+
 /**
  * CSV テキストから LineupPlayer[] をパースする。
  *
  * 期待フォーマット（ヘッダー行あり）:
- *   順番,名前,背番号,守備,打率,HR,打点,OPS,登板数,勝敗
+ *   順番,名前,守備
  *
- * - 1〜9行目: 野手（打率・HR・打点・OPS を使用）
- * - 10行目: 投手（登板数・勝敗を使用）
+ * - 1〜9行目: 野手
+ * - 10行目: 投手
  * - ヘッダー行は自動スキップ（1列目が数値でなければヘッダーと判定）
+ * - 旧フォーマット（背番号や打率列を含む9列CSV）も互換読み込み: 余分な列は無視
  */
 export function parseLineupCsv(text: string): LineupPlayer[] {
   const lines = text
@@ -38,31 +58,22 @@ export function parseLineupCsv(text: string): LineupPlayer[] {
     if (isNaN(order) || order < 1 || order > 10) continue
 
     const name = cols[1] ?? ''
-    const number = cols[2] ?? ''
-    const posRaw = cols[3] ?? ''
+    const posRaw = cols[2] ?? ''
     const position = (VALID_POSITIONS.includes(posRaw as Position) ? posRaw : '') as Position
 
     if (order === 10) {
-      // 投手
       players.push({
         order,
         name,
-        number,
+        number: '',
         position: position || '投',
-        appearances: cols[8] ?? '',
-        record: cols[9] ?? '',
       })
     } else {
-      // 野手
       players.push({
         order,
         name,
-        number,
+        number: '',
         position,
-        battingAvg: cols[4] ?? '',
-        homeRuns: cols[5] ?? '',
-        rbi: cols[6] ?? '',
-        ops: cols[7] ?? '',
       })
     }
   }

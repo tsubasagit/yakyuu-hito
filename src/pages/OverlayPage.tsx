@@ -1,18 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useBroadcastSync } from '../hooks/useBroadcastSync'
 import { useGameStore, setPreventPersistWrites } from '../store/useGameStore'
 import { requestState } from '../lib/sync'
 import { loadOverlayCache } from '../lib/overlayCache'
-import Scoreboard from '../components/overlay/Scoreboard'
-import PlayerInfo from '../components/overlay/PlayerInfo'
-import PlayLog from '../components/overlay/PlayLog'
-import LineupCard from '../components/overlay/LineupCard'
-import GameTimer from '../components/overlay/GameTimer'
-import Ticker from '../components/overlay/Ticker'
-import EffectOverlay from '../components/overlay/EffectOverlay'
-import Mascot from '../components/overlay/Mascot'
-import WaitingScreen from '../components/overlay/WaitingScreen'
-import { setGlobalDragActive } from '../lib/dragState'
+import { DEFAULT_ELEMENT_POSITIONS } from '../types'
+import OverlayPanel from '../components/overlay/shared/OverlayPanel'
+import MiniScore from '../components/overlay/MiniScore'
+import PinchHitterCard from '../components/overlay/PinchHitterCard'
+import LineupPanel from '../components/overlay/LineupPanel'
+import TournamentHeader from '../components/overlay/TournamentHeader'
+import BigScore from '../components/overlay/BigScore'
+import InningScoreboard from '../components/overlay/InningScoreboard'
+import StatusPanel from '../components/overlay/StatusPanel'
+import CurrentBatter from '../components/overlay/CurrentBatter'
 
 const CANVAS_W = 1920
 const CANVAS_H = 1080
@@ -33,97 +33,14 @@ function useViewportScale() {
   return scale
 }
 
-/** Zustand にドラッグ位置を永続化する DraggableBox
- *  ドラッグ中はローカル state で描画し、mouseUp で store に書き戻す */
-function DraggableBox({
-  id,
-  children,
-  scale: panelScale = 1,
-}: {
-  id: string
-  children: React.ReactNode
-  scale?: number
-}) {
-  // プリミティブ値でセレクトし、オブジェクト参照変更による不要な再レンダリングを防止
-  const storeX = useGameStore((s) => s.overlayPositions?.[id]?.x ?? 0)
-  const storeY = useGameStore((s) => s.overlayPositions?.[id]?.y ?? 0)
-  const setOverlayPosition = useGameStore((s) => s.setOverlayPosition)
-
-  const [localPos, setLocalPos] = useState({ x: storeX, y: storeY })
-  const dragging = useRef(false)
-  const offset = useRef({ x: 0, y: 0 })
-  const localPosRef = useRef(localPos)
-  localPosRef.current = localPos
-
-  // store 側が変わったら（sync 経由など）ローカルを追従
-  useEffect(() => {
-    if (!dragging.current) {
-      setLocalPos({ x: storeX, y: storeY })
-    }
-  }, [storeX, storeY])
-
-  const onMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      dragging.current = true
-      setGlobalDragActive(true)
-      const cur = localPosRef.current
-      offset.current = { x: e.clientX - cur.x, y: e.clientY - cur.y }
-      e.preventDefault()
-    },
-    [],
-  )
-
-  useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      if (!dragging.current) return
-      setLocalPos({
-        x: e.clientX - offset.current.x,
-        y: e.clientY - offset.current.y,
-      })
-    }
-    const onMouseUp = () => {
-      if (!dragging.current) return
-      dragging.current = false
-      setGlobalDragActive(false)
-      // ドラッグ終了時のみ store に書き込む（localStorage 書き込み削減）
-      setOverlayPosition(id, localPosRef.current)
-    }
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup', onMouseUp)
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('mouseup', onMouseUp)
-    }
-  }, [id, setOverlayPosition])
-
-  return (
-    <div
-      className="absolute pointer-events-auto drag-handle"
-      style={{
-        left: localPos.x,
-        top: localPos.y,
-        transform: panelScale !== 1 ? `scale(${panelScale})` : undefined,
-        transformOrigin: 'top left',
-      }}
-      onMouseDown={onMouseDown}
-    >
-      {children}
-    </div>
-  )
-}
-
 const HEARTBEAT_KEY = 'yakyuu-overlay-heartbeat'
 
-/** オーバーレイが生きていることをコントロール側に伝えるハートビート。
- *  localStorage + Cookie の二重書き込みで、OBS 環境での
- *  Custom Dock / Browser Source 間の検知を改善する。 */
+/** オーバーレイが生きていることをコントロール側に伝えるハートビート */
 function useOverlayHeartbeat() {
   useEffect(() => {
     function beat() {
       const ts = String(Date.now())
       try { localStorage.setItem(HEARTBEAT_KEY, ts) } catch { /* ignore */ }
-      // Cookie フォールバック: OBS で localStorage が共有されない場合でも
-      // Cookie は同一オリジンで共有されるため検知可能
       try { document.cookie = `yakyuu-hb=${ts};path=/;max-age=10;SameSite=Lax` } catch { /* ignore */ }
     }
     beat()
@@ -133,34 +50,25 @@ function useOverlayHeartbeat() {
 }
 
 export default function OverlayPage() {
-  // オーバーレイは localStorage への書き込みを禁止（読み取り専用）
-  // コントロールとの書き込み競合を防止する
   useEffect(() => {
     setPreventPersistWrites(true)
     return () => setPreventPersistWrites(false)
   }, [])
 
   useBroadcastSync()
-  // useStorageSync は削除: オーバーレイはBroadcastChannel経由（コントロールからの一方通行）のみで同期。
-  // localStorage ポーリングとの二重受信による状態ピンポン（スコアボード点滅）を防止する。
   useOverlayHeartbeat()
 
-  // マウント時: キャッシュから復元 → コントロールパネルに最新ステートを要求
-  // OBS 再起動時にデフォルト値（オリックスVSソフトバンク）に戻るのを防ぐ
   useEffect(() => {
     const cached = loadOverlayCache()
     if (cached) {
       useGameStore.getState().replaceState(cached)
     }
-    // コントロールパネルが開いていれば最新ステートを受信できる
     requestState()
   }, [])
+
   const scale = useViewportScale()
   const overlayScale = useGameStore((s) => s.overlayScale ?? 1)
-  const positions = useGameStore((s) => s.overlayPositions)
-  const showBothLineups = useGameStore((s) => s.showBothLineups ?? false)
 
-  // オーバーレイページでのみスクロールを無効化
   useEffect(() => {
     document.documentElement.classList.add('overlay-no-scroll')
     return () => document.documentElement.classList.remove('overlay-no-scroll')
@@ -176,55 +84,45 @@ export default function OverlayPage() {
       }}
       className="relative select-none pointer-events-none"
     >
-      {/* スコアボード（BSO・走者・球数 統合） — 左上 */}
-      <DraggableBox id="scoreboard" scale={overlayScale * (positions?.scoreboard?.scale ?? 1)}>
-        <Scoreboard />
-      </DraggableBox>
+      {/* [1] ミニスコア — 左上 */}
+      <OverlayPanel id="miniScore" defaultPos={DEFAULT_ELEMENT_POSITIONS.miniScore} scale={overlayScale}>
+        <MiniScore />
+      </OverlayPanel>
 
-      {/* 経過時間 */}
-      <DraggableBox id="timer" scale={overlayScale * (positions?.timer?.scale ?? 1)}>
-        <GameTimer />
-      </DraggableBox>
+      {/* [2] 代打カード — 右上 */}
+      <OverlayPanel id="pinchHitter" defaultPos={DEFAULT_ELEMENT_POSITIONS.pinchHitter} scale={overlayScale}>
+        <PinchHitterCard />
+      </OverlayPanel>
 
-      {/* 打順 — 右上（片側）or 両チーム同時表示 */}
-      {showBothLineups ? (
-        <>
-          <DraggableBox id="lineup_away" scale={overlayScale * (positions?.lineup_away?.scale ?? 1)}>
-            <LineupCard side="away" />
-          </DraggableBox>
-          <DraggableBox id="lineup_home" scale={overlayScale * (positions?.lineup_home?.scale ?? 1)}>
-            <LineupCard side="home" />
-          </DraggableBox>
-        </>
-      ) : (
-        <DraggableBox id="lineup" scale={overlayScale * (positions?.lineup?.scale ?? 1)}>
-          <LineupCard />
-        </DraggableBox>
-      )}
+      {/* [3] スタメン一覧 — 左 */}
+      <OverlayPanel id="lineup" defaultPos={DEFAULT_ELEMENT_POSITIONS.lineup} scale={overlayScale}>
+        <LineupPanel />
+      </OverlayPanel>
 
-      {/* 選手情報 — 左下 */}
-      <DraggableBox id="playerInfo" scale={overlayScale * (positions?.playerInfo?.scale ?? 1)}>
-        <PlayerInfo />
-      </DraggableBox>
+      {/* [4] 大会タイトル — 中央上 */}
+      <OverlayPanel id="tournamentHeader" defaultPos={DEFAULT_ELEMENT_POSITIONS.tournamentHeader} scale={overlayScale}>
+        <TournamentHeader />
+      </OverlayPanel>
 
-      {/* 経過ログ — 右下 */}
-      <DraggableBox id="playLog" scale={overlayScale * (positions?.playLog?.scale ?? 1)}>
-        <PlayLog />
-      </DraggableBox>
+      {/* [5] 大型スコア — 中央 */}
+      <OverlayPanel id="bigScore" defaultPos={DEFAULT_ELEMENT_POSITIONS.bigScore} scale={overlayScale}>
+        <BigScore />
+      </OverlayPanel>
 
-      {/* 速報テロップ — 最下部 */}
-      <Ticker />
+      {/* [6] イニング別スコアボード — 左下 */}
+      <OverlayPanel id="inningScoreboard" defaultPos={DEFAULT_ELEMENT_POSITIONS.inningScoreboard} scale={overlayScale}>
+        <InningScoreboard />
+      </OverlayPanel>
 
-      {/* マスコット — 右下 */}
-      <DraggableBox id="mascot">
-        <Mascot />
-      </DraggableBox>
+      {/* [7] BSOパネル — 右下 */}
+      <OverlayPanel id="statusPanel" defaultPos={DEFAULT_ELEMENT_POSITIONS.statusPanel} scale={overlayScale}>
+        <StatusPanel />
+      </OverlayPanel>
 
-      {/* エフェクト — 画面中央 */}
-      <EffectOverlay />
-
-      {/* 待機画面 — 全面 */}
-      <WaitingScreen />
+      {/* [8] 現在の打者 — 中央下（ロワーサード） */}
+      <OverlayPanel id="currentBatter" defaultPos={DEFAULT_ELEMENT_POSITIONS.currentBatter} scale={overlayScale}>
+        <CurrentBatter />
+      </OverlayPanel>
     </div>
   )
 }

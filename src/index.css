@@ -16,10 +16,26 @@ html, body, #root {
   overflow: hidden;
 }
 
-/* オーバーレイ用フォント */
-body {
-  font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+/* 日本語ベースフォント（studio.design 参考: Inter + Noto Sans JP）
+   Latin は Inter、JP は Noto Sans JP を主体にし、OS フォントへ fallback。
+   オーバーレイ・コントロールパネル共通でこの font-family を採用。 */
+html, body {
+  font-family:
+    'Inter',
+    'Noto Sans JP',
+    'Hiragino Sans',
+    'Hiragino Kaku Gothic ProN',
+    'Yu Gothic',
+    'Yu Gothic Medium',
+    'Meiryo',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-feature-settings: 'palt' 1; /* 日本語の詰めを少しだけ最適化 */
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: 0.01em;
 }
 
 /* 速報テロップ マーキー */

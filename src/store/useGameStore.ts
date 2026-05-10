@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { EffectType, GameState, HalfInning, LineupPlayer, MascotMode, OverlayPosition, PitcherAppearance, PlayerInfo, Runners } from '../types'
-import { initialGameState, initialPlayerInfo, formatBatterStat, DEFAULT_OVERLAY_POSITIONS } from '../types'
+import type { DhMode, EffectType, GameState, HalfInning, LineupDisplayMode, LineupPlayer, MascotMode, OverlayPosition, PinchHitter, PitcherAppearance, PlayerInfo, Runners, Tournament, Visibility } from '../types'
+import { initialGameState, initialPlayerInfo, DEFAULT_OVERLAY_POSITIONS } from '../types'
 import { broadcastState } from '../lib/sync'
 import { backupToIDB, restoreFromIDB } from '../lib/idbBackup'
 
@@ -42,6 +42,10 @@ const DATA_KEYS: (keyof GameState)[] = [
   'gameStartTime', 'ticker', 'activeEffect', 'effectTimestamp',
   'showMascot', 'mascotMode', 'mascotImages', 'autoChangeEffect', 'showWaitingScreen',
   'overlayPositions', 'overlayScale', 'lineupDisplayTeam', 'showBothLineups',
+  'lineupDisplayMode',
+  'awayDhMode', 'homeDhMode',
+  // yakyuu-hito 拡張
+  'tournament', 'pinchHitter', 'visibility',
 ]
 
 export function extractGameState(store: GameState): GameState {
@@ -141,6 +145,14 @@ interface GameActions {
   setOverlayScale: (scale: number) => void
   setLineupDisplayTeam: (team: 'away' | 'home') => void
   setShowBothLineups: (show: boolean) => void
+  setLineupDisplayMode: (mode: LineupDisplayMode) => void
+  setDhMode: (team: 'away' | 'home', mode: DhMode) => void
+  copyDhToPitcher: (team: 'away' | 'home') => void
+  // --- yakyuu-hito 拡張 ---
+  toggleVisibility: (id: keyof Visibility) => void
+  setVisibility: (id: keyof Visibility, value: boolean) => void
+  setTournament: (partial: Partial<Tournament>) => void
+  setPinchHitter: (value: PinchHitter | null) => void
 }
 
 type GameStore = GameState & GameActions
@@ -355,7 +367,7 @@ export const useGameStore = create<GameStore>()(
             batter: {
               name: player.name,
               number: player.number,
-              stat: formatBatterStat(player),
+              stat: '',
               statLabel: '',
             },
           }
@@ -375,7 +387,7 @@ export const useGameStore = create<GameStore>()(
             batter: {
               name: player.name,
               number: player.number,
-              stat: formatBatterStat(player),
+              stat: '',
               statLabel: '',
             },
             count: { ...s.count, balls: 0, strikes: 0 },
@@ -396,7 +408,7 @@ export const useGameStore = create<GameStore>()(
             batter: {
               name: player.name,
               number: player.number,
-              stat: formatBatterStat(player),
+              stat: '',
               statLabel: '',
             },
             count: { ...s.count, balls: 0, strikes: 0 },
@@ -429,7 +441,13 @@ export const useGameStore = create<GameStore>()(
 
       newGame: () => set({ ...initialGameState }),
 
-      replaceState: (state) => set(state),
+      replaceState: (state) =>
+        set((s) => ({
+          ...state,
+          // 受信した state に新キーが欠けている場合に備えて
+          // 現行の visibility を下敷きに上書きする（点滅・初動不整合の防止）
+          visibility: { ...s.visibility, ...(state.visibility ?? {}) },
+        })),
 
       subtractBall: () =>
         set((s) => ({
@@ -590,6 +608,63 @@ export const useGameStore = create<GameStore>()(
       setLineupDisplayTeam: (team) => set({ lineupDisplayTeam: team }),
 
       setShowBothLineups: (show) => set({ showBothLineups: show }),
+
+      setLineupDisplayMode: (mode) => set({ lineupDisplayMode: mode }),
+
+      setDhMode: (team, mode) =>
+        set((s) => {
+          const modeKey = team === 'away' ? 'awayDhMode' : 'homeDhMode'
+          const lineupKey = team === 'away' ? 'awayLineup' : 'homeLineup'
+          const lineup = [...s[lineupKey]]
+          // 'none' に切り替えた時、1-9番内に '投' が無ければ10番目の投手情報を失うため
+          // データ自体は残し、UI 側で10番目を非表示にする（モード切替で再表示できるように）
+          // 'dh' / 'twoWay' に戻したとき、1-9番に 'DH' が無ければユーザーが選び直す前提
+          return { [modeKey]: mode, [lineupKey]: lineup }
+        }),
+
+      copyDhToPitcher: (team) =>
+        set((s) => {
+          const key = team === 'away' ? 'awayLineup' : 'homeLineup'
+          const lineup = [...s[key]]
+          // 1-9番から position === 'DH' の選手を探す
+          const dhIdx = lineup.slice(0, 9).findIndex((p) => p.position === 'DH')
+          if (dhIdx === -1) return s
+          const dh = lineup[dhIdx]!
+          lineup[9] = {
+            ...lineup[9]!,
+            name: dh.name,
+            number: dh.number,
+            position: '投',
+          }
+          return { [key]: lineup }
+        }),
+
+      // --- yakyuu-hito 拡張 ---
+      toggleVisibility: (id) =>
+        set((s) => ({
+          visibility: {
+            ...s.visibility,
+            // 新キー追加直後は s.visibility[id] が undefined のケースがある。
+            // !undefined=true となり初回トグルで意図と逆方向になるのを防ぐため
+            // デフォルトを true 扱いで反転する。
+            [id]: !(s.visibility[id] ?? true),
+          },
+        })),
+
+      setVisibility: (id, value) =>
+        set((s) => ({
+          visibility: {
+            ...s.visibility,
+            [id]: value,
+          },
+        })),
+
+      setTournament: (partial) =>
+        set((s) => ({
+          tournament: { ...s.tournament, ...partial },
+        })),
+
+      setPinchHitter: (value) => set({ pinchHitter: value }),
     }),
     {
       name: 'yakyuu-game-state',
@@ -646,13 +721,21 @@ export const useGameStore = create<GameStore>()(
           localStorage.removeItem(name)
         },
       },
-      merge: (persisted, current) => ({
-        ...current,
-        ...(persisted as Partial<GameStore>),
-        // エフェクトは一時的な表示状態なので、リロード時にリセット
-        activeEffect: null,
-        effectTimestamp: 0,
-      }),
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<GameStore>
+        return {
+          ...current,
+          ...p,
+          // visibility は新キー追加時に persisted 側で欠落しがちなので
+          // 必ず default(initialGameState.visibility) を下敷きにマージする。
+          // これを怠ると新トグル(currentBatter等)が undefined となり、
+          // !undefined=true でON/OFF初動が逆転して点滅に見える原因になる。
+          visibility: { ...current.visibility, ...(p.visibility ?? {}) },
+          // エフェクトは一時的な表示状態なので、リロード時にリセット
+          activeEffect: null,
+          effectTimestamp: 0,
+        }
+      },
     },
   ),
 )

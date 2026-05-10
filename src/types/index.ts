@@ -2,6 +2,14 @@ export type HalfInning = 'top' | 'bottom'
 
 export type Position = '投' | '捕' | '一' | '二' | '三' | '遊' | '左' | '中' | '右' | 'DH' | ''
 
+/**
+ * DH制モード（2026-04-23 追加）
+ * - 'dh'     : DHあり。10名（1-9番打者＋10番目投手）
+ * - 'none'   : DHなし。9名（投手が1-9番の打席に立つ。10番目行は非表示）
+ * - 'twoWay' : 二刀流（大谷ルール）。10名だが、DH打者と投手が同一選手可（重複OK）
+ */
+export type DhMode = 'dh' | 'none' | 'twoWay'
+
 export interface Count {
   balls: number
   strikes: number
@@ -34,6 +42,9 @@ export interface LineupPlayer {
   // 投手用（10番目）
   appearances?: string  // 登板数
   record?: string       // 勝敗（例: "5勝3敗"）
+  // 大学野球向け（yakyuu-hito 拡張）
+  grade?: string        // 学年（"3年"など自由文字列）
+  comment?: string      // 代打時の一行コメント（"少年クラブ優勝経験あり"など）
 }
 
 export interface InningScore {
@@ -88,6 +99,65 @@ export interface OverlayPosition {
   scale?: number
 }
 
+/** yakyuu-hito の8要素ID（モックアップ 2026-04-23 準拠 + 現在の打者 2026-05-02 追加） */
+export type ElementId =
+  | 'miniScore'
+  | 'pinchHitter'
+  | 'lineup'
+  | 'tournamentHeader'
+  | 'bigScore'
+  | 'inningScoreboard'
+  | 'statusPanel'
+  | 'currentBatter'
+
+/** スタメンオーバーレイの表示モード */
+export type LineupDisplayMode =
+  | 'attacking'  // 攻撃中チームのみ（自動切替・デフォルト）
+  | 'away'       // 先攻のみ
+  | 'home'       // 後攻のみ
+  | 'both'       // 両チーム並列表示（VS表示付き）
+
+/** 大会情報（tournamentHeader 用） */
+export interface Tournament {
+  title: string      // 大会名（例: "全国クラブ野球選手権大会"）
+  subtitle: string   // 副題（例: "決勝戦"）
+  venue: string      // 会場（例: "ドリーム競技場"）
+  date: string       // 日付（例: "2022年1月1日"、自由文字列）
+}
+
+/** 代打情報（pinchHitter 用） */
+export interface PinchHitter {
+  team: 'away' | 'home'
+  name: string
+}
+
+/** 8要素＋statusPanel サブトグルの表示フラグ */
+export interface Visibility {
+  miniScore: boolean
+  pinchHitter: boolean
+  lineup: boolean
+  tournamentHeader: boolean
+  bigScore: boolean
+  inningScoreboard: boolean
+  statusPanel: boolean
+  currentBatter: boolean
+  statusPanel_diamond: boolean
+  statusPanel_bso: boolean
+  statusPanel_quickScore: boolean
+}
+
+/** モックアップ準拠の8要素デフォルト座標（1920x1080基準） */
+export const DEFAULT_ELEMENT_POSITIONS: Record<ElementId, OverlayPosition> = {
+  miniScore:        { x: 40,   y: 40   },
+  pinchHitter:      { x: 1100, y: 40   },
+  lineup:           { x: 40,   y: 140  },
+  tournamentHeader: { x: 820,  y: 280  },
+  bigScore:         { x: 820,  y: 420  },
+  inningScoreboard: { x: 40,   y: 800  },
+  statusPanel:      { x: 1600, y: 830  },
+  currentBatter:    { x: 700,  y: 920  },
+}
+
 export interface GameState {
   awayTeam: Team
   homeTeam: Team
@@ -127,8 +197,20 @@ export interface GameState {
   overlayScale: number
   /** コントロールパネルで選択中のチーム。オーバーレイの打順表示に連動する */
   lineupDisplayTeam: 'away' | 'home'
-  /** 両チームの打順を同時にオーバーレイに表示するか */
+  /** 両チームの打順を同時にオーバーレイに表示するか（旧フィールド・lineupDisplayMode が優先） */
   showBothLineups: boolean
+  /** スタメンオーバーレイの表示モード（先攻/後攻/両方/自動） */
+  lineupDisplayMode: LineupDisplayMode
+  /** DH制モード（チーム別） */
+  awayDhMode: DhMode
+  homeDhMode: DhMode
+  // --- yakyuu-hito 拡張（2026-04-23 キックオフ） ---
+  /** 大会情報（tournamentHeader 用） */
+  tournament: Tournament
+  /** 代打情報（pinchHitter 用、nullなら代打なし） */
+  pinchHitter: PinchHitter | null
+  /** 7要素の表示フラグ */
+  visibility: Visibility
 }
 
 export const initialPlayerInfo: PlayerInfo = {
@@ -145,16 +227,6 @@ function emptyLineup(): LineupPlayer[] {
     number: '',
     position: (i === 9 ? '投' : '') as Position,
   }))
-}
-
-/** 打者のスタッツ文字列を生成 */
-export function formatBatterStat(player: LineupPlayer): string {
-  const parts: string[] = []
-  if (player.battingAvg) parts.push(player.battingAvg)
-  if (player.homeRuns) parts.push(`${player.homeRuns}本`)
-  if (player.rbi) parts.push(`${player.rbi}打点`)
-  if (player.ops) parts.push(`OPS${player.ops}`)
-  return parts.join(' ')
 }
 
 // デモ用: 広島東洋カープ 2025スタメン
@@ -197,8 +269,8 @@ export const DEFAULT_OVERLAY_POSITIONS: Record<string, OverlayPosition> = {
 }
 
 export const initialGameState: GameState = {
-  awayTeam: { name: '楽天', shortName: '楽天', color: '#860012' },
-  homeTeam: { name: 'ソフトバンク', shortName: 'ソフトバンク', color: '#F5C51C' },
+  awayTeam: { name: '楽天', shortName: '楽天', color: '#000000' },
+  homeTeam: { name: 'ソフトバンク', shortName: 'ソフトバンク', color: '#000000' },
   currentInning: 1,
   currentHalf: 'top',
   isGameOver: false,
@@ -235,6 +307,29 @@ export const initialGameState: GameState = {
   overlayScale: 1,
   lineupDisplayTeam: 'away',
   showBothLineups: false,
+  lineupDisplayMode: 'attacking',
+  awayDhMode: 'dh',
+  homeDhMode: 'dh',
+  tournament: {
+    title: '',
+    subtitle: '',
+    venue: '',
+    date: '',
+  },
+  pinchHitter: null,
+  visibility: {
+    miniScore: true,
+    pinchHitter: true,
+    lineup: true,
+    tournamentHeader: false,
+    bigScore: false,
+    inningScoreboard: true,
+    statusPanel: true,
+    currentBatter: true,
+    statusPanel_diamond: true,
+    statusPanel_bso: true,
+    statusPanel_quickScore: true,
+  },
 }
 
 export { emptyLineup }

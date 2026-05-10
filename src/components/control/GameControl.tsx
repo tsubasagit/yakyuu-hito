@@ -1,7 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useGameStore } from '../../store/useGameStore'
-import { extractGameState } from '../../store/useGameStore'
-import { generateGameRecordHTML } from '../../lib/gameRecordExport'
 import type { OverlayPosition } from '../../types'
 import { DEFAULT_OVERLAY_POSITIONS } from '../../types'
 
@@ -16,6 +14,22 @@ const PANEL_LABELS: Record<string, string> = {
 
 const PANEL_IDS = Object.keys(PANEL_LABELS)
 
+/** チームカラー プリセット（大学野球で使われやすい色を厳選） */
+const COLOR_PRESETS: { label: string; hex: string }[] = [
+  { label: 'レッド',     hex: '#e60033' },
+  { label: 'ネイビー',   hex: '#1c4e88' },
+  { label: 'ブルー',     hex: '#2563eb' },
+  { label: 'スカイ',     hex: '#0ea5e9' },
+  { label: 'グリーン',   hex: '#16a34a' },
+  { label: 'イエロー',   hex: '#f59e0b' },
+  { label: 'オレンジ',   hex: '#ea580c' },
+  { label: 'パープル',   hex: '#7c3aed' },
+  { label: 'マルーン',   hex: '#7f1d1d' },
+  { label: 'ブラック',   hex: '#111827' },
+  { label: 'グレー',     hex: '#6b7280' },
+  { label: 'ホワイト',   hex: '#f3f4f6' },
+]
+
 export default function GameControl() {
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
@@ -23,18 +37,25 @@ export default function GameControl() {
   const setTeamName = useGameStore((s) => s.setTeamName)
   const setGameOver = useGameStore((s) => s.setGameOver)
   const newGame = useGameStore((s) => s.newGame)
-  const gameStartTime = useGameStore((s) => s.gameStartTime)
-  const startGameTimer = useGameStore((s) => s.startGameTimer)
-  const stopGameTimer = useGameStore((s) => s.stopGameTimer)
   const setTeamColor = useGameStore((s) => s.setTeamColor)
-  const showWaitingScreen = useGameStore((s) => s.showWaitingScreen)
-  const setShowWaitingScreen = useGameStore((s) => s.setShowWaitingScreen)
   const resetOverlayPositions = useGameStore((s) => s.resetOverlayPositions)
   const overlayScale = useGameStore((s) => s.overlayScale ?? 1)
   const setOverlayScale = useGameStore((s) => s.setOverlayScale)
   const overlayPositions = useGameStore((s) => s.overlayPositions)
   const setOverlayPosition = useGameStore((s) => s.setOverlayPosition)
   const [panelOpen, setPanelOpen] = useState(false)
+  const [colorEditorOpen, setColorEditorOpen] = useState(false)
+  const [copiedKey, setCopiedKey] = useState<'away' | 'home' | null>(null)
+
+  const copyColor = async (team: 'away' | 'home', value: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopiedKey(team)
+      setTimeout(() => setCopiedKey((k) => (k === team ? null : k)), 1200)
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
 
   const updatePanelField = useCallback(
     (id: string, field: keyof OverlayPosition, value: number) => {
@@ -82,18 +103,6 @@ export default function GameControl() {
     }
   }
 
-  const handleExportRecord = () => {
-    const state = extractGameState(useGameStore.getState())
-    const html = generateGameRecordHTML(state)
-    const blob = new Blob([html], { type: 'text/html; charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `試合記録_${awayTeam.name}_vs_${homeTeam.name}_${new Date().toISOString().slice(0, 10)}.html`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-4">
       <h2 className="text-white font-bold text-lg">試合管理</h2>
@@ -108,16 +117,6 @@ export default function GameControl() {
             onChange={(e) => setAwayName(e.target.value)}
             onBlur={handleBlur}
           />
-          <div className="flex items-center gap-2">
-            <label className="text-gray-400 text-xs">カラー</label>
-            <input
-              type="color"
-              className="w-8 h-8 rounded cursor-pointer bg-transparent border-0"
-              value={awayColor}
-              onChange={(e) => { setAwayColor(e.target.value); setTeamColor('away', e.target.value) }}
-            />
-            <span className="text-gray-500 text-xs font-mono">{awayColor}</span>
-          </div>
         </div>
         <div className="space-y-2">
           <label className="text-gray-400 text-xs">ホーム（後攻）</label>
@@ -128,20 +127,10 @@ export default function GameControl() {
             onChange={(e) => setHomeName(e.target.value)}
             onBlur={handleBlur}
           />
-          <div className="flex items-center gap-2">
-            <label className="text-gray-400 text-xs">カラー</label>
-            <input
-              type="color"
-              className="w-8 h-8 rounded cursor-pointer bg-transparent border-0"
-              value={homeColor}
-              onChange={(e) => { setHomeColor(e.target.value); setTeamColor('home', e.target.value) }}
-            />
-            <span className="text-gray-500 text-xs font-mono">{homeColor}</span>
-          </div>
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <button
           onClick={applyTeams}
           className="bg-accent hover:bg-accent/80 text-white px-4 py-2 rounded text-sm font-bold"
@@ -165,53 +154,73 @@ export default function GameControl() {
           新規試合
         </button>
         <button
-          onClick={handleExportRecord}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm font-bold"
+          onClick={() => setColorEditorOpen((v) => !v)}
+          className="bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2 rounded text-sm font-bold border border-gray-600 flex items-center gap-1"
         >
-          試合記録
+          <span>{colorEditorOpen ? '▼' : '▶'}</span>
+          チームカラーを変更
         </button>
       </div>
 
-      {/* 待機画面 */}
-      <div className="flex items-center gap-3 pt-2 border-t border-gray-700">
-        <span className="text-gray-400 text-sm">待機画面</span>
-        <button
-          onClick={() => setShowWaitingScreen(!showWaitingScreen)}
-          className={`px-4 py-2 rounded text-sm font-bold ${
-            showWaitingScreen
-              ? 'bg-accent hover:bg-accent/80 text-white'
-              : 'bg-gray-600 hover:bg-gray-500 text-gray-300'
-          }`}
-        >
-          {showWaitingScreen ? '表示中' : '表示する'}
-        </button>
-        {showWaitingScreen && (
-          <span className="text-accent text-xs">タイマー開始で自動非表示</span>
-        )}
-      </div>
-
-      {/* タイマー */}
-      <div className="flex items-center gap-3 pt-2 border-t border-gray-700">
-        <span className="text-gray-400 text-sm">経過時間</span>
-        {gameStartTime ? (
-          <button
-            onClick={stopGameTimer}
-            className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded text-sm font-bold"
-          >
-            タイマー停止
-          </button>
-        ) : (
-          <button
-            onClick={startGameTimer}
-            className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded text-sm font-bold"
-          >
-            タイマー開始
-          </button>
-        )}
-        {gameStartTime && (
-          <span className="text-green-400 text-xs animate-pulse">計測中</span>
-        )}
-      </div>
+      {colorEditorOpen && (
+        <div className="grid grid-cols-2 gap-4 bg-gray-900/50 rounded p-3 border border-gray-700">
+          {(['away', 'home'] as const).map((team) => {
+            const label = team === 'away' ? 'アウェイ（先攻）' : 'ホーム（後攻）'
+            const value = team === 'away' ? awayColor : homeColor
+            const setLocal = team === 'away' ? setAwayColor : setHomeColor
+            const apply = (v: string) => { setLocal(v); setTeamColor(team, v) }
+            return (
+              <div key={team} className="space-y-2">
+                <span className="text-gray-400 text-xs">{label}</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    className="w-8 h-8 rounded cursor-pointer bg-transparent border-0"
+                    value={value}
+                    onChange={(e) => apply(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className="flex-1 bg-gray-700 text-white rounded px-2 py-1 text-xs font-mono"
+                    value={value}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      setLocal(v)
+                      if (/^#[0-9a-fA-F]{6}$/.test(v)) setTeamColor(team, v)
+                    }}
+                  />
+                  <button
+                    onClick={() => copyColor(team, value)}
+                    className="bg-gray-700 hover:bg-gray-600 text-gray-200 px-2 py-1 rounded text-xs border border-gray-600"
+                    title="カラーコードをコピー"
+                  >
+                    {copiedKey === team ? '✓' : 'コピー'}
+                  </button>
+                </div>
+                {/* プリセット色パッチ（クリックで一発適用） */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {COLOR_PRESETS.map((preset) => {
+                    const selected = value.toLowerCase() === preset.hex.toLowerCase()
+                    return (
+                      <button
+                        key={preset.hex}
+                        type="button"
+                        onClick={() => apply(preset.hex)}
+                        title={`${preset.label} ${preset.hex}`}
+                        className={`w-6 h-6 rounded border-2 transition-transform hover:scale-110 ${
+                          selected ? 'border-white ring-2 ring-accent' : 'border-gray-600'
+                        }`}
+                        style={{ backgroundColor: preset.hex }}
+                        aria-label={preset.label}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* パネルサイズ調整 */}
       <div className="bg-gray-700/50 rounded-lg p-3 space-y-3 border border-accent/30">
