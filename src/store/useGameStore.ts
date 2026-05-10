@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { DhMode, EffectType, GameState, HalfInning, LineupDisplayMode, LineupPlayer, MascotMode, OverlayPosition, PinchHitter, PitcherAppearance, PlayerInfo, Runners, Tournament, Visibility } from '../types'
-import { initialGameState, initialPlayerInfo, formatBatterStat, DEFAULT_OVERLAY_POSITIONS } from '../types'
+import { initialGameState, initialPlayerInfo, DEFAULT_OVERLAY_POSITIONS } from '../types'
 import { broadcastState } from '../lib/sync'
 import { backupToIDB, restoreFromIDB } from '../lib/idbBackup'
 
@@ -367,7 +367,7 @@ export const useGameStore = create<GameStore>()(
             batter: {
               name: player.name,
               number: player.number,
-              stat: formatBatterStat(player),
+              stat: '',
               statLabel: '',
             },
           }
@@ -387,7 +387,7 @@ export const useGameStore = create<GameStore>()(
             batter: {
               name: player.name,
               number: player.number,
-              stat: formatBatterStat(player),
+              stat: '',
               statLabel: '',
             },
             count: { ...s.count, balls: 0, strikes: 0 },
@@ -408,7 +408,7 @@ export const useGameStore = create<GameStore>()(
             batter: {
               name: player.name,
               number: player.number,
-              stat: formatBatterStat(player),
+              stat: '',
               statLabel: '',
             },
             count: { ...s.count, balls: 0, strikes: 0 },

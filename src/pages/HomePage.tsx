@@ -108,7 +108,7 @@ export default function HomePage() {
             />
             <Reason
               title="CSVで一括登録"
-              desc="打順・守備のサンプルCSVをDLボタンから取得。Excelで編集して読込ですぐスタメン完成。"
+              desc="順番・名前・守備の3列だけのシンプルCSV。Excelで編集して読込ですぐスタメン完成。"
             />
             <Reason
               title="本番中の修正も自由"

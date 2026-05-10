@@ -61,30 +61,6 @@ function BatterRow({
         value={player.name}
         onChange={(e) => onChange({ ...player, name: e.target.value })}
       />
-      <input
-        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-12 shrink-0"
-        placeholder="打率"
-        value={player.battingAvg || ''}
-        onChange={(e) => onChange({ ...player, battingAvg: e.target.value })}
-      />
-      <input
-        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-10 shrink-0"
-        placeholder="HR"
-        value={player.homeRuns || ''}
-        onChange={(e) => onChange({ ...player, homeRuns: e.target.value })}
-      />
-      <input
-        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-10 shrink-0"
-        placeholder="打点"
-        value={player.rbi || ''}
-        onChange={(e) => onChange({ ...player, rbi: e.target.value })}
-      />
-      <input
-        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-14 shrink-0"
-        placeholder="OPS"
-        value={player.ops || ''}
-        onChange={(e) => onChange({ ...player, ops: e.target.value })}
-      />
       <button
         onClick={onSelect}
         className={`text-xs px-2 py-1 rounded shrink-0 font-bold ${
@@ -145,18 +121,6 @@ function PitcherRow({
           placeholder="投手名"
           value={player.name}
           onChange={(e) => onChange({ ...player, name: e.target.value })}
-        />
-        <input
-          className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-10 shrink-0"
-          placeholder="登板"
-          value={player.appearances || ''}
-          onChange={(e) => onChange({ ...player, appearances: e.target.value })}
-        />
-        <input
-          className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-20 shrink-0"
-          placeholder="勝敗"
-          value={player.record || ''}
-          onChange={(e) => onChange({ ...player, record: e.target.value })}
         />
         <button
           onClick={onSelect}
@@ -398,11 +362,7 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
           <span className="w-4 text-center shrink-0">順番</span>
           <span className="w-12 text-center shrink-0">守備</span>
           <span className="flex-1 min-w-0">名前</span>
-          <span className="w-12 text-center shrink-0">打率</span>
-          <span className="w-10 text-center shrink-0">HR</span>
-          <span className="w-10 text-center shrink-0">打点</span>
-          <span className="w-14 text-center shrink-0">OPS</span>
-          <span className="shrink-0 w-[40px] text-center">　</span>
+          <span className="shrink-0 w-[60px] text-center">　</span>
         </div>
         {lineup.slice(0, 9).map((player, idx) => (
           <BatterRow
@@ -429,14 +389,12 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
               ⚾ DH打者を投手行にコピー（大谷ルール）
             </button>
           )}
-          {/* 列ヘッダ（投手用 = 順番,守備,名前,登板数,勝敗） */}
+          {/* 列ヘッダ（投手用 = 順番,守備,名前） */}
           <div className="flex items-center gap-1.5 text-[10px] text-red-300/80 px-1.5 pt-1 pb-0.5 border-b border-red-800/40">
             <span className="w-4 text-center shrink-0">10</span>
             <span className="w-12 text-center shrink-0">守備</span>
             <span className="flex-1 min-w-0">名前</span>
-            <span className="w-10 text-center shrink-0">登板数</span>
-            <span className="w-20 text-center shrink-0">勝敗</span>
-            <span className="shrink-0 w-[40px] text-center">　</span>
+            <span className="shrink-0 w-[60px] text-center">　</span>
           </div>
           <PitcherRow
             player={lineup[9]}

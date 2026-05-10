@@ -12,16 +12,12 @@ function PlayerForm({
   onApply: (info: PlayerInfo) => void
 }) {
   const [name, setName] = useState(player.name)
-  const [stat, setStat] = useState(player.stat)
-  const [statLabel, setStatLabel] = useState(player.statLabel)
 
   useEffect(() => {
     setName(player.name)
-    setStat(player.stat)
-    setStatLabel(player.statLabel)
-  }, [player.name, player.stat, player.statLabel])
+  }, [player.name])
 
-  const apply = () => onApply({ name, number: '', stat, statLabel })
+  const apply = () => onApply({ name, number: '', stat: '', statLabel: '' })
 
   return (
     <div className="space-y-2">
@@ -40,22 +36,6 @@ function PlayerForm({
         >
           反映
         </button>
-      </div>
-      <div className="grid grid-cols-4 gap-2">
-        <input
-          className="bg-gray-700 text-white rounded px-2 py-1.5 text-sm col-span-1"
-          placeholder="ラベル（例: 打率）"
-          value={statLabel}
-          onChange={(e) => setStatLabel(e.target.value)}
-          onBlur={apply}
-        />
-        <input
-          className="bg-gray-700 text-white rounded px-2 py-1.5 text-sm col-span-1"
-          placeholder="値（例: .312）"
-          value={stat}
-          onChange={(e) => setStat(e.target.value)}
-          onBlur={apply}
-        />
       </div>
     </div>
   )

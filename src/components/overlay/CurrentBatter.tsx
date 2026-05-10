@@ -58,11 +58,6 @@ export default function CurrentBatter() {
         </div>
       </div>
 
-      {batter.stat && (
-        <div className="bg-white/5 border-t border-white/10 px-5 py-1 text-xs text-gray-200 tracking-wider tabular-nums">
-          {batter.statLabel ? `${batter.statLabel}  ` : ''}{batter.stat}
-        </div>
-      )}
     </div>
   )
 }
