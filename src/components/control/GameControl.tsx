@@ -27,7 +27,6 @@ const COLOR_PRESETS: { label: string; hex: string }[] = [
   { label: 'マルーン',   hex: '#7f1d1d' },
   { label: 'ブラック',   hex: '#111827' },
   { label: 'グレー',     hex: '#6b7280' },
-  { label: 'ホワイト',   hex: '#f3f4f6' },
 ]
 
 export default function GameControl() {
