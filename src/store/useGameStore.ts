@@ -204,7 +204,10 @@ export const useGameStore = create<GameStore>()(
         }),
 
       resetCount: () =>
-        set((s) => ({ count: { ...s.count, balls: 0, strikes: 0 } })),
+        set((s) => ({
+          count: { ...s.count, balls: 0, strikes: 0 },
+          runners: { first: false, second: false, third: false },
+        })),
 
       /** 三振プリセット: 1回の set() でアウト加算+投球数+チェンジ判定まで完結 */
       applyStrikeout: () =>
@@ -351,9 +354,12 @@ export const useGameStore = create<GameStore>()(
             })
 
             // 履歴と投球数は常に更新。表示投手は守備中チームのみ更新
+            // 投手を選択したチームを lineupDisplayTeam にも反映（オーバーレイの投手表示に連動）
             const result: Partial<GameState> = {
               [histKey]: history,
               [pitchCountKey]: 0,
+              pitcher: pitcherInfo,
+              lineupDisplayTeam: team,
             }
             if (isDefending) {
               result.pitcher = pitcherInfo
@@ -370,6 +376,8 @@ export const useGameStore = create<GameStore>()(
               stat: '',
               statLabel: '',
             },
+            // 選択したチームを lineupDisplayTeam にも反映（攻守問わず CurrentBatter のチーム色決定に使用）
+            lineupDisplayTeam: team,
           }
         }),
 

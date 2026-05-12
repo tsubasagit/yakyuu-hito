@@ -3,7 +3,6 @@ import SyncStatus from '../components/control/SyncStatus'
 import GameControl from '../components/control/GameControl'
 import InningControl from '../components/control/InningControl'
 import CountControl from '../components/control/CountControl'
-import RunnerControl from '../components/control/RunnerControl'
 import ScoreControl from '../components/control/ScoreControl'
 import LineupControl from '../components/control/LineupControl'
 import VisibilityControl, { stripeForSection } from '../components/control/VisibilityControl'
@@ -66,9 +65,8 @@ export default function ControlPage() {
 
   const orderableSections: Section[] = [
     { id: 'inning',      label: 'イニング',          component: <InningControl /> },
-    { id: 'count',       label: 'カウント',          component: <CountControl /> },
-    { id: 'runner',      label: '走者',              component: <RunnerControl /> },
-    { id: 'score',       label: '得点・安打・失策',  component: <ScoreControl /> },
+    { id: 'count',       label: 'BSO管理',           component: <CountControl /> },
+    { id: 'score',       label: '得点',              component: <ScoreControl /> },
     { id: 'lineup',      label: '打順・選手',        component: <LineupControl /> },
     { id: 'pinchhitter', label: '代打',              component: <PinchHitterControl /> },
     { id: 'ticker',      label: '速報テロップ',      component: <TickerControl /> },

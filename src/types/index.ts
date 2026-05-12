@@ -99,7 +99,7 @@ export interface OverlayPosition {
   scale?: number
 }
 
-/** yakyuu-hito の8要素ID（モックアップ 2026-04-23 準拠 + 現在の打者 2026-05-02 追加） */
+/** yakyuu-hito の要素ID（2026-04-23 準拠 + currentBatter/currentPitcher 拡張） */
 export type ElementId =
   | 'miniScore'
   | 'pinchHitter'
@@ -109,6 +109,7 @@ export type ElementId =
   | 'inningScoreboard'
   | 'statusPanel'
   | 'currentBatter'
+  | 'currentPitcher'
 
 /** スタメンオーバーレイの表示モード */
 export type LineupDisplayMode =
@@ -131,7 +132,7 @@ export interface PinchHitter {
   name: string
 }
 
-/** 8要素＋statusPanel サブトグルの表示フラグ */
+/** 要素＋statusPanel サブトグルの表示フラグ */
 export interface Visibility {
   miniScore: boolean
   pinchHitter: boolean
@@ -141,12 +142,13 @@ export interface Visibility {
   inningScoreboard: boolean
   statusPanel: boolean
   currentBatter: boolean
+  currentPitcher: boolean
   statusPanel_diamond: boolean
   statusPanel_bso: boolean
   statusPanel_quickScore: boolean
 }
 
-/** モックアップ準拠の8要素デフォルト座標（1920x1080基準） */
+/** モックアップ準拠の要素デフォルト座標（1920x1080基準） */
 export const DEFAULT_ELEMENT_POSITIONS: Record<ElementId, OverlayPosition> = {
   miniScore:        { x: 40,   y: 40   },
   pinchHitter:      { x: 1100, y: 40   },
@@ -156,6 +158,7 @@ export const DEFAULT_ELEMENT_POSITIONS: Record<ElementId, OverlayPosition> = {
   inningScoreboard: { x: 40,   y: 800  },
   statusPanel:      { x: 1600, y: 830  },
   currentBatter:    { x: 700,  y: 920  },
+  currentPitcher:   { x: 700,  y: 800  },
 }
 
 export interface GameState {
@@ -325,7 +328,8 @@ export const initialGameState: GameState = {
     bigScore: false,
     inningScoreboard: true,
     statusPanel: true,
-    currentBatter: true,
+    currentBatter: false,
+    currentPitcher: false,
     statusPanel_diamond: true,
     statusPanel_bso: true,
     statusPanel_quickScore: true,

@@ -1,55 +1,47 @@
 import { useGameStore } from '../../store/useGameStore'
 
 /**
- * 現在の打者: 攻守問わず lineupDisplayTeam で選択中のチーム・打者を表示。
- * スタッツの代わりに 1行コメント（高校名等）を表示する（2026-05-12 改修）。
+ * 現在の投手: lineupDisplayTeam で選択中チームの投手を表示。
+ * 投球数・登板中バッジは表示しない（学生運用簡素化）。
  */
-export default function CurrentBatter() {
+export default function CurrentPitcher() {
   const lineupDisplayTeam = useGameStore((s) => s.lineupDisplayTeam ?? 'away')
   const awayLineup = useGameStore((s) => s.awayLineup)
   const homeLineup = useGameStore((s) => s.homeLineup)
-  const awayBatterIndex = useGameStore((s) => s.awayBatterIndex)
-  const homeBatterIndex = useGameStore((s) => s.homeBatterIndex)
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
-  const batter = useGameStore((s) => s.batter)
+  const pitcher = useGameStore((s) => s.pitcher)
 
-  if (!batter.name) return null
+  if (!pitcher.name) return null
 
   const team = lineupDisplayTeam === 'away' ? awayTeam : homeTeam
   const lineup = lineupDisplayTeam === 'away' ? awayLineup : homeLineup
-  const batterIndex = lineupDisplayTeam === 'away' ? awayBatterIndex : homeBatterIndex
-  const lineupPlayer = lineup[batterIndex]
-  const order = lineupPlayer?.order ?? 0
-  const positionLong = positionLabel(lineupPlayer?.position ?? '')
-  const grade = lineupPlayer?.grade ?? ''
-  const comment = lineupPlayer?.comment ?? ''
+  const pitcherPlayer = lineup[9]
+  const grade = pitcherPlayer?.grade ?? ''
+  const comment = pitcherPlayer?.comment ?? ''
 
   return (
     <div className="bg-[#0b1220]/[0.92] backdrop-blur-sm rounded-lg text-white min-w-[520px] select-none overflow-hidden shadow-[0_4px_18px_rgba(0,0,0,0.5)] border border-white/10">
       <div className="flex items-stretch">
-        {/* 左: 打順バッジ（チーム色） */}
+        {/* 左: PITCHER バッジ（チーム色） */}
         <div
           className="flex flex-col items-center justify-center px-4 py-2 min-w-[78px] relative"
           style={{ backgroundColor: team.color }}
         >
           <span className="text-[10px] tracking-[0.25em] font-medium opacity-80 uppercase">
-            BATTER
+            PITCHER
           </span>
-          <span className="text-2xl font-black leading-tight">
-            {order > 0 ? `${order}` : '—'}
-            <span className="text-sm font-bold ml-0.5">番</span>
-          </span>
+          <span className="text-xl font-black leading-tight mt-1">投</span>
         </div>
 
         {/* 中央: 名前＋コメント */}
         <div className="flex items-center gap-3 px-5 py-2 flex-1">
           <div className="flex flex-col gap-0.5 min-w-0 flex-1">
             <span className="text-[10px] tracking-[0.2em] text-gray-400 uppercase">
-              {positionLong || '　'}
+              ピッチャー
             </span>
             <span className="text-3xl font-bold leading-tight tracking-tight truncate">
-              {batter.name}
+              {pitcher.name}
             </span>
             {comment && (
               <span className="text-xs text-gray-300 truncate mt-0.5">
@@ -64,23 +56,6 @@ export default function CurrentBatter() {
           )}
         </div>
       </div>
-
     </div>
   )
-}
-
-function positionLabel(position: string): string {
-  switch (position) {
-    case '投': return 'ピッチャー'
-    case '捕': return 'キャッチャー'
-    case '一': return 'ファースト'
-    case '二': return 'セカンド'
-    case '三': return 'サード'
-    case '遊': return 'ショート'
-    case '左': return 'レフト'
-    case '中': return 'センター'
-    case '右': return 'ライト'
-    case 'DH': return 'DH'
-    default: return ''
-  }
 }

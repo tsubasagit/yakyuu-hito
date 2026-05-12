@@ -104,6 +104,14 @@ function TeamLineupCard({
         </span>
       </div>
 
+      {/* サブヘッダー: スターティングメンバー黄色帯 */}
+      <div
+        className="text-[11px] font-bold text-black px-2 py-0.5 tracking-wider text-right"
+        style={{ backgroundColor: '#f5d042' }}
+      >
+        スターティングメンバー
+      </div>
+
       {/* 打者テーブル（1-9番） */}
       <table className="w-full border-collapse text-sm">
         <tbody>
