@@ -1,5 +1,5 @@
 import { useGameStore } from '../../store/useGameStore'
-import type { Visibility } from '../../types'
+import type { LineupDisplayMode, Visibility } from '../../types'
 
 /**
  * 表示トグルボタン（最上段固定配置）。
@@ -24,13 +24,14 @@ export interface ToggleMeta {
 
 /** 対応関係マスタ（VisibilityControl と ControlPage 両方で参照） */
 export const TOGGLE_META: ToggleMeta[] = [
-  { id: 'miniScore',        label: 'ミニスコア',  sources: ['試合管理', '得点・安打・失策'], scrollTarget: 'section-score',      stripe: 'bg-sky-500'     },
-  { id: 'currentBatter',    label: '現在の打者',  sources: ['打順・選手'],                    scrollTarget: 'section-lineup',     stripe: 'bg-amber-500'   },
-  { id: 'lineup',           label: 'スタメン',    sources: ['打順・選手'],                    scrollTarget: 'section-lineup',     stripe: 'bg-orange-500'  },
-  { id: 'tournamentHeader', label: '大会名',      sources: ['大会情報'],                      scrollTarget: 'section-tournament', stripe: 'bg-violet-500'  },
-  { id: 'bigScore',         label: '大型スコア',  sources: ['試合管理', '得点・安打・失策'], scrollTarget: 'section-score',      stripe: 'bg-rose-500'    },
-  { id: 'inningScoreboard', label: 'イニング別',  sources: ['得点・安打・失策'],              scrollTarget: 'section-score',      stripe: 'bg-emerald-500' },
-  { id: 'statusPanel',      label: 'BSOパネル',   sources: ['イニング', 'カウント', '走者'], scrollTarget: 'section-count',      stripe: 'bg-cyan-500'    },
+  { id: 'miniScore',        label: 'ミニスコア',  sources: ['試合管理', '得点'],     scrollTarget: 'section-score',      stripe: 'bg-sky-500'     },
+  { id: 'lineup',           label: 'スタメン',    sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-orange-500'  },
+  { id: 'tournamentHeader', label: '大会名',      sources: ['大会情報'],              scrollTarget: 'section-tournament', stripe: 'bg-violet-500'  },
+  { id: 'bigScore',         label: '大型スコア',  sources: ['試合管理', '得点'],     scrollTarget: 'section-score',      stripe: 'bg-rose-500'    },
+  { id: 'inningScoreboard', label: 'スコアボード', sources: ['得点'],                  scrollTarget: 'section-score',      stripe: 'bg-emerald-500' },
+  { id: 'statusPanel',      label: 'BSOパネル',   sources: ['イニング', 'BSO管理'],   scrollTarget: 'section-count',      stripe: 'bg-cyan-500'    },
+  { id: 'currentBatter',    label: 'バッター',    sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-amber-500'   },
+  { id: 'currentPitcher',   label: 'ピッチャー',  sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-red-500'     },
 ]
 
 /** scrollTarget → stripe color のマップ（ControlPage で使用） */
@@ -39,27 +40,73 @@ export function stripeForSection(sectionId: string): string | null {
   return found ? found.stripe : null
 }
 
+const LINEUP_MODES: { key: LineupDisplayMode; label: string; hint: string }[] = [
+  { key: 'attacking', label: '自動（攻撃中）', hint: '攻撃中チームのみ自動表示' },
+  { key: 'away',      label: '先攻のみ',       hint: '先攻チームの打順を常時表示' },
+  { key: 'home',      label: '後攻のみ',       hint: '後攻チームの打順を常時表示' },
+  { key: 'both',      label: '両チーム（VS）', hint: '両チーム並列＋VS表示' },
+]
+
 export default function VisibilityControl() {
   const visibility = useGameStore((s) => s.visibility)
   const toggle = useGameStore((s) => s.toggleVisibility)
+  const lineupMode = useGameStore((s) => s.lineupDisplayMode ?? 'attacking')
+  const setLineupMode = useGameStore((s) => s.setLineupDisplayMode)
+  const lineupOn = visibility?.lineup ?? false
 
   return (
-    <div className="bg-gray-800 rounded-lg p-3">
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-xs text-gray-300 tracking-widest">表示ON/OFF</div>
-        <div className="text-[10px] text-gray-500">
-          色帯 = 下の編集セクションと対応
+    <div className="bg-gray-800 rounded-lg p-3 space-y-3">
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs text-gray-300 tracking-widest">表示ON/OFF</div>
+          <div className="text-[10px] text-gray-500">
+            色帯 = 下の編集セクションと対応
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+          {TOGGLE_META.map((meta) => (
+            <ToggleButton
+              key={meta.id}
+              meta={meta}
+              on={visibility?.[meta.id] ?? false}
+              onClick={() => toggle(meta.id)}
+            />
+          ))}
         </div>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-        {TOGGLE_META.map((meta) => (
-          <ToggleButton
-            key={meta.id}
-            meta={meta}
-            on={visibility?.[meta.id] ?? false}
-            onClick={() => toggle(meta.id)}
-          />
-        ))}
+
+      {/* スタメン表示モード（表示ON時のみ操作可） */}
+      <div className="border-t border-gray-700 pt-3">
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="text-xs text-gray-300">
+            スタメン表示モード
+            {!lineupOn && (
+              <span className="ml-2 text-[10px] text-gray-500">（スタメンOFF中）</span>
+            )}
+          </div>
+          <div className="text-[10px] text-gray-500">
+            {LINEUP_MODES.find((m) => m.key === lineupMode)?.hint}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          {LINEUP_MODES.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => setLineupMode(m.key)}
+              disabled={!lineupOn}
+              title={m.hint}
+              className={`text-xs px-2 py-1.5 rounded font-bold transition-colors ${
+                !lineupOn
+                  ? 'bg-gray-700/40 text-gray-500 cursor-not-allowed'
+                  : lineupMode === m.key
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   )

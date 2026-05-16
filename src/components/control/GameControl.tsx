@@ -1,18 +1,21 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useGameStore } from '../../store/useGameStore'
-import type { OverlayPosition } from '../../types'
-import { DEFAULT_OVERLAY_POSITIONS } from '../../types'
+import type { OverlayPosition, ElementId } from '../../types'
+import { DEFAULT_ELEMENT_POSITIONS } from '../../types'
 
-const PANEL_LABELS: Record<string, string> = {
-  scoreboard: 'スコアボード',
-  timer: 'タイマー',
-  lineup: '打順カード',
-  playerInfo: '選手情報',
-  playLog: '経過ログ',
-  mascot: 'マスコット',
+const PANEL_LABELS: Record<ElementId, string> = {
+  miniScore:        'ミニスコア',
+  pinchHitter:      '代打カード',
+  lineup:           'スタメン',
+  tournamentHeader: '大会名ヘッダー',
+  bigScore:         '大型スコア',
+  inningScoreboard: 'スコアボード',
+  statusPanel:      'BSO管理パネル',
+  currentBatter:    '現在の打者',
+  currentPitcher:   '現在の投手',
 }
 
-const PANEL_IDS = Object.keys(PANEL_LABELS)
+const PANEL_IDS = Object.keys(PANEL_LABELS) as ElementId[]
 
 /** チームカラー プリセット（大学野球で使われやすい色を厳選） */
 const COLOR_PRESETS: { label: string; hex: string }[] = [
@@ -267,7 +270,7 @@ export default function GameControl() {
           <div className="space-y-2 bg-gray-800/50 rounded p-2">
             {PANEL_IDS.map((id) => {
               const pos = overlayPositions?.[id]
-              const def = DEFAULT_OVERLAY_POSITIONS[id] ?? { x: 0, y: 0 }
+              const def = DEFAULT_ELEMENT_POSITIONS[id] ?? { x: 0, y: 0 }
               const x = pos?.x ?? def.x
               const y = pos?.y ?? def.y
               const sc = pos?.scale ?? 1

@@ -1,9 +1,9 @@
 import { useGameStore } from '../../store/useGameStore'
 
 /**
- * イニング別スコアボード: プロ野球中継風（2026-05-02 リファイン）。
- * 9回までを基本表示、延長は自動でカラム拡張。
- * チーム色のアクセントバー + チーム略称(最大3文字) + R列を強調。
+ * イニング別スコアボード（画像準拠デザイン・2026-05-16 リファイン）。
+ * 白セル + 黒太ボーダーのテレビ中継風スコアボード。
+ * 1-12 + R 列、A/X 各行。延長は currentInning に応じて自動拡張。
  */
 export default function InningScoreboard() {
   const innings = useGameStore((s) => s.innings)
@@ -14,7 +14,6 @@ export default function InningScoreboard() {
   const currentInning = useGameStore((s) => s.currentInning)
   const currentHalf = useGameStore((s) => s.currentHalf)
 
-  // 9回までを基本にして、延長戦に応じて拡張（最大12回）
   const baseInnings = Math.max(9, currentInning)
   const MAX_INNINGS = Math.min(12, baseInnings)
   const displayInnings = Array.from({ length: MAX_INNINGS }, (_, i) => {
@@ -23,37 +22,36 @@ export default function InningScoreboard() {
     return existing ?? { inning: num, top: null, bottom: null }
   })
 
-  const awayName = (awayTeam.shortName || awayTeam.name || 'AWAY').slice(0, 3)
-  const homeName = (homeTeam.shortName || homeTeam.name || 'HOME').slice(0, 3)
+  const awayLetter = (awayTeam.shortName || awayTeam.name || 'A').charAt(0)
+  const homeLetter = (homeTeam.shortName || homeTeam.name || 'X').charAt(0)
 
   return (
-    <div className="bg-[#0b1220]/[0.92] backdrop-blur-sm rounded-lg overflow-hidden text-white shadow-[0_4px_16px_rgba(0,0,0,0.4)] border border-white/10 select-none">
-      <table className="border-collapse w-full text-sm tabular-nums">
+    <div className="select-none shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+      <table className="border-collapse tabular-nums font-bold" style={{ borderSpacing: 0 }}>
         <thead>
-          <tr className="bg-white/5">
-            <th className="w-[88px] text-left px-3 py-1 text-[10px] tracking-[0.2em] text-gray-400 font-medium uppercase">
-              Team
-            </th>
+          <tr>
+            {/* 左上角 */}
+            <th className="bg-[#0b1220] border-2 border-black" style={{ width: 36, height: 28 }} />
             {displayInnings.map((inn) => (
               <th
                 key={inn.inning}
-                className={`px-2 py-1 text-center min-w-[24px] text-[11px] font-medium ${
-                  inn.inning === currentInning
-                    ? 'text-amber-300'
-                    : 'text-gray-400'
-                }`}
+                className="border-2 border-black text-sm text-center bg-[#0b1220] text-white"
+                style={{ width: 32, height: 28 }}
               >
                 {inn.inning}
               </th>
             ))}
-            <th className="px-3 py-1 text-center text-[11px] text-amber-300 border-l border-white/15 min-w-[44px] font-bold tracking-widest">
+            <th
+              className="bg-[#0b1220] text-amber-300 border-2 border-black text-base"
+              style={{ width: 44, height: 28 }}
+            >
               R
             </th>
           </tr>
         </thead>
         <tbody>
           <ScoreRow
-            name={awayName}
+            letter={awayLetter}
             color={awayTeam.color}
             innings={displayInnings}
             half="top"
@@ -62,7 +60,7 @@ export default function InningScoreboard() {
             total={awayTotal}
           />
           <ScoreRow
-            name={homeName}
+            letter={homeLetter}
             color={homeTeam.color}
             innings={displayInnings}
             half="bottom"
@@ -77,7 +75,7 @@ export default function InningScoreboard() {
 }
 
 function ScoreRow({
-  name,
+  letter,
   color,
   innings,
   half,
@@ -85,7 +83,7 @@ function ScoreRow({
   currentHalf,
   total,
 }: {
-  name: string
+  letter: string
   color: string
   innings: { inning: number; top: number | null; bottom: number | null }[]
   half: 'top' | 'bottom'
@@ -93,19 +91,18 @@ function ScoreRow({
   currentHalf: 'top' | 'bottom'
   total: number
 }) {
-  const isAttacking = currentHalf === half
   return (
-    <tr className="border-t border-white/10">
-      <td className="py-1 pl-0 pr-2">
-        <div className="flex items-center gap-2 pl-0">
-          <span className="w-1 h-7 rounded-r" style={{ backgroundColor: color }} />
-          <span
-            className={`text-base font-bold tracking-tight ${isAttacking ? 'text-white' : 'text-gray-300'}`}
-            style={{ minWidth: '3.2rem' }}
-          >
-            {name}
-          </span>
-        </div>
+    <tr>
+      {/* チームレターセル */}
+      <td
+        className="border-2 border-black text-white text-center text-lg font-black"
+        style={{
+          backgroundColor: color || '#1e3a5f',
+          width: 36,
+          height: 36,
+        }}
+      >
+        {letter}
       </td>
       {innings.map((inn) => {
         const played =
@@ -114,19 +111,20 @@ function ScoreRow({
             : inn.inning < currentInning ||
               (inn.inning === currentInning && currentHalf === 'bottom')
         const value = half === 'top' ? inn.top : inn.bottom
-        const isCurrent = inn.inning === currentInning && currentHalf === half
         return (
           <td
             key={inn.inning}
-            className={`px-2 py-1 text-center text-sm font-medium ${
-              isCurrent ? 'bg-white/10 text-amber-300 font-bold' : 'text-white'
-            }`}
+            className="border-2 border-black text-center text-base bg-[#0b1220] text-white"
+            style={{ width: 32, height: 36 }}
           >
-            {played ? value ?? 0 : <span className="text-gray-600">·</span>}
+            {played ? value ?? 0 : ''}
           </td>
         )
       })}
-      <td className="px-3 py-1 text-center font-black text-lg text-white border-l border-white/15">
+      <td
+        className="border-2 border-black text-center text-xl font-black bg-white text-black"
+        style={{ width: 44, height: 36 }}
+      >
         {total}
       </td>
     </tr>

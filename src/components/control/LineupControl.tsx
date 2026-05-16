@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
 import type { DhMode, LineupPlayer, Position } from '../../types'
-import { CARP_LINEUP, HAWKS_LINEUP, formatInningsPitched } from '../../types'
+import { CARP_LINEUP, HAWKS_LINEUP } from '../../types'
 import { parseLineupCsv, LINEUP_CSV_SAMPLE } from '../../lib/csvImport'
 
 function downloadCsvSample() {
@@ -38,7 +38,7 @@ function BatterRow({
   const positions = dhMode === 'none' ? POSITIONS_NO_DH : POSITIONS_WITH_DH
   return (
     <div
-      className={`flex items-center gap-1.5 text-sm rounded px-1.5 py-1 ${
+      className={`flex flex-wrap items-center gap-1.5 text-sm rounded px-1.5 py-1 ${
         isCurrent ? 'bg-accent/30 ring-1 ring-accent' : ''
       }`}
     >
@@ -56,10 +56,16 @@ function BatterRow({
         ))}
       </select>
       <input
-        className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-0"
+        className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[100px]"
         placeholder="名前"
         value={player.name}
         onChange={(e) => onChange({ ...player, name: e.target.value })}
+      />
+      <input
+        className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[140px]"
+        placeholder="コメント（例: ○○高校・通算3HR）"
+        value={player.comment ?? ''}
+        onChange={(e) => onChange({ ...player, comment: e.target.value })}
       />
       <button
         onClick={onSelect}
@@ -91,87 +97,61 @@ function BatterRow({
 
 function PitcherRow({
   player,
-  side,
+  isCurrent,
+  currentPitcherVisible,
   onSelect,
   onChange,
 }: {
   player: LineupPlayer
-  side: 'away' | 'home'
+  isCurrent: boolean
+  currentPitcherVisible: boolean
   onSelect: () => void
   onChange: (p: LineupPlayer) => void
 }) {
-  const history = useGameStore(s =>
-    side === 'away' ? s.awayPitcherHistory : s.homePitcherHistory
-  )
-  const setTeamPitchCount = useGameStore(s => s.setTeamPitchCount)
-  const archived = history.filter(p => !p.isActive)
-  const active = history.find(p => p.isActive)
-
   return (
-    <div className="space-y-1">
-      <div className="flex items-center gap-1.5 text-sm rounded px-1.5 py-1 bg-red-900/20 border border-red-800/30">
-        <span className="text-red-400 w-4 text-center text-xs shrink-0 font-bold">
-          P
-        </span>
-        <span className="text-red-400 text-xs w-12 shrink-0 text-center font-bold">
-          投
-        </span>
-        <input
-          className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-0"
-          placeholder="投手名"
-          value={player.name}
-          onChange={(e) => onChange({ ...player, name: e.target.value })}
-        />
-        <button
-          onClick={onSelect}
-          className="text-xs px-2 py-1 rounded shrink-0 bg-red-700 hover:bg-red-600 text-white font-bold"
-          title="この投手を登板"
-        >
-          登板
-        </button>
-      </div>
-      {/* 投手交代履歴 */}
-      {(archived.length > 0 || active) && (
-        <div className="text-[10px] text-gray-400 px-2 space-y-0.5">
-          {archived.map((p, i) => (
-            <div key={p.id} className="flex gap-2">
-              <span className="text-gray-500">{i === 0 ? '先発' : `${i}番手`}</span>
-              <span className="text-gray-300">{p.name}</span>
-              <span>{formatInningsPitched(p.outsRecorded)}回</span>
-              <span>{p.pitchCount}球</span>
-            </div>
-          ))}
-          {active && (
-            <div className="space-y-1">
-              <div className="flex gap-2 text-green-400">
-                <span>{archived.length === 0 ? '先発' : `${archived.length}番手`}</span>
-                <span>{active.name}</span>
-                <span>{formatInningsPitched(active.outsRecorded)}回</span>
-                <span className="font-bold">{active.pitchCount}球</span>
-                <span className="animate-pulse">登板中</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setTeamPitchCount(side, Math.max(0, active.pitchCount - 1))}
-                  className="bg-gray-700 hover:bg-gray-600 text-white px-1.5 py-0.5 rounded text-[10px]"
-                >-1</button>
-                <button
-                  onClick={() => setTeamPitchCount(side, active.pitchCount + 1)}
-                  className="bg-gray-700 hover:bg-gray-600 text-white px-1.5 py-0.5 rounded text-[10px]"
-                >+1</button>
-                <button
-                  onClick={() => setTeamPitchCount(side, active.pitchCount + 10)}
-                  className="bg-blue-700 hover:bg-blue-600 text-white px-1.5 py-0.5 rounded text-[10px] font-bold"
-                >+10</button>
-                <button
-                  onClick={() => setTeamPitchCount(side, 0)}
-                  className="bg-gray-700 hover:bg-gray-600 text-white px-1.5 py-0.5 rounded text-[10px]"
-                >リセット</button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+    <div className="flex flex-wrap items-center gap-1.5 text-sm rounded px-1.5 py-1 bg-red-900/20 border border-red-800/30">
+      <span className="text-red-400 w-4 text-center text-xs shrink-0 font-bold">
+        P
+      </span>
+      <span className="text-red-400 text-xs w-12 shrink-0 text-center font-bold">
+        投
+      </span>
+      <input
+        className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[100px]"
+        placeholder="投手名"
+        value={player.name}
+        onChange={(e) => onChange({ ...player, name: e.target.value })}
+      />
+      <input
+        className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[140px]"
+        placeholder="コメント（例: ○○高校）"
+        value={player.comment ?? ''}
+        onChange={(e) => onChange({ ...player, comment: e.target.value })}
+      />
+      <button
+        onClick={onSelect}
+        className={`text-xs px-2 py-1 rounded shrink-0 font-bold ${
+          isCurrent && currentPitcherVisible
+            ? 'bg-red-600 text-white'
+            : isCurrent && !currentPitcherVisible
+            ? 'bg-gray-600 text-gray-300 ring-1 ring-red-500'
+            : 'bg-red-800 hover:bg-red-700 text-white'
+        }`}
+        title={
+          isCurrent && currentPitcherVisible
+            ? '投手パネルを非表示にする'
+            : isCurrent && !currentPitcherVisible
+            ? '投手パネルを表示する'
+            : 'この投手を選択して表示'
+        }
+      >
+        登板
+        {isCurrent && (
+          <span className="ml-1 text-[9px] opacity-80">
+            {currentPitcherVisible ? 'ON' : 'OFF'}
+          </span>
+        )}
+      </button>
     </div>
   )
 }
@@ -192,9 +172,11 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
   const nextBatter = useGameStore((s) => s.nextBatter)
   const prevBatter = useGameStore((s) => s.prevBatter)
   const setLineupDisplayTeam = useGameStore((s) => s.setLineupDisplayTeam)
+  const lineupDisplayTeam = useGameStore((s) => s.lineupDisplayTeam ?? 'away')
   const setDhMode = useGameStore((s) => s.setDhMode)
   const copyDhToPitcher = useGameStore((s) => s.copyDhToPitcher)
   const currentBatterVisible = useGameStore((s) => s.visibility?.currentBatter ?? false)
+  const currentPitcherVisible = useGameStore((s) => s.visibility?.currentPitcher ?? false)
   const toggleVisibility = useGameStore((s) => s.toggleVisibility)
 
   // DHなしモード: 投手が1-9番に居ないと警告
@@ -206,15 +188,27 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
     (side === 'home' && currentHalf === 'bottom')
   const label = side === 'away' ? '先攻' : '後攻'
 
-  // 打席ボタン: 同じ打者が現在選択中なら currentBatter パネルを ON/OFF 切替、
-  // 別打者なら選択 + パネルを ON。
+  // 打席ボタン: 攻守問わず動作。同じ打者（同チーム&同インデックス）なら currentBatter パネルを ON/OFF 切替、
+  // 別打者・別チームなら選択 + パネルを ON。
   const handleBatterButton = (idx: number) => {
-    const isAlreadyCurrent = idx === batterIdx && isAttacking
+    const isAlreadyCurrent = idx === batterIdx && lineupDisplayTeam === side
     if (isAlreadyCurrent) {
       toggleVisibility('currentBatter')
     } else {
       selectBatter(side, idx)
       if (!currentBatterVisible) toggleVisibility('currentBatter')
+    }
+  }
+
+  // 登板ボタン: 攻守問わず動作。同じ投手（同チーム）なら currentPitcher パネルを ON/OFF 切替、
+  // 別チームの投手なら選択 + パネルを ON。
+  const handlePitcherButton = () => {
+    const isAlreadyCurrent = lineupDisplayTeam === side
+    if (isAlreadyCurrent) {
+      toggleVisibility('currentPitcher')
+    } else {
+      selectBatter(side, 9)
+      if (!currentPitcherVisible) toggleVisibility('currentPitcher')
     }
   }
 
@@ -368,7 +362,7 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
           <BatterRow
             key={player.order}
             player={player}
-            isCurrent={idx === batterIdx && isAttacking}
+            isCurrent={idx === batterIdx && lineupDisplayTeam === side}
             dhMode={dhMode}
             currentBatterVisible={currentBatterVisible}
             onSelect={() => handleBatterButton(idx)}
@@ -398,8 +392,9 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
           </div>
           <PitcherRow
             player={lineup[9]}
-            side={side}
-            onSelect={() => selectBatter(side, 9)}
+            isCurrent={lineupDisplayTeam === side}
+            currentPitcherVisible={currentPitcherVisible}
+            onSelect={handlePitcherButton}
             onChange={(p) => setLineupPlayer(side, 9, p)}
           />
         </>
@@ -408,49 +403,13 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
   )
 }
 
-function LineupDisplayModeToggle() {
-  const mode = useGameStore((s) => s.lineupDisplayMode ?? 'attacking')
-  const setMode = useGameStore((s) => s.setLineupDisplayMode)
-
-  const modes: { key: 'attacking' | 'away' | 'home' | 'both'; label: string; hint: string }[] = [
-    { key: 'attacking', label: '自動（攻撃中）', hint: '攻撃中チームのみ自動表示' },
-    { key: 'away',      label: '先攻のみ',       hint: '先攻チームの打順を常時表示' },
-    { key: 'home',      label: '後攻のみ',       hint: '後攻チームの打順を常時表示' },
-    { key: 'both',      label: '両チーム（VS）', hint: '両チーム並列＋VS表示' },
-  ]
-  const current = modes.find((m) => m.key === mode) ?? modes[0]!
-
-  return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 space-y-2">
-      <div>
-        <div className="text-white text-sm font-bold">オーバーレイの打順表示</div>
-        <div className="text-gray-400 text-[11px]">{current.hint}</div>
-      </div>
-      <div className="flex flex-wrap gap-1">
-        {modes.map((m) => (
-          <button
-            key={m.key}
-            onClick={() => setMode(m.key)}
-            title={m.hint}
-            className={`text-[11px] px-2 py-1 rounded font-bold transition-colors ${
-              mode === m.key
-                ? 'bg-accent text-white'
-                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export default function LineupControl() {
   return (
     <div className="space-y-3">
       <h2 className="text-white font-bold text-lg">打順・選手</h2>
-      <LineupDisplayModeToggle />
+      <div className="text-[11px] text-gray-500 -mt-1">
+        ※ オーバーレイの表示モード（自動/先攻/後攻/VS）は上部「表示ON/OFF」枠で切替
+      </div>
       <TeamLineupPanel side="away" />
       <TeamLineupPanel side="home" />
     </div>

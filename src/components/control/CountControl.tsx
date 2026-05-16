@@ -1,5 +1,11 @@
 import { useGameStore } from '../../store/useGameStore'
 
+/**
+ * BSO管理パネル（旧カウント＋走者を統合）。
+ * - B/S/O カウンタと一塁/二塁/三塁の走者トグルを1枠に集約
+ * - 「カウントリセット」はBSO＋走者すべてをリセット
+ * - デッドボールボタンは廃止（学生運用簡素化のため）
+ */
 export default function CountControl() {
   const count = useGameStore((s) => s.count)
   const addBall = useGameStore((s) => s.addBall)
@@ -9,11 +15,18 @@ export default function CountControl() {
   const subtractBall = useGameStore((s) => s.subtractBall)
   const subtractStrike = useGameStore((s) => s.subtractStrike)
   const subtractOut = useGameStore((s) => s.subtractOut)
-  const applyWalkPreset = useGameStore((s) => s.applyWalkPreset)
+  const runners = useGameStore((s) => s.runners)
+  const setRunner = useGameStore((s) => s.setRunner)
+
+  const bases = [
+    { key: 'first' as const, label: '一塁' },
+    { key: 'second' as const, label: '二塁' },
+    { key: 'third' as const, label: '三塁' },
+  ]
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
-      <h2 className="text-white font-bold text-lg">カウント</h2>
+      <h2 className="text-white font-bold text-lg">BSO管理</h2>
 
       <div className="grid grid-cols-3 gap-3">
         {/* ボール */}
@@ -92,20 +105,34 @@ export default function CountControl() {
         </div>
       </div>
 
-      {/* プリセット — いきなりカウントが変わる場面用 */}
-      <div className="flex gap-2 pt-2 border-t border-gray-700 flex-wrap">
-        <button
-          onClick={applyWalkPreset}
-          className="bg-orange-700 hover:bg-orange-600 text-white px-3 py-1.5 rounded text-xs font-bold"
-          title="打者を1塁へ進塁・走者押し出し・カウントリセット"
-        >
-          デッドボール
-        </button>
+      {/* 走者（BSO枠に統合） */}
+      <div className="pt-2 border-t border-gray-700">
+        <div className="text-gray-400 text-xs mb-1.5">走者</div>
+        <div className="flex gap-2">
+          {bases.map((base) => (
+            <button
+              key={base.key}
+              onClick={() => setRunner(base.key, !runners[base.key])}
+              className={`flex-1 px-3 py-2 rounded text-sm font-bold transition-colors ${
+                runners[base.key]
+                  ? 'bg-yellow-500 text-black'
+                  : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+              }`}
+            >
+              {base.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* リセット（カウント＋走者を同時リセット） */}
+      <div className="flex gap-2 pt-2 border-t border-gray-700">
         <button
           onClick={resetCount}
           className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-xs font-bold"
+          title="ボール・ストライク・走者をすべてリセット"
         >
-          カウントリセット
+          カウントリセット（走者含む）
         </button>
       </div>
     </div>

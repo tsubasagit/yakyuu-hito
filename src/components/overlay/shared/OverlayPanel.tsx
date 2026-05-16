@@ -16,11 +16,14 @@ interface OverlayPanelProps {
  * - overlayPositions[id] が未設定なら defaultPos にフォールバック
  * - ドラッグ中はローカル state で即時描画し、mouseUp で store に書き戻す
  */
-export default function OverlayPanel({ id, defaultPos, children, scale: panelScale = 1 }: OverlayPanelProps) {
+export default function OverlayPanel({ id, defaultPos, children, scale: globalScale = 1 }: OverlayPanelProps) {
   const visible = useGameStore((s) => s.visibility?.[id] ?? true)
 
   const storeX = useGameStore((s) => s.overlayPositions?.[id]?.x)
   const storeY = useGameStore((s) => s.overlayPositions?.[id]?.y)
+  const storeScale = useGameStore((s) => s.overlayPositions?.[id]?.scale)
+  const perPanelScale = storeScale ?? 1
+  const panelScale = globalScale * perPanelScale
   const setOverlayPosition = useGameStore((s) => s.setOverlayPosition)
 
   const effectiveX = storeX ?? defaultPos.x

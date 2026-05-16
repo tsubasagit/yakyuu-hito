@@ -3,9 +3,8 @@ import { useGameStore } from '../../store/useGameStore'
 import type { PinchHitter } from '../../types'
 
 /**
- * 代打コントロール: 選手名入力のみ。
+ * 代打コントロール: 選手名+学年+1行コメント入力。
  * チームは攻撃中チーム（currentHalf）を自動採用。
- * 学年・コメント・サンプル補完は野手側UIに無いため不要（2026-05-02）。
  */
 export default function PinchHitterControl() {
   const pinchHitter = useGameStore((s) => s.pinchHitter)
@@ -16,13 +15,21 @@ export default function PinchHitterControl() {
   const homeTeam = useGameStore((s) => s.homeTeam)
 
   const [name, setName] = useState(pinchHitter?.name ?? '')
+  const [grade, setGrade] = useState(pinchHitter?.grade ?? '')
+  const [comment, setComment] = useState(pinchHitter?.comment ?? '')
 
   const attackingTeamSide: 'away' | 'home' = currentHalf === 'top' ? 'away' : 'home'
   const attackingTeam = attackingTeamSide === 'away' ? awayTeam : homeTeam
 
   const applyAndShow = () => {
-    const payload: PinchHitter = { team: attackingTeamSide, name: name.trim() }
-    if (!payload.name) return
+    const trimmedName = name.trim()
+    if (!trimmedName) return
+    const payload: PinchHitter = {
+      team: attackingTeamSide,
+      name: trimmedName,
+      grade: grade.trim() || undefined,
+      comment: comment.trim() || undefined,
+    }
     setPinchHitter(payload)
     setVisibility('pinchHitter', true)
   }
@@ -47,6 +54,28 @@ export default function PinchHitterControl() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="例: 加藤 陸"
+          className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:border-accent focus:outline-none"
+        />
+      </label>
+
+      <label className="block">
+        <span className="text-xs text-gray-300 mb-1 block">学年（任意）</span>
+        <input
+          type="text"
+          value={grade}
+          onChange={(e) => setGrade(e.target.value)}
+          placeholder="例: 3年"
+          className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:border-accent focus:outline-none"
+        />
+      </label>
+
+      <label className="block">
+        <span className="text-xs text-gray-300 mb-1 block">1行コメント（任意）</span>
+        <input
+          type="text"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="例: 少年クラブ優勝経験あり"
           className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:border-accent focus:outline-none"
         />
       </label>
