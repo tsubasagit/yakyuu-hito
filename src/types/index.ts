@@ -130,6 +130,8 @@ export interface Tournament {
 export interface PinchHitter {
   team: 'away' | 'home'
   name: string
+  grade?: string    // 学年（"3年"など）
+  comment?: string  // 1行コメント（"少年クラブ優勝経験あり"など）
 }
 
 /** 要素＋statusPanel サブトグルの表示フラグ */

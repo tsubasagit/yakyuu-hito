@@ -2,17 +2,15 @@ import { useGameStore } from '../../store/useGameStore'
 import type { DhMode, LineupPlayer, Team } from '../../types'
 
 /**
- * スタメン一覧。コントロールパネルの「オーバーレイの打順表示」モードに応じて
- * 表示を切り替える:
+ * スタメン一覧（画像準拠デザイン・2026-05-16 リファイン）。
+ *
+ * 表示モード:
  *  - 'attacking' : 攻撃中チーム1つのみ（currentHalf で自動切替・デフォルト）
- *  - 'away'      : 先攻チームのみ（常時固定）
- *  - 'home'      : 後攻チームのみ（常時固定）
+ *  - 'away'      : 先攻チームのみ
+ *  - 'home'      : 後攻チームのみ
  *  - 'both'      : 両チーム並列＋VS表示
  *
- * DHモードに応じて行数を切り替える:
- *  - 'dh'     : 10行（1-9 打者 + 10 投手）
- *  - 'none'   : 9行（投手は1-9のどこかに含まれる）
- *  - 'twoWay' : 10行（DH打者と投手が同一選手可）
+ * 各行は番号/ポジション/名前/学年の4セルを白アウトラインで区切ったテーブル風レイアウト。
  */
 export default function LineupPanel() {
   const awayTeam = useGameStore((s) => s.awayTeam)
@@ -80,84 +78,87 @@ function TeamLineupCard({
   const showPitcherRow = dhMode !== 'none' && pitcher && pitcher.name.length > 0
 
   return (
-    <div className="bg-black/85 backdrop-blur-sm rounded-lg text-white min-w-[372px] overflow-hidden">
-      {/* ヘッダー: チーム略称 + 先攻/後攻 */}
-      <div
-        className="flex items-center gap-2 px-2 py-1"
-        style={{ backgroundColor: team.color + '30' }}
-      >
-        <span
-          className="inline-flex items-center justify-center w-[28px] h-[28px] rounded text-white font-bold border"
+    <div className="text-white font-bold shadow-[0_6px_24px_rgba(0,0,0,0.55)]">
+      {/* ヘッダー行: チーム名（チームカラー背景）+ スターティングメンバー黄帯 */}
+      <div className="flex items-stretch border border-white/70">
+        <div
+          className="flex items-center px-5 py-3 flex-1 text-3xl font-black tracking-wide text-white"
           style={{
-            backgroundColor: team.color + 'cc',
-            borderColor: team.color,
+            backgroundColor: team.color || '#0b1220',
+            textShadow: '0 2px 4px rgba(0,0,0,0.55)',
           }}
         >
-          {team.shortName.charAt(0) || (label === '先攻' ? 'A' : 'H')}
-        </span>
-        <span className="text-sm font-bold">{team.name}</span>
-        <span
-          className="ml-auto text-[10px] font-bold text-black px-2 py-0.5 rounded tracking-wider"
-          style={{ backgroundColor: '#f5d042' }}
+          {team.name || (label === '先攻' ? 'チームA' : 'チームX')}
+        </div>
+        <div
+          className="flex items-end justify-end px-3 pb-1 bg-[#0b1220]"
+          style={{ minWidth: 160 }}
         >
-          {label}
-        </span>
+          <span
+            className="text-black text-[11px] font-black tracking-widest px-3 py-1 leading-none"
+            style={{ backgroundColor: '#f5d042' }}
+          >
+            スターティングメンバー
+          </span>
+        </div>
       </div>
 
-      {/* サブヘッダー: スターティングメンバー黄色帯 */}
-      <div
-        className="text-[11px] font-bold text-black px-2 py-0.5 tracking-wider text-right"
-        style={{ backgroundColor: '#f5d042' }}
-      >
-        スターティングメンバー
-      </div>
-
-      {/* 打者テーブル（1-9番） */}
-      <table className="w-full border-collapse text-sm">
-        <tbody>
-          {batters.map((player) => (
-            <tr key={player.order} className="border-t border-gray-700/60">
-              <td className="px-2 py-0.5 text-gray-400 font-bold w-[24px] text-center">
-                {player.order}
-              </td>
-              <td className="px-2 py-0.5 text-yellow-300 w-[112px] whitespace-nowrap">
-                {positionLabel(player.position)}
-              </td>
-              <td className="px-2 py-0.5 font-bold">{player.name || '　'}</td>
-              <td className="px-2 py-0.5 text-gray-300 text-xs w-[48px] text-right">
-                {player.grade || ''}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* 打者行 1-9 */}
+      {batters.map((player) => (
+        <LineupRow key={player.order} player={player} />
+      ))}
 
       {/* 10番目: 投手行（DHあり/二刀流のみ） */}
-      {showPitcherRow && (
-        <div className="border-t-2 border-yellow-400/40">
-          <table className="w-full border-collapse text-sm">
-            <tbody>
-              <tr className="bg-red-950/40">
-                <td className="px-2 py-0.5 text-red-300 font-bold w-[24px] text-center">
-                  P
-                </td>
-                <td className="px-2 py-0.5 text-red-300 w-[112px] font-bold whitespace-nowrap">
-                  ピッチャー
-                </td>
-                <td className="px-2 py-0.5 font-bold">{pitcher!.name}</td>
-                <td className="px-2 py-0.5 text-gray-300 text-xs w-[48px] text-right">
-                  {pitcher!.grade || ''}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
+      {showPitcherRow && <LineupRow player={pitcher!} pitcherRow />}
     </div>
   )
 }
 
-/** ポジション記号を長ラベルに変換（モックアップの「ショート」等に合わせる） */
+function LineupRow({
+  player,
+  pitcherRow = false,
+}: {
+  player: LineupPlayer
+  pitcherRow?: boolean
+}) {
+  const orderLabel = pitcherRow ? 'P' : String(player.order)
+  return (
+    <div className="flex items-stretch border border-t-0 border-white/70">
+      {/* 番号セル */}
+      <div
+        className={`flex items-center justify-center text-base font-black border-r border-white/70 ${
+          pitcherRow ? 'bg-[#5b1d1d] text-red-200' : 'bg-white text-[#0b1220]'
+        }`}
+        style={{ minWidth: 36 }}
+      >
+        {orderLabel}
+      </div>
+      {/* ポジションセル（白文字） */}
+      <div
+        className="flex items-center px-3 py-1 text-[15px] tracking-wide border-r border-white/70 whitespace-nowrap bg-[#0b1220] text-white"
+        style={{ minWidth: 128 }}
+      >
+        {pitcherRow ? 'ピッチャー' : positionLabel(player.position)}
+      </div>
+      {/* 名前セル */}
+      <div
+        className="flex items-center px-3 py-1 text-[16px] bg-[#0b1220] border-r border-white/70 whitespace-nowrap"
+        style={{ minWidth: 160 }}
+      >
+        {player.name || '　'}
+      </div>
+      {/* コメントセル（○○高校＋補足情報程度） */}
+      <div
+        className="flex items-center px-3 py-1 text-[13px] text-gray-200 bg-[#0b1220] whitespace-nowrap flex-1"
+        style={{ minWidth: 280 }}
+      >
+        {player.comment || ''}
+      </div>
+    </div>
+  )
+}
+
+/** ポジション記号を長ラベルに変換（モックアップ準拠） */
 function positionLabel(position: string): string {
   switch (position) {
     case '投': return 'ピッチャー'
@@ -170,6 +171,6 @@ function positionLabel(position: string): string {
     case '中': return 'センター'
     case '右': return 'ライト'
     case 'DH': return 'DH'
-    default: return position
+    default: return position || '　'
   }
 }

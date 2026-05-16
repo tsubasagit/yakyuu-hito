@@ -12,59 +12,69 @@ export default function CurrentBatter() {
   const homeBatterIndex = useGameStore((s) => s.homeBatterIndex)
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
-  const batter = useGameStore((s) => s.batter)
-
-  if (!batter.name) return null
 
   const team = lineupDisplayTeam === 'away' ? awayTeam : homeTeam
   const lineup = lineupDisplayTeam === 'away' ? awayLineup : homeLineup
   const batterIndex = lineupDisplayTeam === 'away' ? awayBatterIndex : homeBatterIndex
   const lineupPlayer = lineup[batterIndex]
+  const name = lineupPlayer?.name ?? ''
+  if (!name) return null
+
   const order = lineupPlayer?.order ?? 0
   const positionLong = positionLabel(lineupPlayer?.position ?? '')
   const grade = lineupPlayer?.grade ?? ''
   const comment = lineupPlayer?.comment ?? ''
 
   return (
-    <div className="bg-[#0b1220]/[0.92] backdrop-blur-sm rounded-lg text-white min-w-[520px] select-none overflow-hidden shadow-[0_4px_18px_rgba(0,0,0,0.5)] border border-white/10">
-      <div className="flex items-stretch">
-        {/* 左: 打順バッジ（チーム色） */}
+    <div className="select-none min-w-[520px]">
+      {/* チーム名（フル表示・枠の上） */}
+      {team.name && (
         <div
-          className="flex flex-col items-center justify-center px-4 py-2 min-w-[78px] relative"
+          className="inline-block px-4 py-1 text-white text-sm font-bold tracking-wider rounded-t-md"
           style={{ backgroundColor: team.color }}
         >
-          <span className="text-[10px] tracking-[0.25em] font-medium opacity-80 uppercase">
-            BATTER
-          </span>
-          <span className="text-2xl font-black leading-tight">
-            {order > 0 ? `${order}` : '—'}
-            <span className="text-sm font-bold ml-0.5">番</span>
-          </span>
+          {team.name}
         </div>
+      )}
+      <div className="bg-[#0b1220]/[0.92] backdrop-blur-sm rounded-lg rounded-tl-none text-white overflow-hidden shadow-[0_4px_18px_rgba(0,0,0,0.5)] border border-white/10">
+        <div className="flex items-stretch">
+          {/* 左: 打順バッジ（チーム色） */}
+          <div
+            className="flex flex-col items-center justify-center px-4 py-2 min-w-[78px] relative"
+            style={{ backgroundColor: team.color }}
+          >
+            <span className="text-[10px] tracking-[0.25em] font-medium opacity-80">
+              バッター
+            </span>
+            <span className="text-2xl font-black leading-tight">
+              {order > 0 ? `${order}` : '—'}
+              <span className="text-sm font-bold ml-0.5">番</span>
+            </span>
+          </div>
 
-        {/* 中央: 名前＋コメント */}
-        <div className="flex items-center gap-3 px-5 py-2 flex-1">
-          <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-            <span className="text-[10px] tracking-[0.2em] text-gray-400 uppercase">
-              {positionLong || '　'}
-            </span>
-            <span className="text-3xl font-bold leading-tight tracking-tight truncate">
-              {batter.name}
-            </span>
-            {comment && (
-              <span className="text-xs text-gray-300 truncate mt-0.5">
-                {comment}
+          {/* 中央: 名前＋コメント */}
+          <div className="flex items-center gap-3 px-5 py-2 flex-1">
+            <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+              <span className="text-[10px] tracking-[0.2em] text-gray-400 uppercase">
+                {positionLong || '　'}
+              </span>
+              <span className="text-3xl font-bold leading-tight tracking-tight truncate">
+                {name}
+              </span>
+              {comment && (
+                <span className="text-xs text-gray-300 truncate mt-0.5">
+                  {comment}
+                </span>
+              )}
+            </div>
+            {grade && (
+              <span className="text-sm text-gray-300 self-start mt-0.5 font-medium">
+                {grade}
               </span>
             )}
           </div>
-          {grade && (
-            <span className="text-sm text-gray-300 self-start mt-0.5 font-medium">
-              {grade}
-            </span>
-          )}
         </div>
       </div>
-
     </div>
   )
 }

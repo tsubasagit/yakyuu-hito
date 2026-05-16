@@ -10,50 +10,61 @@ export default function CurrentPitcher() {
   const homeLineup = useGameStore((s) => s.homeLineup)
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
-  const pitcher = useGameStore((s) => s.pitcher)
-
-  if (!pitcher.name) return null
 
   const team = lineupDisplayTeam === 'away' ? awayTeam : homeTeam
   const lineup = lineupDisplayTeam === 'away' ? awayLineup : homeLineup
   const pitcherPlayer = lineup[9]
+  const name = pitcherPlayer?.name ?? ''
+  if (!name) return null
+
   const grade = pitcherPlayer?.grade ?? ''
   const comment = pitcherPlayer?.comment ?? ''
 
   return (
-    <div className="bg-[#0b1220]/[0.92] backdrop-blur-sm rounded-lg text-white min-w-[520px] select-none overflow-hidden shadow-[0_4px_18px_rgba(0,0,0,0.5)] border border-white/10">
-      <div className="flex items-stretch">
-        {/* 左: PITCHER バッジ（チーム色） */}
+    <div className="select-none min-w-[520px]">
+      {/* チーム名（フル表示・枠の上） */}
+      {team.name && (
         <div
-          className="flex flex-col items-center justify-center px-4 py-2 min-w-[78px] relative"
+          className="inline-block px-4 py-1 text-white text-sm font-bold tracking-wider rounded-t-md"
           style={{ backgroundColor: team.color }}
         >
-          <span className="text-[10px] tracking-[0.25em] font-medium opacity-80 uppercase">
-            PITCHER
-          </span>
-          <span className="text-xl font-black leading-tight mt-1">投</span>
+          {team.name}
         </div>
-
-        {/* 中央: 名前＋コメント */}
-        <div className="flex items-center gap-3 px-5 py-2 flex-1">
-          <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-            <span className="text-[10px] tracking-[0.2em] text-gray-400 uppercase">
+      )}
+      <div className="bg-[#0b1220]/[0.92] backdrop-blur-sm rounded-lg rounded-tl-none text-white overflow-hidden shadow-[0_4px_18px_rgba(0,0,0,0.5)] border border-white/10">
+        <div className="flex items-stretch">
+          {/* 左: ピッチャー バッジ（チーム色） */}
+          <div
+            className="flex flex-col items-center justify-center px-4 py-2 min-w-[78px] relative"
+            style={{ backgroundColor: team.color }}
+          >
+            <span className="text-[10px] tracking-[0.25em] font-medium opacity-80">
               ピッチャー
             </span>
-            <span className="text-3xl font-bold leading-tight tracking-tight truncate">
-              {pitcher.name}
-            </span>
-            {comment && (
-              <span className="text-xs text-gray-300 truncate mt-0.5">
-                {comment}
+            <span className="text-xl font-black leading-tight mt-1">投</span>
+          </div>
+
+          {/* 中央: 名前＋コメント */}
+          <div className="flex items-center gap-3 px-5 py-2 flex-1">
+            <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+              <span className="text-[10px] tracking-[0.2em] text-gray-400 uppercase">
+                ピッチャー
+              </span>
+              <span className="text-3xl font-bold leading-tight tracking-tight truncate">
+                {name}
+              </span>
+              {comment && (
+                <span className="text-xs text-gray-300 truncate mt-0.5">
+                  {comment}
+                </span>
+              )}
+            </div>
+            {grade && (
+              <span className="text-sm text-gray-300 self-start mt-0.5 font-medium">
+                {grade}
               </span>
             )}
           </div>
-          {grade && (
-            <span className="text-sm text-gray-300 self-start mt-0.5 font-medium">
-              {grade}
-            </span>
-          )}
         </div>
       </div>
     </div>

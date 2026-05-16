@@ -30,6 +30,8 @@ export const TOGGLE_META: ToggleMeta[] = [
   { id: 'bigScore',         label: '大型スコア',  sources: ['試合管理', '得点'],     scrollTarget: 'section-score',      stripe: 'bg-rose-500'    },
   { id: 'inningScoreboard', label: 'スコアボード', sources: ['得点'],                  scrollTarget: 'section-score',      stripe: 'bg-emerald-500' },
   { id: 'statusPanel',      label: 'BSOパネル',   sources: ['イニング', 'BSO管理'],   scrollTarget: 'section-count',      stripe: 'bg-cyan-500'    },
+  { id: 'currentBatter',    label: 'バッター',    sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-amber-500'   },
+  { id: 'currentPitcher',   label: 'ピッチャー',  sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-red-500'     },
 ]
 
 /** scrollTarget → stripe color のマップ（ControlPage で使用） */
@@ -61,7 +63,7 @@ export default function VisibilityControl() {
             色帯 = 下の編集セクションと対応
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
           {TOGGLE_META.map((meta) => (
             <ToggleButton
               key={meta.id}

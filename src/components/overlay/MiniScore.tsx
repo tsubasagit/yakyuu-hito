@@ -1,9 +1,5 @@
 import { useGameStore } from '../../store/useGameStore'
 
-/**
- * ミニスコア: プロ野球中継風の上部小型スコアボード（2026-05-02 リファイン）。
- * チーム色のアクセントバー + 略称(最大3文字) + 大きめスコア + イニング。
- */
 export default function MiniScore() {
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
@@ -12,59 +8,47 @@ export default function MiniScore() {
   const currentInning = useGameStore((s) => s.currentInning)
   const currentHalf = useGameStore((s) => s.currentHalf)
 
-  const awayName = (awayTeam.shortName || awayTeam.name || 'AWAY').slice(0, 3)
-  const homeName = (homeTeam.shortName || homeTeam.name || 'HOME').slice(0, 3)
+  const awayLetter = (awayTeam.shortName || awayTeam.name || 'A').charAt(0)
+  const homeLetter = (homeTeam.shortName || homeTeam.name || 'X').charAt(0)
+  const halfLabel = currentHalf === 'top' ? 'オモテ' : 'ウラ'
 
   return (
-    <div className="bg-[#0b1220]/[0.92] backdrop-blur-sm rounded-lg text-white shadow-[0_4px_16px_rgba(0,0,0,0.4)] border border-white/10 select-none overflow-hidden">
-      <div className="flex flex-col">
-        <ScoreLine
-          name={awayName}
-          score={awayTotal}
-          color={awayTeam.color}
-          attacking={currentHalf === 'top'}
-        />
-        <div className="h-px bg-white/10" />
-        <ScoreLine
-          name={homeName}
-          score={homeTotal}
-          color={homeTeam.color}
-          attacking={currentHalf === 'bottom'}
-        />
+    <div className="select-none text-white font-bold">
+      <div className="bg-[#0b1220] px-3 py-0.5 text-white text-xs tracking-widest text-center">
+        {currentInning}回 {halfLabel}
       </div>
-      <div className="bg-white/5 border-t border-white/10 text-center text-[11px] text-gray-300 px-3 py-1 tracking-[0.2em] font-medium">
-        {currentInning}回{currentHalf === 'top' ? '表' : '裏'}
+
+      <div className="flex items-stretch bg-[#0b1220]">
+        <TeamCell letter={awayLetter} />
+        <ScoreCell value={awayTotal} />
+        <div className="flex items-center justify-center text-2xl font-black px-2 text-white">
+          -
+        </div>
+        <ScoreCell value={homeTotal} />
+        <TeamCell letter={homeLetter} />
       </div>
     </div>
   )
 }
 
-function ScoreLine({
-  name,
-  score,
-  color,
-  attacking,
-}: {
-  name: string
-  score: number
-  color: string
-  attacking: boolean
-}) {
+function TeamCell({ letter }: { letter: string }) {
   return (
-    <div className="flex items-stretch min-w-[200px]">
-      {/* チーム色のアクセントバー */}
-      <span className="w-1 shrink-0" style={{ backgroundColor: color }} />
-      <div className="flex items-center gap-2 px-3 py-1.5 flex-1">
-        <span
-          className={`inline-block w-1.5 h-1.5 rounded-full ${
-            attacking ? 'bg-amber-300 shadow-[0_0_4px_rgba(252,211,77,0.9)]' : 'bg-transparent'
-          }`}
-        />
-        <span className="font-bold text-base leading-none tracking-tight" style={{ minWidth: '3.2rem' }}>
-          {name}
-        </span>
-        <span className="ml-auto text-2xl font-black tabular-nums leading-none">{score}</span>
-      </div>
+    <div
+      className="flex items-center justify-center text-white text-2xl font-black px-3"
+      style={{ minWidth: 44 }}
+    >
+      {letter}
+    </div>
+  )
+}
+
+function ScoreCell({ value }: { value: number }) {
+  return (
+    <div
+      className="flex items-center justify-center text-3xl font-black tabular-nums px-4 text-white"
+      style={{ minWidth: 60 }}
+    >
+      {value}
     </div>
   )
 }
