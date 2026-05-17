@@ -1,4 +1,27 @@
 import { Link } from 'react-router-dom'
+import {
+  ArrowRight,
+  ArrowUpRight,
+  BarChart3,
+  CircleDot,
+  Database,
+  ExternalLink,
+  FileSpreadsheet,
+  Github,
+  ListOrdered,
+  MailQuestion,
+  Maximize2,
+  Megaphone,
+  Move,
+  MousePointerClick,
+  Settings2,
+  Shield,
+  Trophy,
+  Tv,
+  Undo2,
+  User,
+  WifiOff,
+} from 'lucide-react'
 
 const HITO_LOGO = 'https://hito-inc.jp/wp-content/uploads/2023/10/header_title_20231020x.png'
 const HITO_SITE = 'https://hito-inc.jp/'
@@ -13,7 +36,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="max-w-4xl mx-auto px-6 py-12">
         {/* ヘッダーバナー */}
         <div className="flex items-center justify-between gap-3 mb-10">
           <a
@@ -61,61 +84,83 @@ export default function HomePage() {
         </div>
 
         {/* 入口リンク */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-14">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16">
           <Link
             to="/control"
-            className="block bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-[#538bb0] rounded-xl p-5 transition-colors"
+            className="group relative block bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 border border-slate-700 hover:border-[#538bb0] rounded-2xl p-6 transition-all hover:shadow-[0_8px_24px_rgba(83,139,176,0.25)] hover:-translate-y-0.5"
           >
-            <div className="text-xs text-[#538bb0] font-bold mb-1">
+            <div className="flex items-start justify-between mb-3">
+              <div className="bg-[#538bb0]/15 border border-[#538bb0]/40 rounded-lg p-2.5">
+                <Settings2 className="w-5 h-5 text-[#538bb0]" strokeWidth={2.25} />
+              </div>
+              <ArrowUpRight className="w-5 h-5 text-slate-600 group-hover:text-[#538bb0] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
+            </div>
+            <div className="text-[11px] text-[#538bb0] font-bold mb-1 tracking-wider">
               操作する人へ
             </div>
-            <h2 className="text-xl font-bold mb-1">コントロールパネル</h2>
-            <p className="text-slate-400 text-sm">
-              スコア・カウント・選手の操作画面（OBSカスタムドック用）
+            <h2 className="text-2xl font-bold mb-2">コントロールパネル</h2>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              スコア・カウント・選手の操作画面<br />
+              <span className="text-slate-500 text-xs">（OBSカスタムドック用）</span>
             </p>
           </Link>
           <Link
             to="/overlay"
-            className="block bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-amber-300 rounded-xl p-5 transition-colors"
+            className="group relative block bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 border border-slate-700 hover:border-amber-300 rounded-2xl p-6 transition-all hover:shadow-[0_8px_24px_rgba(252,211,77,0.20)] hover:-translate-y-0.5"
           >
-            <div className="text-xs text-amber-300 font-bold mb-1">
+            <div className="flex items-start justify-between mb-3">
+              <div className="bg-amber-300/15 border border-amber-300/40 rounded-lg p-2.5">
+                <Tv className="w-5 h-5 text-amber-300" strokeWidth={2.25} />
+              </div>
+              <ArrowUpRight className="w-5 h-5 text-slate-600 group-hover:text-amber-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
+            </div>
+            <div className="text-[11px] text-amber-300 font-bold mb-1 tracking-wider">
               OBSに取り込む画面
             </div>
-            <h2 className="text-xl font-bold mb-1">オーバーレイ</h2>
-            <p className="text-slate-400 text-sm">
-              透明背景のスコアボード（OBSブラウザソース用 / 1920×1080）
+            <h2 className="text-2xl font-bold mb-2">オーバーレイ</h2>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              透明背景のスコアボード<br />
+              <span className="text-slate-500 text-xs">（OBSブラウザソース用 / 1920×1080）</span>
             </p>
           </Link>
         </div>
 
         {/* 学生スタッフ向け安心ポイント */}
-        <div className="mb-14">
-          <h2 className="text-xl font-bold mb-1 tracking-tight">学生スタッフが安心して使える理由</h2>
-          <p className="text-slate-500 text-xs mb-5">
-            初心者を取り残さない設計を最優先しました。
-          </p>
+        <div className="mb-16">
+          <SectionHeader
+            label="WHY"
+            title="学生スタッフが安心して使える理由"
+            subtitle="初心者を取り残さない設計を最優先しました。"
+            accent="amber"
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Reason
+              icon={<MousePointerClick />}
               title="1クリックON/OFF"
               desc="表示要素ごとに大きなトグルボタン。色帯で「下のどのセクションが操作元か」が視覚で分かります。"
             />
             <Reason
+              icon={<Undo2 />}
               title="間違えてもすぐ戻せる"
               desc="カウント・走者・打順は ±1 / 戻すボタン完備。「次の打者」「前の打者」も1タップ。"
             />
             <Reason
+              icon={<Database />}
               title="OBS再起動でも消えない"
               desc="状態は localStorage + IndexedDB に二重保存。試合途中で OBS が落ちても復元します。"
             />
             <Reason
+              icon={<WifiOff />}
               title="ネット切断にも強い"
               desc="初回読み込み後はオフライン動作。回線が不安定な球場でも止まりません。"
             />
             <Reason
+              icon={<FileSpreadsheet />}
               title="CSVで一括登録"
               desc="順番・名前・守備の3列だけのシンプルCSV。Excelで編集して読込ですぐスタメン完成。"
             />
             <Reason
+              icon={<Move />}
               title="本番中の修正も自由"
               desc="表示位置はドラッグで微調整、チームカラーはHEXコード入力＋コピペ対応。"
             />
@@ -123,98 +168,120 @@ export default function HomePage() {
         </div>
 
         {/* 表示できる要素 */}
-        <div className="mb-14">
-          <h2 className="text-xl font-bold mb-1 tracking-tight">表示できるオーバーレイ要素</h2>
-          <p className="text-slate-500 text-xs mb-5">
-            必要なものだけON、不要なものはOFFでスッキリ画面に。
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-            <FeatureCard title="ミニスコア" desc="左上の小型2行スコア。試合中の常設表示向け。" />
-            <FeatureCard title="現在の打者" desc="打順・守備・名前を中継風ロワーサードで表示。" />
-            <FeatureCard title="スタメン一覧" desc="DH制（あり/なし/二刀流）対応。両チーム並列表示も可能。" />
-            <FeatureCard title="大会名" desc="大会名・副題・対戦カード・会場・日付。試合前のオープニング向け。" />
-            <FeatureCard title="大型スコア" desc="中継切替時の大判スコア。チーム色フルバンド + 大きな数字。" />
-            <FeatureCard title="イニング別スコア" desc="9回基本＋延長12回まで自動拡張。R列強調。" />
-            <FeatureCard title="BSOパネル" desc="イニング表記＋スコア＋走者ダイヤ＋BSO（緑のグラウンド地）を1セットで。" />
-            <FeatureCard title="代打 / 速報テロップ" desc="代打選手の発表表示と、自由テロップ。" />
+        <div className="mb-16">
+          <SectionHeader
+            label="FEATURES"
+            title="表示できるオーバーレイ要素"
+            subtitle="必要なものだけON、不要なものはOFFでスッキリ画面に。"
+            accent="primary"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <FeatureCard icon={<BarChart3 />} title="ミニスコア" desc="左上の小型2行スコア。試合中の常設表示向け。" />
+            <FeatureCard icon={<User />} title="現在の打者" desc="打順・守備・名前を中継風ロワーサードで表示。" />
+            <FeatureCard icon={<ListOrdered />} title="スタメン一覧" desc="DH制（あり/なし/二刀流）対応。両チーム並列表示も可能。" />
+            <FeatureCard icon={<Trophy />} title="大会名" desc="大会名・副題・対戦カード・会場・日付。試合前のオープニング向け。" />
+            <FeatureCard icon={<Maximize2 />} title="大型スコア" desc="中継切替時の大判スコア。チーム色フルバンド + 大きな数字。" />
+            <FeatureCard icon={<BarChart3 />} title="イニング別スコア" desc="9回基本＋延長12回まで自動拡張。R列強調。" />
+            <FeatureCard icon={<CircleDot />} title="BSOパネル" desc="イニング表記＋スコア＋走者ダイヤ＋BSO（緑のグラウンド地）を1セットで。" />
+            <FeatureCard icon={<Megaphone />} title="代打 / 速報テロップ" desc="代打選手の発表表示と、自由テロップ。" />
           </div>
         </div>
 
         {/* OBS セットアップガイド */}
-        <div className="mb-14">
-          <h2 className="text-xl font-bold mb-1 tracking-tight">OBS セットアップ</h2>
-          <p className="text-slate-500 text-xs mb-5">2ステップで完了します。</p>
-          <div className="space-y-4 text-sm">
-            <a
-              href="guide.html"
-              className="block bg-[#538bb0]/10 hover:bg-[#538bb0]/20 border-2 border-[#538bb0] rounded-xl p-5 transition-colors text-center"
-            >
-              <span className="text-[#538bb0] font-bold text-lg block mb-1">
-                スクリーンショット付き 詳細ガイド
-              </span>
-              <span className="text-slate-400 text-sm">
-                操作デモ動画つき・初めての方はこちらから →
-              </span>
-            </a>
-            <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-              <h3 className="font-bold text-[#538bb0] mb-2">
-                Step 1: カスタムドックを追加（コントロール画面）
-              </h3>
-              <p className="text-slate-300 mb-2">
-                OBS の「<strong className="text-white">ドック</strong>」→「<strong className="text-white">カスタムブラウザドック</strong>」で以下を設定：
-              </p>
-              <ul className="text-slate-400 space-y-1 ml-4">
-                <li>
-                  ・ ドック名:{' '}
-                  <code className="bg-slate-700 px-1.5 py-0.5 rounded text-xs text-slate-200">yakyuu-hito</code>
-                </li>
-                <li>
-                  ・ URL:{' '}
-                  <code className="bg-slate-700 px-1.5 py-0.5 rounded text-xs text-slate-200">{baseUrl}#/control</code>
-                </li>
-              </ul>
+        <div className="mb-16">
+          <SectionHeader
+            label="SETUP"
+            title="OBS セットアップ"
+            subtitle="2ステップで完了します。"
+            accent="primary"
+          />
+
+          <a
+            href="guide.html"
+            className="group flex items-center justify-between gap-4 bg-gradient-to-br from-[#538bb0]/15 to-[#538bb0]/5 hover:from-[#538bb0]/25 hover:to-[#538bb0]/10 border-2 border-[#538bb0] rounded-xl p-5 mb-5 transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-[#538bb0] rounded-lg p-3 shrink-0">
+                <Tv className="w-6 h-6 text-white" strokeWidth={2.25} />
+              </div>
+              <div>
+                <div className="text-[#538bb0] font-bold text-base md:text-lg">
+                  スクリーンショット付き 詳細ガイド
+                </div>
+                <div className="text-slate-400 text-xs md:text-sm">
+                  操作デモ動画つき・初めての方はこちらから
+                </div>
+              </div>
             </div>
-            <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-              <h3 className="font-bold text-amber-300 mb-2">
-                Step 2: ブラウザソースを追加（オーバーレイ）
-              </h3>
-              <p className="text-slate-300 mb-2">OBS の「ソース」→「ブラウザ」で以下を設定：</p>
-              <ul className="text-slate-400 space-y-1 ml-4">
-                <li>
-                  ・ URL:{' '}
-                  <code className="bg-slate-700 px-1.5 py-0.5 rounded text-xs text-slate-200">{baseUrl}#/overlay</code>
-                </li>
-                <li>
-                  ・ 幅: <strong className="text-white">1920</strong>　高さ:{' '}
-                  <strong className="text-white">1080</strong>
-                </li>
-                <li>
-                  ・ カスタムCSS: <strong className="text-red-400">空欄にする</strong>（OBS デフォルトを削除）
-                </li>
-              </ul>
-            </div>
-            <p className="text-amber-300/80 text-xs">
-              ※ カスタムドックとブラウザソースは OBS 内で同じブラウザエンジン（CEF）を共有するため、リアルタイム同期が可能です。Chrome 等の外部ブラウザでは同期できません。
+            <ArrowRight className="w-6 h-6 text-[#538bb0] shrink-0 group-hover:translate-x-1 transition-transform" />
+          </a>
+
+          <div className="space-y-4">
+            <StepCard
+              stepNum={1}
+              accent="primary"
+              title="カスタムドックを追加（コントロール画面）"
+              description={
+                <>
+                  OBS の「<strong className="text-white">ドック</strong>」→
+                  「<strong className="text-white">カスタムブラウザドック</strong>」で以下を設定：
+                </>
+              }
+              items={[
+                { label: 'ドック名', value: 'yakyuu-hito' },
+                { label: 'URL', value: `${baseUrl}#/control` },
+              ]}
+            />
+            <StepCard
+              stepNum={2}
+              accent="amber"
+              title="ブラウザソースを追加（オーバーレイ）"
+              description={<>OBS の「ソース」→「ブラウザ」で以下を設定：</>}
+              items={[
+                { label: 'URL', value: `${baseUrl}#/overlay` },
+                { label: '幅 × 高さ', value: '1920 × 1080' },
+                { label: 'カスタムCSS', value: '空欄にする（OBSデフォルトを削除）', warn: true },
+              ]}
+            />
+          </div>
+
+          <div className="mt-5 flex items-start gap-2.5 bg-amber-300/5 border border-amber-300/30 rounded-lg p-3.5">
+            <Shield className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
+            <p className="text-amber-300/90 text-xs leading-relaxed">
+              カスタムドックとブラウザソースは OBS 内で同じブラウザエンジン（CEF）を共有するため、
+              リアルタイム同期が可能です。Chrome 等の外部ブラウザでは同期できません。
             </p>
           </div>
         </div>
 
         {/* 問い合わせ CTA */}
-        <div className="mb-14">
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-[#538bb0]/30 rounded-xl p-6 text-center">
-            <h2 className="text-lg font-bold text-[#538bb0] mb-2">大学野球配信のご相談</h2>
-            <p className="text-slate-400 text-sm mb-4 leading-relaxed">
-              本ツールは株式会社ひとが大学野球オンライン配信のために運用しています。<br />
-              配信導入・カスタマイズ等のご相談は株式会社ひとまでお気軽にお問い合わせください。
-            </p>
-            <a
-              href={HITO_SITE}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-[#538bb0] hover:bg-[#3d6f94] text-white font-bold px-8 py-3 rounded-lg transition-colors"
-            >
-              株式会社ひと 公式サイト →
-            </a>
+        <div className="mb-16">
+          <div className="relative bg-gradient-to-br from-[#1d3557] via-slate-800 to-slate-900 border-2 border-[#538bb0]/40 rounded-2xl p-8 text-center overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#538bb0]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-amber-300/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative">
+              <div className="inline-flex items-center gap-2 bg-[#538bb0]/20 border border-[#538bb0]/40 rounded-full px-4 py-1.5 mb-4">
+                <MailQuestion className="w-4 h-4 text-[#538bb0]" />
+                <span className="text-[#538bb0] text-xs font-bold tracking-wider">CONTACT</span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 tracking-tight">
+                大学野球配信のご相談
+              </h2>
+              <p className="text-slate-300 text-sm md:text-base mb-6 leading-relaxed max-w-xl mx-auto">
+                本ツールは株式会社ひとが大学野球オンライン配信のために運用しています。<br className="hidden md:inline" />
+                配信導入・カスタマイズ等のご相談は<br className="md:hidden" />
+                株式会社ひとまでお気軽にお問い合わせください。
+              </p>
+              <a
+                href={HITO_SITE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-2 bg-[#538bb0] hover:bg-[#3d6f94] text-white font-bold px-8 py-3.5 rounded-lg transition-colors shadow-lg shadow-[#538bb0]/30"
+              >
+                株式会社ひと 公式サイト
+                <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </a>
+            </div>
           </div>
         </div>
 
@@ -237,51 +304,176 @@ export default function HomePage() {
         </details>
 
         {/* フッター */}
-        <div className="text-center text-slate-500 text-sm border-t border-slate-700 pt-6 space-y-1">
-          <p>
-            <a href={HITO_SITE} target="_blank" rel="noopener noreferrer" className="text-[#538bb0] hover:underline">
+        <div className="text-center border-t border-slate-700 pt-6 space-y-3">
+          <p className="text-sm">
+            <a href={HITO_SITE} target="_blank" rel="noopener noreferrer" className="text-[#538bb0] hover:underline font-medium">
               株式会社ひと
             </a>
           </p>
-          <p className="text-xs">
+          <div className="flex items-center justify-center gap-4 text-xs text-slate-400">
             <a
               href={REPO_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-slate-400 hover:text-[#538bb0] hover:underline"
+              className="inline-flex items-center gap-1.5 hover:text-[#538bb0] transition-colors"
             >
+              <Github className="w-3.5 h-3.5" />
               GitHub
             </a>
-            {' / '}
+            <span className="text-slate-700">|</span>
             <a
               href={`${REPO_URL}/issues/new`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-slate-400 hover:text-[#538bb0] hover:underline"
+              className="hover:text-[#538bb0] transition-colors"
             >
               ご質問・不具合報告
             </a>
-          </p>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-function Reason({ title, desc }: { title: string; desc: string }) {
+function SectionHeader({
+  label,
+  title,
+  subtitle,
+  accent = 'primary',
+}: {
+  label: string
+  title: string
+  subtitle: string
+  accent?: 'primary' | 'amber'
+}) {
+  const accentColors =
+    accent === 'amber'
+      ? { bar: 'bg-amber-300', text: 'text-amber-300' }
+      : { bar: 'bg-[#538bb0]', text: 'text-[#538bb0]' }
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
-      <div className="text-amber-300 text-base font-bold mb-1">{title}</div>
-      <div className="text-slate-300 text-xs leading-relaxed">{desc}</div>
+    <div className="mb-6">
+      <div className="flex items-center gap-3 mb-2">
+        <span className={`block w-8 h-0.5 ${accentColors.bar}`} />
+        <span className={`text-[10px] font-bold tracking-[0.3em] ${accentColors.text}`}>
+          {label}
+        </span>
+      </div>
+      <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-1.5">{title}</h2>
+      <p className="text-slate-400 text-sm">{subtitle}</p>
     </div>
   )
 }
 
-function FeatureCard({ title, desc }: { title: string; desc: string }) {
+function Reason({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode
+  title: string
+  desc: string
+}) {
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-lg p-3">
-      <div className="text-white font-bold text-sm mb-1">{title}</div>
-      <div className="text-slate-400 text-xs leading-relaxed">{desc}</div>
+    <div className="group bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-amber-300/50 rounded-xl p-4 transition-all">
+      <div className="flex items-start gap-3">
+        <div className="bg-amber-300/15 group-hover:bg-amber-300/25 border border-amber-300/30 rounded-lg p-2 shrink-0 transition-colors">
+          <div className="w-5 h-5 text-amber-300 [&>svg]:w-5 [&>svg]:h-5">{icon}</div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-amber-300 text-base font-bold mb-1 leading-tight">{title}</div>
+          <div className="text-slate-300 text-xs leading-relaxed">{desc}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FeatureCard({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode
+  title: string
+  desc: string
+}) {
+  return (
+    <div className="group bg-slate-800 hover:bg-slate-700/70 border border-slate-700 hover:border-[#538bb0]/50 rounded-xl p-4 transition-all">
+      <div className="flex items-start gap-3">
+        <div className="bg-[#538bb0]/15 group-hover:bg-[#538bb0]/25 border border-[#538bb0]/30 rounded-lg p-2 shrink-0 transition-colors">
+          <div className="w-4 h-4 text-[#538bb0] [&>svg]:w-4 [&>svg]:h-4">{icon}</div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-white font-bold text-sm mb-1 leading-tight">{title}</div>
+          <div className="text-slate-400 text-xs leading-relaxed">{desc}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function StepCard({
+  stepNum,
+  accent,
+  title,
+  description,
+  items,
+}: {
+  stepNum: number
+  accent: 'primary' | 'amber'
+  title: string
+  description: React.ReactNode
+  items: { label: string; value: string; warn?: boolean }[]
+}) {
+  const colors =
+    accent === 'amber'
+      ? {
+          badge: 'bg-amber-300 text-slate-900',
+          border: 'border-amber-300/40',
+          title: 'text-amber-300',
+          ring: 'ring-amber-300/20',
+        }
+      : {
+          badge: 'bg-[#538bb0] text-white',
+          border: 'border-[#538bb0]/40',
+          title: 'text-[#538bb0]',
+          ring: 'ring-[#538bb0]/20',
+        }
+  return (
+    <div className={`bg-slate-800/80 border ${colors.border} rounded-xl p-5 ring-1 ${colors.ring}`}>
+      <div className="flex items-start gap-4 mb-3">
+        <div className={`${colors.badge} font-bold text-base w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-md`}>
+          {stepNum}
+        </div>
+        <div className="flex-1 min-w-0 pt-1">
+          <h3 className={`font-bold ${colors.title} text-base md:text-lg leading-tight mb-1.5`}>
+            {title}
+          </h3>
+          <p className="text-slate-300 text-sm leading-relaxed">{description}</p>
+        </div>
+      </div>
+      <div className="space-y-2 ml-0 md:ml-14">
+        {items.map((item) => (
+          <div
+            key={item.label}
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 bg-slate-900/60 border border-slate-700/60 rounded-lg px-3 py-2"
+          >
+            <span className="text-slate-400 text-xs font-medium sm:w-28 shrink-0">
+              {item.label}
+            </span>
+            <code
+              className={`flex-1 px-2 py-1 rounded text-xs font-mono break-all ${
+                item.warn
+                  ? 'bg-red-500/10 text-red-300 border border-red-500/30'
+                  : 'bg-slate-950 text-slate-100 border border-slate-700'
+              }`}
+            >
+              {item.value}
+            </code>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
