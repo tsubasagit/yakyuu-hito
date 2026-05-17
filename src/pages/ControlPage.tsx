@@ -80,7 +80,6 @@ export default function ControlPage() {
 
   const defaultOrder = orderableSections.map((s) => s.id)
   const [order, setOrder] = useState<string[]>(() => mergeOrder(loadOrder(), defaultOrder))
-  const [editMode, setEditMode] = useState(false)
 
   // 初期化時に古い並び順を正規化（旧 'game' エントリは固定化に伴い除去）
   useEffect(() => {
@@ -162,23 +161,7 @@ export default function ControlPage() {
         {/* 試合管理（最上段固定・並び替え不可） */}
         <div>{PINNED.component}</div>
 
-        {/* 並び替えモードトグル */}
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() => setEditMode((v) => !v)}
-            className={`text-xs px-3 py-1.5 rounded border transition-colors ${
-              editMode
-                ? 'bg-accent text-white border-accent'
-                : 'bg-gray-800 text-gray-400 border-gray-700 hover:text-white'
-            }`}
-            title="セクションの並び替えを有効化"
-          >
-            {editMode ? '✓ 並び替えモード' : '⇅ 並び替え'}
-          </button>
-        </div>
-
-        {/* セクション群（2カラムレイアウト・並び替え可能） */}
+        {/* セクション群（2カラムレイアウト・▲/▼ で常時並び替え可能） */}
         <div className="columns-1 lg:columns-2 gap-4 space-y-3">
           {sorted.map((section, idx) => {
             const stripe = sectionStripe(section.id)
@@ -188,27 +171,25 @@ export default function ControlPage() {
                 id={`section-${section.id}`}
                 className="relative break-inside-avoid scroll-mt-4"
               >
-                {editMode && (
-                  <div className="absolute -left-1 top-1 flex flex-col gap-0.5 z-10">
-                    <button
-                      onClick={() => move(idx, -1)}
-                      disabled={idx === 0}
-                      className="text-gray-400 hover:text-white disabled:opacity-20 text-xs leading-none px-1.5 py-0.5 bg-gray-800 rounded"
-                      title="上へ移動"
-                    >
-                      ▲
-                    </button>
-                    <button
-                      onClick={() => move(idx, 1)}
-                      disabled={idx === sorted.length - 1}
-                      className="text-gray-400 hover:text-white disabled:opacity-20 text-xs leading-none px-1.5 py-0.5 bg-gray-800 rounded"
-                      title="下へ移動"
-                    >
-                      ▼
-                    </button>
-                  </div>
-                )}
-                <div className={`relative ${editMode ? 'ml-6' : ''}`}>
+                <div className="absolute -left-0.5 top-1.5 flex flex-col gap-0.5 z-10">
+                  <button
+                    onClick={() => move(idx, -1)}
+                    disabled={idx === 0}
+                    className="text-gray-500 hover:text-white disabled:opacity-20 text-[10px] leading-none px-1 py-0.5 bg-gray-800/80 hover:bg-gray-700 rounded shadow-sm"
+                    title="上へ移動"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    onClick={() => move(idx, 1)}
+                    disabled={idx === sorted.length - 1}
+                    className="text-gray-500 hover:text-white disabled:opacity-20 text-[10px] leading-none px-1 py-0.5 bg-gray-800/80 hover:bg-gray-700 rounded shadow-sm"
+                    title="下へ移動"
+                  >
+                    ▼
+                  </button>
+                </div>
+                <div className="relative ml-5">
                   {stripe && (
                     <div
                       className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-lg ${stripe} z-10 pointer-events-none`}
