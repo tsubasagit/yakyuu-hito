@@ -1,4 +1,5 @@
 import { useGameStore } from '../../store/useGameStore'
+import SectionTitle from './shared/SectionTitle'
 
 /**
  * 大会情報コントロール: tournamentHeader 用の4フィールド入力。
@@ -9,7 +10,7 @@ export default function TournamentControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-3 space-y-2">
-      <h3 className="text-white font-bold text-sm">大会情報</h3>
+      <SectionTitle title="大会情報" controls={['大会名']} />
       <Field
         label="大会名"
         value={tournament.title}

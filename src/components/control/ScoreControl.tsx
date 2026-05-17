@@ -1,5 +1,6 @@
 import { useGameStore } from '../../store/useGameStore'
 import type { HalfInning } from '../../types'
+import SectionTitle from './shared/SectionTitle'
 
 export default function ScoreControl() {
   const innings = useGameStore((s) => s.innings)
@@ -27,7 +28,7 @@ export default function ScoreControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
-      <h2 className="text-white font-bold text-lg">得点</h2>
+      <SectionTitle title="得点" controls={['ミニスコア', 'スコアボード', '大型スコア']} />
 
       {/* クイック操作ボタン — アウェイ */}
       <div className="flex flex-wrap gap-1.5">

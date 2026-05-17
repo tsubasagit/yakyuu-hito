@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
+import SectionTitle from './shared/SectionTitle'
 
 export default function TickerControl() {
   const ticker = useGameStore((s) => s.ticker)
@@ -14,7 +15,7 @@ export default function TickerControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
-      <h2 className="text-white font-bold text-lg">速報テロップ</h2>
+      <SectionTitle title="速報テロップ" />
       <input
         className="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm"
         placeholder="テロップテキストを入力..."

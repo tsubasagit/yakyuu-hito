@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
 import type { PinchHitter } from '../../types'
+import SectionTitle from './shared/SectionTitle'
 
 /**
  * 代打コントロール: 選手名+学年+1行コメント入力。
@@ -41,7 +42,7 @@ export default function PinchHitterControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-3 space-y-2">
-      <h3 className="text-white font-bold text-sm">代打</h3>
+      <SectionTitle title="代打" controls={['代打カード']} />
 
       <div className="text-[11px] text-gray-400">
         現在の攻撃: <span className="text-white font-bold">{attackingTeam.name}</span>

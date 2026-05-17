@@ -1,4 +1,5 @@
 import { useGameStore } from '../../store/useGameStore'
+import SectionTitle from './shared/SectionTitle'
 
 /**
  * BSO管理パネル（旧カウント＋走者を統合）。
@@ -26,7 +27,7 @@ export default function CountControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
-      <h2 className="text-white font-bold text-lg">BSO管理</h2>
+      <SectionTitle title="BSO管理" controls={['BSOパネル']} />
 
       <div className="grid grid-cols-3 gap-3">
         {/* ボール */}

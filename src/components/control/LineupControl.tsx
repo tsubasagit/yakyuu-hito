@@ -3,6 +3,7 @@ import { useGameStore } from '../../store/useGameStore'
 import type { DhMode, LineupPlayer, Position } from '../../types'
 import { TEITO_LINEUP, SORYO_LINEUP } from '../../types'
 import { parseLineupCsv, LINEUP_CSV_SAMPLE } from '../../lib/csvImport'
+import SectionTitle from './shared/SectionTitle'
 
 function downloadCsvSample() {
   // BOM付きでExcelの文字化け回避
@@ -406,7 +407,7 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
 export default function LineupControl() {
   return (
     <div className="space-y-3">
-      <h2 className="text-white font-bold text-lg">打順・選手</h2>
+      <SectionTitle title="打順・選手" controls={['スタメン', 'バッター', 'ピッチャー']} />
       <div className="text-[11px] text-gray-500 -mt-1">
         ※ オーバーレイの表示モード（自動/先攻/後攻/VS）は上部「表示ON/OFF」枠で切替
       </div>

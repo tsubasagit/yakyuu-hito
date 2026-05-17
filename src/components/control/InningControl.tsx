@@ -1,4 +1,5 @@
 import { useGameStore } from '../../store/useGameStore'
+import SectionTitle from './shared/SectionTitle'
 
 export default function InningControl() {
   const currentInning = useGameStore((s) => s.currentInning)
@@ -8,7 +9,7 @@ export default function InningControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
-      <h2 className="text-white font-bold text-lg">イニング</h2>
+      <SectionTitle title="イニング" controls={['BSOパネル', 'スコアボード']} />
 
       <div className="flex items-center gap-4">
         <button
