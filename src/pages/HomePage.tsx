@@ -149,7 +149,7 @@ export default function HomePage() {
         <div className="mb-16">
           <SectionHeader
             label="WHY"
-            title="学生スタッフが安心して使える理由"
+            title="安心して使える理由"
             subtitle="初心者を取り残さない設計を最優先しました。"
             accent="orange"
           />
