@@ -32,27 +32,32 @@ export default function HomePage() {
 
         {/* ヒーロー */}
         <div className="text-center mb-10">
-          <p className="text-[#538bb0] text-xs tracking-[0.4em] mb-3 font-medium uppercase">
-            For Hito Inc. — College Baseball Live Broadcast
+          <p className="text-[#538bb0] text-sm tracking-[0.3em] mb-3 font-bold">
+            株式会社ひと 大学野球配信オーバーレイ
           </p>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight leading-tight">
-            初めての配信でも、<br className="md:hidden" />迷わない。
+          <h1 className="text-5xl md:text-6xl font-bold mb-5 tracking-tight leading-[1.15]">
+            初めての配信でも、<br />迷わない。
           </h1>
-          <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-xl mx-auto">
-            株式会社ひと の大学野球オンライン配信を、
-            <br />
-            学生スタッフが <span className="text-amber-300 font-bold">1人で</span> 操作できるよう設計したスコアボードオーバーレイ。
+          <p className="text-slate-200 text-lg md:text-xl leading-relaxed max-w-xl mx-auto font-medium">
+            学生スタッフ <span className="text-amber-300 font-bold text-2xl">1人</span> で
+            操作できる、<br className="hidden md:inline" />
+            大学野球専用のスコアボード。
           </p>
         </div>
 
-        {/* ヒーロー画像 */}
-        <div className="mb-12 rounded-xl overflow-hidden border border-slate-700 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-          <img
-            src="images/hero-overlay-game.png"
-            alt="試合中のオーバーレイ表示例"
-            className="w-full block"
-            loading="lazy"
-          />
+        {/* ヒーロー画像（OBSオーバーレイ実例） */}
+        <div className="mb-12">
+          <div className="rounded-xl overflow-hidden border border-slate-700 shadow-[0_8px_32px_rgba(0,0,0,0.5)] bg-slate-800">
+            <img
+              src="images/hero-overlay-game.png"
+              alt="OBSオーバーレイ表示例：帝都大学 vs 早凌大学"
+              className="w-full block"
+              loading="lazy"
+            />
+          </div>
+          <p className="text-slate-500 text-xs text-center mt-2">
+            ▲ 実際のOBSオーバーレイ出力（1920×1080・透明背景）
+          </p>
         </div>
 
         {/* 入口リンク */}
@@ -61,8 +66,8 @@ export default function HomePage() {
             to="/control"
             className="block bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-[#538bb0] rounded-xl p-5 transition-colors"
           >
-            <div className="text-[10px] tracking-[0.3em] text-[#538bb0] font-medium uppercase mb-1">
-              For Operator
+            <div className="text-xs text-[#538bb0] font-bold mb-1">
+              操作する人へ
             </div>
             <h2 className="text-xl font-bold mb-1">コントロールパネル</h2>
             <p className="text-slate-400 text-sm">
@@ -73,8 +78,8 @@ export default function HomePage() {
             to="/overlay"
             className="block bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-amber-300 rounded-xl p-5 transition-colors"
           >
-            <div className="text-[10px] tracking-[0.3em] text-amber-300 font-medium uppercase mb-1">
-              For OBS Browser Source
+            <div className="text-xs text-amber-300 font-bold mb-1">
+              OBSに取り込む画面
             </div>
             <h2 className="text-xl font-bold mb-1">オーバーレイ</h2>
             <p className="text-slate-400 text-sm">
