@@ -29,13 +29,13 @@ const REPO_URL = 'https://github.com/tsubasagit/yakyuu-hito'
 
 /**
  * 株式会社ひと 大学野球配信向けトップページ。
- * 大学生スタッフが「初めての配信でも迷わない」と感じられるストーリー導線。
+ * 白基調 + ブランドカラー（青 #538bb0 / オレンジ #f97316）。
  */
 export default function HomePage() {
   const baseUrl = window.location.origin + window.location.pathname
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="max-w-4xl mx-auto px-6 py-12">
         {/* ヘッダーバナー */}
         <div className="flex items-center justify-between gap-3 mb-10">
@@ -43,7 +43,7 @@ export default function HomePage() {
             href={HITO_SITE}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-white rounded px-3 py-1.5 hover:opacity-80 transition-opacity"
+            className="hover:opacity-70 transition-opacity"
             title="株式会社ひと 公式サイト"
           >
             <img src={HITO_LOGO} alt="株式会社ひと" className="h-7 w-auto" />
@@ -58,19 +58,19 @@ export default function HomePage() {
           <p className="text-[#538bb0] text-sm tracking-[0.3em] mb-3 font-bold">
             株式会社ひと 大学野球配信オーバーレイ
           </p>
-          <h1 className="text-5xl md:text-6xl font-bold mb-5 tracking-tight leading-[1.15]">
+          <h1 className="text-5xl md:text-6xl font-bold mb-5 tracking-tight leading-[1.15] text-slate-900">
             初めての配信でも、<br />迷わない。
           </h1>
-          <p className="text-slate-200 text-lg md:text-xl leading-relaxed max-w-xl mx-auto font-medium">
-            学生スタッフ <span className="text-amber-300 font-bold text-2xl">1人</span> で
+          <p className="text-slate-700 text-lg md:text-xl leading-relaxed max-w-xl mx-auto font-medium">
+            学生スタッフ <span className="text-[#f97316] font-bold text-2xl">1人</span> で
             操作できる、<br className="hidden md:inline" />
             大学野球専用のスコアボード。
           </p>
         </div>
 
-        {/* ヒーロー画像（試合中のオーバーレイ表示イメージ） */}
+        {/* ヒーロー画像 */}
         <div className="mb-12">
-          <div className="rounded-xl overflow-hidden border border-slate-700 shadow-[0_8px_32px_rgba(0,0,0,0.5)] bg-slate-800">
+          <div className="rounded-xl overflow-hidden border border-slate-200 shadow-lg bg-white">
             <img
               src="images/hero-stadium.jpg"
               alt="試合中のオーバーレイ表示イメージ：帝都大学 vs 早凌大学"
@@ -87,38 +87,38 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16">
           <Link
             to="/control"
-            className="group relative block bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 border border-slate-700 hover:border-[#538bb0] rounded-2xl p-6 transition-all hover:shadow-[0_8px_24px_rgba(83,139,176,0.25)] hover:-translate-y-0.5"
+            className="group relative block bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#538bb0] rounded-2xl p-6 transition-all shadow-sm hover:shadow-[0_8px_24px_rgba(83,139,176,0.20)] hover:-translate-y-0.5"
           >
             <div className="flex items-start justify-between mb-3">
-              <div className="bg-[#538bb0]/15 border border-[#538bb0]/40 rounded-lg p-2.5">
+              <div className="bg-[#538bb0]/10 border border-[#538bb0]/30 rounded-lg p-2.5">
                 <Settings2 className="w-5 h-5 text-[#538bb0]" strokeWidth={2.25} />
               </div>
-              <ArrowUpRight className="w-5 h-5 text-slate-600 group-hover:text-[#538bb0] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
+              <ArrowUpRight className="w-5 h-5 text-slate-400 group-hover:text-[#538bb0] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
             </div>
             <div className="text-[11px] text-[#538bb0] font-bold mb-1 tracking-wider">
               操作する人へ
             </div>
-            <h2 className="text-2xl font-bold mb-2">コントロールパネル</h2>
-            <p className="text-slate-400 text-sm leading-relaxed">
+            <h2 className="text-2xl font-bold mb-2 text-slate-900">コントロールパネル</h2>
+            <p className="text-slate-600 text-sm leading-relaxed">
               スコア・カウント・選手の操作画面<br />
               <span className="text-slate-500 text-xs">（OBSカスタムドック用）</span>
             </p>
           </Link>
           <Link
             to="/overlay"
-            className="group relative block bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 border border-slate-700 hover:border-amber-300 rounded-2xl p-6 transition-all hover:shadow-[0_8px_24px_rgba(252,211,77,0.20)] hover:-translate-y-0.5"
+            className="group relative block bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#f97316] rounded-2xl p-6 transition-all shadow-sm hover:shadow-[0_8px_24px_rgba(249,115,22,0.20)] hover:-translate-y-0.5"
           >
             <div className="flex items-start justify-between mb-3">
-              <div className="bg-amber-300/15 border border-amber-300/40 rounded-lg p-2.5">
-                <Tv className="w-5 h-5 text-amber-300" strokeWidth={2.25} />
+              <div className="bg-[#f97316]/10 border border-[#f97316]/30 rounded-lg p-2.5">
+                <Tv className="w-5 h-5 text-[#f97316]" strokeWidth={2.25} />
               </div>
-              <ArrowUpRight className="w-5 h-5 text-slate-600 group-hover:text-amber-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
+              <ArrowUpRight className="w-5 h-5 text-slate-400 group-hover:text-[#f97316] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
             </div>
-            <div className="text-[11px] text-amber-300 font-bold mb-1 tracking-wider">
+            <div className="text-[11px] text-[#f97316] font-bold mb-1 tracking-wider">
               OBSに取り込む画面
             </div>
-            <h2 className="text-2xl font-bold mb-2">オーバーレイ</h2>
-            <p className="text-slate-400 text-sm leading-relaxed">
+            <h2 className="text-2xl font-bold mb-2 text-slate-900">オーバーレイ</h2>
+            <p className="text-slate-600 text-sm leading-relaxed">
               透明背景のスコアボード<br />
               <span className="text-slate-500 text-xs">（OBSブラウザソース用 / 1920×1080）</span>
             </p>
@@ -131,7 +131,7 @@ export default function HomePage() {
             label="WHY"
             title="学生スタッフが安心して使える理由"
             subtitle="初心者を取り残さない設計を最優先しました。"
-            accent="amber"
+            accent="orange"
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Reason
@@ -177,7 +177,7 @@ export default function HomePage() {
           />
 
           {/* 要素サンプル一覧（ビジュアル） */}
-          <div className="mb-6 rounded-xl overflow-hidden border border-slate-700 bg-slate-950">
+          <div className="mb-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
             <img
               src="images/manual-elements.png"
               alt="オーバーレイ要素サンプル：ミニスコア・対戦カード・大型スコア・スタメン一覧・イニング別スコア・投手/打者カード・BSOパネル"
@@ -208,7 +208,7 @@ export default function HomePage() {
           />
 
           {/* 全体ワークフロー図 */}
-          <div className="mb-6 rounded-xl overflow-hidden border border-slate-700 bg-slate-800/50">
+          <div className="mb-6 rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm">
             <img
               src="images/manual-workflow.jpg"
               alt="操作方法：コントロールパネル→OBS Studio→YouTube Live の3ステップ"
@@ -219,7 +219,7 @@ export default function HomePage() {
 
           <a
             href="guide.html"
-            className="group flex items-center justify-between gap-4 bg-gradient-to-br from-[#538bb0]/15 to-[#538bb0]/5 hover:from-[#538bb0]/25 hover:to-[#538bb0]/10 border-2 border-[#538bb0] rounded-xl p-5 mb-5 transition-all"
+            className="group flex items-center justify-between gap-4 bg-[#538bb0]/5 hover:bg-[#538bb0]/10 border-2 border-[#538bb0] rounded-xl p-5 mb-5 transition-all"
           >
             <div className="flex items-center gap-4">
               <div className="bg-[#538bb0] rounded-lg p-3 shrink-0">
@@ -229,7 +229,7 @@ export default function HomePage() {
                 <div className="text-[#538bb0] font-bold text-base md:text-lg">
                   スクリーンショット付き 詳細ガイド
                 </div>
-                <div className="text-slate-400 text-xs md:text-sm">
+                <div className="text-slate-600 text-xs md:text-sm">
                   操作デモ動画つき・初めての方はこちらから
                 </div>
               </div>
@@ -244,8 +244,8 @@ export default function HomePage() {
               title="カスタムドックを追加（コントロール画面）"
               description={
                 <>
-                  OBS の「<strong className="text-white">ドック</strong>」→
-                  「<strong className="text-white">カスタムブラウザドック</strong>」で以下を設定：
+                  OBS の「<strong className="text-slate-900">ドック</strong>」→
+                  「<strong className="text-slate-900">カスタムブラウザドック</strong>」で以下を設定：
                 </>
               }
               items={[
@@ -255,7 +255,7 @@ export default function HomePage() {
             />
             <StepCard
               stepNum={2}
-              accent="amber"
+              accent="orange"
               title="ブラウザソースを追加（オーバーレイ）"
               description={<>OBS の「ソース」→「ブラウザ」で以下を設定：</>}
               items={[
@@ -266,20 +266,20 @@ export default function HomePage() {
             />
           </div>
 
-          <div className="mt-5 flex items-start gap-2.5 bg-amber-300/5 border border-amber-300/30 rounded-lg p-3.5">
-            <Shield className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
-            <p className="text-amber-300/90 text-xs leading-relaxed">
+          <div className="mt-5 flex items-start gap-2.5 bg-[#f97316]/5 border border-[#f97316]/30 rounded-lg p-3.5">
+            <Shield className="w-4 h-4 text-[#f97316] shrink-0 mt-0.5" />
+            <p className="text-slate-700 text-xs leading-relaxed">
               カスタムドックとブラウザソースは OBS 内で同じブラウザエンジン（CEF）を共有するため、
               リアルタイム同期が可能です。Chrome 等の外部ブラウザでは同期できません。
             </p>
           </div>
         </div>
 
-        {/* 問い合わせ CTA */}
+        {/* 問い合わせ CTA（強調アクセントとして濃紺グラデを残す） */}
         <div className="mb-16">
           <div className="relative bg-gradient-to-br from-[#1d3557] via-slate-800 to-slate-900 border-2 border-[#538bb0]/40 rounded-2xl p-8 text-center overflow-hidden">
-            <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#538bb0]/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-amber-300/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#538bb0]/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-[#f97316]/10 rounded-full blur-3xl pointer-events-none" />
             <div className="relative">
               <div className="inline-flex items-center gap-2 bg-[#538bb0]/20 border border-[#538bb0]/40 rounded-full px-4 py-1.5 mb-4">
                 <MailQuestion className="w-4 h-4 text-[#538bb0]" />
@@ -308,7 +308,7 @@ export default function HomePage() {
 
         {/* 技術スタック（控えめに最後） */}
         <details className="mb-10 group">
-          <summary className="cursor-pointer text-slate-400 text-xs hover:text-white transition-colors list-none flex items-center justify-center gap-2">
+          <summary className="cursor-pointer text-slate-500 text-xs hover:text-slate-900 transition-colors list-none flex items-center justify-center gap-2">
             <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
             技術スタックを見る
           </summary>
@@ -316,7 +316,7 @@ export default function HomePage() {
             {['React', 'TypeScript', 'Vite', 'Tailwind CSS', 'Zustand', 'BroadcastChannel API', 'GitHub Pages'].map((tech) => (
               <span
                 key={tech}
-                className="bg-slate-800 border border-slate-600 text-slate-300 text-xs px-3 py-1 rounded-full"
+                className="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-1 rounded-full"
               >
                 {tech}
               </span>
@@ -325,13 +325,13 @@ export default function HomePage() {
         </details>
 
         {/* フッター */}
-        <div className="text-center border-t border-slate-700 pt-6 space-y-3">
+        <div className="text-center border-t border-slate-200 pt-6 space-y-3">
           <p className="text-sm">
             <a href={HITO_SITE} target="_blank" rel="noopener noreferrer" className="text-[#538bb0] hover:underline font-medium">
               株式会社ひと
             </a>
           </p>
-          <div className="flex items-center justify-center gap-4 text-xs text-slate-400">
+          <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
             <a
               href={REPO_URL}
               target="_blank"
@@ -341,7 +341,7 @@ export default function HomePage() {
               <Github className="w-3.5 h-3.5" />
               GitHub
             </a>
-            <span className="text-slate-700">|</span>
+            <span className="text-slate-300">|</span>
             <a
               href={`${REPO_URL}/issues/new`}
               target="_blank"
@@ -366,11 +366,11 @@ function SectionHeader({
   label: string
   title: string
   subtitle: string
-  accent?: 'primary' | 'amber'
+  accent?: 'primary' | 'orange'
 }) {
   const accentColors =
-    accent === 'amber'
-      ? { bar: 'bg-amber-300', text: 'text-amber-300' }
+    accent === 'orange'
+      ? { bar: 'bg-[#f97316]', text: 'text-[#f97316]' }
       : { bar: 'bg-[#538bb0]', text: 'text-[#538bb0]' }
   return (
     <div className="mb-6">
@@ -380,8 +380,8 @@ function SectionHeader({
           {label}
         </span>
       </div>
-      <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-1.5">{title}</h2>
-      <p className="text-slate-400 text-sm">{subtitle}</p>
+      <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-1.5 text-slate-900">{title}</h2>
+      <p className="text-slate-600 text-sm">{subtitle}</p>
     </div>
   )
 }
@@ -396,14 +396,14 @@ function Reason({
   desc: string
 }) {
   return (
-    <div className="group bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-amber-300/50 rounded-xl p-4 transition-all">
+    <div className="group bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#f97316]/60 rounded-xl p-4 transition-all shadow-sm">
       <div className="flex items-start gap-3">
-        <div className="bg-amber-300/15 group-hover:bg-amber-300/25 border border-amber-300/30 rounded-lg p-2 shrink-0 transition-colors">
-          <div className="w-5 h-5 text-amber-300 [&>svg]:w-5 [&>svg]:h-5">{icon}</div>
+        <div className="bg-[#f97316]/10 group-hover:bg-[#f97316]/20 border border-[#f97316]/30 rounded-lg p-2 shrink-0 transition-colors">
+          <div className="w-5 h-5 text-[#f97316] [&>svg]:w-5 [&>svg]:h-5">{icon}</div>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-amber-300 text-base font-bold mb-1 leading-tight">{title}</div>
-          <div className="text-slate-300 text-xs leading-relaxed">{desc}</div>
+          <div className="text-[#f97316] text-base font-bold mb-1 leading-tight">{title}</div>
+          <div className="text-slate-700 text-xs leading-relaxed">{desc}</div>
         </div>
       </div>
     </div>
@@ -420,14 +420,14 @@ function FeatureCard({
   desc: string
 }) {
   return (
-    <div className="group bg-slate-800 hover:bg-slate-700/70 border border-slate-700 hover:border-[#538bb0]/50 rounded-xl p-4 transition-all">
+    <div className="group bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#538bb0]/60 rounded-xl p-4 transition-all shadow-sm">
       <div className="flex items-start gap-3">
-        <div className="bg-[#538bb0]/15 group-hover:bg-[#538bb0]/25 border border-[#538bb0]/30 rounded-lg p-2 shrink-0 transition-colors">
+        <div className="bg-[#538bb0]/10 group-hover:bg-[#538bb0]/20 border border-[#538bb0]/30 rounded-lg p-2 shrink-0 transition-colors">
           <div className="w-4 h-4 text-[#538bb0] [&>svg]:w-4 [&>svg]:h-4">{icon}</div>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-white font-bold text-sm mb-1 leading-tight">{title}</div>
-          <div className="text-slate-400 text-xs leading-relaxed">{desc}</div>
+          <div className="text-slate-900 font-bold text-sm mb-1 leading-tight">{title}</div>
+          <div className="text-slate-600 text-xs leading-relaxed">{desc}</div>
         </div>
       </div>
     </div>
@@ -442,18 +442,18 @@ function StepCard({
   items,
 }: {
   stepNum: number
-  accent: 'primary' | 'amber'
+  accent: 'primary' | 'orange'
   title: string
   description: React.ReactNode
   items: { label: string; value: string; warn?: boolean }[]
 }) {
   const colors =
-    accent === 'amber'
+    accent === 'orange'
       ? {
-          badge: 'bg-amber-300 text-slate-900',
-          border: 'border-amber-300/40',
-          title: 'text-amber-300',
-          ring: 'ring-amber-300/20',
+          badge: 'bg-[#f97316] text-white',
+          border: 'border-[#f97316]/40',
+          title: 'text-[#f97316]',
+          ring: 'ring-[#f97316]/20',
         }
       : {
           badge: 'bg-[#538bb0] text-white',
@@ -462,7 +462,7 @@ function StepCard({
           ring: 'ring-[#538bb0]/20',
         }
   return (
-    <div className={`bg-slate-800/80 border ${colors.border} rounded-xl p-5 ring-1 ${colors.ring}`}>
+    <div className={`bg-white border ${colors.border} rounded-xl p-5 ring-1 ${colors.ring} shadow-sm`}>
       <div className="flex items-start gap-4 mb-3">
         <div className={`${colors.badge} font-bold text-base w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-md`}>
           {stepNum}
@@ -471,23 +471,23 @@ function StepCard({
           <h3 className={`font-bold ${colors.title} text-base md:text-lg leading-tight mb-1.5`}>
             {title}
           </h3>
-          <p className="text-slate-300 text-sm leading-relaxed">{description}</p>
+          <p className="text-slate-700 text-sm leading-relaxed">{description}</p>
         </div>
       </div>
       <div className="space-y-2 ml-0 md:ml-14">
         {items.map((item) => (
           <div
             key={item.label}
-            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 bg-slate-900/60 border border-slate-700/60 rounded-lg px-3 py-2"
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2"
           >
-            <span className="text-slate-400 text-xs font-medium sm:w-28 shrink-0">
+            <span className="text-slate-500 text-xs font-medium sm:w-28 shrink-0">
               {item.label}
             </span>
             <code
               className={`flex-1 px-2 py-1 rounded text-xs font-mono break-all ${
                 item.warn
-                  ? 'bg-red-500/10 text-red-300 border border-red-500/30'
-                  : 'bg-slate-950 text-slate-100 border border-slate-700'
+                  ? 'bg-red-50 text-red-700 border border-red-200'
+                  : 'bg-slate-900 text-slate-100 border border-slate-700'
               }`}
             >
               {item.value}
@@ -498,4 +498,3 @@ function StepCard({
     </div>
   )
 }
-
