@@ -10,7 +10,7 @@ export default function TournamentControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-3 space-y-2">
-      <SectionTitle title="大会情報" controls={['大会名']} />
+      <SectionTitle title="大会名" controls={['大会名']} />
       <Field
         label="大会名"
         value={tournament.title}

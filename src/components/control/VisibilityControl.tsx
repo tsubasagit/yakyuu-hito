@@ -26,10 +26,10 @@ export interface ToggleMeta {
 export const TOGGLE_META: ToggleMeta[] = [
   { id: 'miniScore',        label: 'ミニスコア',  sources: ['試合管理', '得点'],     scrollTarget: 'section-score',      stripe: 'bg-sky-500'     },
   { id: 'lineup',           label: 'スタメン',    sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-orange-500'  },
-  { id: 'tournamentHeader', label: '大会名',      sources: ['大会情報'],              scrollTarget: 'section-tournament', stripe: 'bg-violet-500'  },
+  { id: 'tournamentHeader', label: '大会名',      sources: ['大会名'],                scrollTarget: 'section-tournament', stripe: 'bg-violet-500'  },
   { id: 'bigScore',         label: '大型スコア',  sources: ['試合管理', '得点'],     scrollTarget: 'section-score',      stripe: 'bg-rose-500'    },
   { id: 'inningScoreboard', label: 'スコアボード', sources: ['得点'],                  scrollTarget: 'section-score',      stripe: 'bg-emerald-500' },
-  { id: 'statusPanel',      label: 'BSOパネル',   sources: ['イニング', 'BSO管理'],   scrollTarget: 'section-count',      stripe: 'bg-cyan-500'    },
+  { id: 'statusPanel',      label: 'BSOパネル',   sources: ['イニング', 'BSOパネル'], scrollTarget: 'section-count',      stripe: 'bg-cyan-500'    },
   { id: 'currentBatter',    label: 'バッター',    sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-amber-500'   },
   { id: 'currentPitcher',   label: 'ピッチャー',  sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-red-500'     },
 ]

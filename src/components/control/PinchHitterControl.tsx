@@ -42,7 +42,7 @@ export default function PinchHitterControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-3 space-y-2">
-      <SectionTitle title="代打" controls={['代打カード']} />
+      <SectionTitle title="代打カード" controls={['代打カード']} />
 
       <div className="text-[11px] text-gray-400">
         現在の攻撃: <span className="text-white font-bold">{attackingTeam.name}</span>

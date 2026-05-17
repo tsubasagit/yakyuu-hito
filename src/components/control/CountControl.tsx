@@ -27,7 +27,7 @@ export default function CountControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
-      <SectionTitle title="BSO管理" controls={['BSOパネル']} />
+      <SectionTitle title="BSOパネル" controls={['BSOパネル']} />
 
       <div className="grid grid-cols-3 gap-3">
         {/* ボール */}

@@ -66,12 +66,12 @@ export default function ControlPage() {
 
   const orderableSections: Section[] = [
     { id: 'inning',      label: 'イニング',          component: <InningControl /> },
-    { id: 'count',       label: 'BSO管理',           component: <CountControl /> },
+    { id: 'count',       label: 'BSOパネル',         component: <CountControl /> },
     { id: 'score',       label: '得点',              component: <ScoreControl /> },
     { id: 'lineup',      label: '打順・選手',        component: <LineupControl /> },
-    { id: 'pinchhitter', label: '代打',              component: <PinchHitterControl /> },
+    { id: 'pinchhitter', label: '代打カード',        component: <PinchHitterControl /> },
     { id: 'ticker',      label: '速報テロップ',      component: <TickerControl /> },
-    { id: 'tournament',  label: '大会情報',          component: <TournamentControl /> },
+    { id: 'tournament',  label: '大会名',            component: <TournamentControl /> },
   ]
 
   /** 表示トグルとの対応色（左帯）— stripeForSection の引数は section-{id} 形式 */
