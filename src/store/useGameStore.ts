@@ -675,7 +675,7 @@ export const useGameStore = create<GameStore>()(
       setPinchHitter: (value) => set({ pinchHitter: value }),
     }),
     {
-      name: 'yakyuu-game-state',
+      name: 'yakyuu-game-state-v2',
       storage: {
         getItem: (name) => {
           try {

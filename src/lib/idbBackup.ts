@@ -9,7 +9,7 @@
 
 const DB_NAME = 'yakyuu-backup'
 const STORE_NAME = 'state'
-const KEY = 'game-state'
+const KEY = 'game-state-v2'
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
