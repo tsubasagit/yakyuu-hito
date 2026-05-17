@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import {
   ArrowRight,
   ArrowUpRight,
@@ -55,14 +54,14 @@ export default function HomePage() {
 
         {/* ヒーロー */}
         <div className="text-center mb-10">
-          <p className="text-[#538bb0] text-sm tracking-[0.3em] mb-3 font-bold">
+          <p className="text-[#538bb0] text-base tracking-[0.3em] mb-4 font-bold">
             株式会社ひと 大学野球配信オーバーレイ
           </p>
-          <h1 className="text-5xl md:text-6xl font-bold mb-5 tracking-tight leading-[1.15] text-slate-900">
+          <h1 className="text-6xl md:text-7xl font-bold mb-6 tracking-tight leading-[1.1] text-slate-900">
             初めての配信でも、<br />迷わない。
           </h1>
-          <p className="text-slate-700 text-lg md:text-xl leading-relaxed max-w-xl mx-auto font-medium">
-            学生スタッフ <span className="text-[#f97316] font-bold text-2xl">1人</span> で
+          <p className="text-slate-700 text-xl md:text-2xl leading-relaxed max-w-2xl mx-auto font-medium">
+            学生スタッフ <span className="text-[#f97316] font-bold text-3xl">1人</span> で
             操作できる、<br className="hidden md:inline" />
             大学野球専用のスコアボード。
           </p>
@@ -78,51 +77,72 @@ export default function HomePage() {
               loading="lazy"
             />
           </div>
-          <p className="text-slate-500 text-xs text-center mt-2">
+          <p className="text-slate-500 text-sm text-center mt-3">
             ▲ 試合中のオーバーレイ表示イメージ（球場映像にスコア・スタメン・BSOを重ねて配信）
           </p>
         </div>
 
-        {/* 入口リンク */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16">
-          <Link
-            to="/control"
-            className="group relative block bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#538bb0] rounded-2xl p-6 transition-all shadow-sm hover:shadow-[0_8px_24px_rgba(83,139,176,0.20)] hover:-translate-y-0.5"
+        {/* 入口リンク（外部URL風の巨大アクションボタン） */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-16">
+          <a
+            href="#/control"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative block bg-white hover:bg-[#538bb0]/[0.04] border-2 border-[#538bb0] rounded-2xl p-7 transition-all shadow-md hover:shadow-[0_12px_32px_rgba(83,139,176,0.30)] hover:-translate-y-1"
           >
-            <div className="flex items-start justify-between mb-3">
-              <div className="bg-[#538bb0]/10 border border-[#538bb0]/30 rounded-lg p-2.5">
-                <Settings2 className="w-5 h-5 text-[#538bb0]" strokeWidth={2.25} />
+            <div className="flex items-start justify-between mb-4">
+              <div className="bg-[#538bb0] rounded-xl p-3.5 shadow-md">
+                <Settings2 className="w-7 h-7 text-white" strokeWidth={2.25} />
               </div>
-              <ArrowUpRight className="w-5 h-5 text-slate-400 group-hover:text-[#538bb0] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
+              <span className="inline-flex items-center gap-1 bg-[#538bb0]/10 text-[#538bb0] text-[11px] font-bold px-2.5 py-1 rounded-full">
+                <ExternalLink className="w-3 h-3" />
+                新しいタブで開く
+              </span>
             </div>
-            <div className="text-[11px] text-[#538bb0] font-bold mb-1 tracking-wider">
+            <div className="text-sm text-[#538bb0] font-bold mb-1.5 tracking-wider">
               操作する人へ
             </div>
-            <h2 className="text-2xl font-bold mb-2 text-slate-900">コントロールパネル</h2>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              スコア・カウント・選手の操作画面<br />
-              <span className="text-slate-500 text-xs">（OBSカスタムドック用）</span>
+            <h2 className="text-3xl font-bold mb-2 text-slate-900">コントロールパネル</h2>
+            <p className="text-slate-600 text-base leading-relaxed mb-4">
+              スコア・カウント・選手の操作画面
+              <span className="block text-slate-500 text-sm mt-0.5">OBSカスタムドック用URL</span>
             </p>
-          </Link>
-          <Link
-            to="/overlay"
-            className="group relative block bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#f97316] rounded-2xl p-6 transition-all shadow-sm hover:shadow-[0_8px_24px_rgba(249,115,22,0.20)] hover:-translate-y-0.5"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className="bg-[#f97316]/10 border border-[#f97316]/30 rounded-lg p-2.5">
-                <Tv className="w-5 h-5 text-[#f97316]" strokeWidth={2.25} />
-              </div>
-              <ArrowUpRight className="w-5 h-5 text-slate-400 group-hover:text-[#f97316] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
+            <div className="flex items-center justify-between bg-slate-900 text-slate-100 rounded-lg px-3 py-2.5 font-mono text-xs">
+              <span className="truncate">{baseUrl}#/control</span>
+              <ArrowUpRight className="w-4 h-4 text-[#538bb0] shrink-0 ml-2 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
             </div>
-            <div className="text-[11px] text-[#f97316] font-bold mb-1 tracking-wider">
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-[#538bb0] rounded-b-2xl" />
+          </a>
+
+          <a
+            href="#/overlay"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative block bg-white hover:bg-[#f97316]/[0.04] border-2 border-[#f97316] rounded-2xl p-7 transition-all shadow-md hover:shadow-[0_12px_32px_rgba(249,115,22,0.30)] hover:-translate-y-1"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="bg-[#f97316] rounded-xl p-3.5 shadow-md">
+                <Tv className="w-7 h-7 text-white" strokeWidth={2.25} />
+              </div>
+              <span className="inline-flex items-center gap-1 bg-[#f97316]/10 text-[#f97316] text-[11px] font-bold px-2.5 py-1 rounded-full">
+                <ExternalLink className="w-3 h-3" />
+                新しいタブで開く
+              </span>
+            </div>
+            <div className="text-sm text-[#f97316] font-bold mb-1.5 tracking-wider">
               OBSに取り込む画面
             </div>
-            <h2 className="text-2xl font-bold mb-2 text-slate-900">オーバーレイ</h2>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              透明背景のスコアボード<br />
-              <span className="text-slate-500 text-xs">（OBSブラウザソース用 / 1920×1080）</span>
+            <h2 className="text-3xl font-bold mb-2 text-slate-900">オーバーレイ</h2>
+            <p className="text-slate-600 text-base leading-relaxed mb-4">
+              透明背景のスコアボード
+              <span className="block text-slate-500 text-sm mt-0.5">OBSブラウザソース用URL / 1920×1080</span>
             </p>
-          </Link>
+            <div className="flex items-center justify-between bg-slate-900 text-slate-100 rounded-lg px-3 py-2.5 font-mono text-xs">
+              <span className="truncate">{baseUrl}#/overlay</span>
+              <ArrowUpRight className="w-4 h-4 text-[#f97316] shrink-0 ml-2 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
+            </div>
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-[#f97316] rounded-b-2xl" />
+          </a>
         </div>
 
         {/* 学生スタッフ向け安心ポイント */}
@@ -226,10 +246,10 @@ export default function HomePage() {
                 <Tv className="w-6 h-6 text-white" strokeWidth={2.25} />
               </div>
               <div>
-                <div className="text-[#538bb0] font-bold text-base md:text-lg">
+                <div className="text-[#538bb0] font-bold text-lg md:text-xl">
                   スクリーンショット付き 詳細ガイド
                 </div>
-                <div className="text-slate-600 text-xs md:text-sm">
+                <div className="text-slate-600 text-sm md:text-base mt-0.5">
                   操作デモ動画つき・初めての方はこちらから
                 </div>
               </div>
@@ -266,9 +286,9 @@ export default function HomePage() {
             />
           </div>
 
-          <div className="mt-5 flex items-start gap-2.5 bg-[#f97316]/5 border border-[#f97316]/30 rounded-lg p-3.5">
-            <Shield className="w-4 h-4 text-[#f97316] shrink-0 mt-0.5" />
-            <p className="text-slate-700 text-xs leading-relaxed">
+          <div className="mt-5 flex items-start gap-3 bg-[#f97316]/5 border border-[#f97316]/30 rounded-lg p-4">
+            <Shield className="w-5 h-5 text-[#f97316] shrink-0 mt-0.5" />
+            <p className="text-slate-700 text-sm leading-relaxed">
               カスタムドックとブラウザソースは OBS 内で同じブラウザエンジン（CEF）を共有するため、
               リアルタイム同期が可能です。Chrome 等の外部ブラウザでは同期できません。
             </p>
@@ -285,10 +305,10 @@ export default function HomePage() {
                 <MailQuestion className="w-4 h-4 text-[#538bb0]" />
                 <span className="text-[#538bb0] text-xs font-bold tracking-wider">CONTACT</span>
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 tracking-tight">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
                 大学野球配信のご相談
               </h2>
-              <p className="text-slate-300 text-sm md:text-base mb-6 leading-relaxed max-w-xl mx-auto">
+              <p className="text-slate-300 text-base md:text-lg mb-6 leading-relaxed max-w-xl mx-auto">
                 本ツールは株式会社ひとが大学野球オンライン配信のために運用しています。<br className="hidden md:inline" />
                 配信導入・カスタマイズ等のご相談は<br className="md:hidden" />
                 株式会社ひとまでお気軽にお問い合わせください。
@@ -380,8 +400,8 @@ function SectionHeader({
           {label}
         </span>
       </div>
-      <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-1.5 text-slate-900">{title}</h2>
-      <p className="text-slate-600 text-sm">{subtitle}</p>
+      <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 text-slate-900">{title}</h2>
+      <p className="text-slate-600 text-base">{subtitle}</p>
     </div>
   )
 }
@@ -396,14 +416,14 @@ function Reason({
   desc: string
 }) {
   return (
-    <div className="group bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#f97316]/60 rounded-xl p-4 transition-all shadow-sm">
-      <div className="flex items-start gap-3">
-        <div className="bg-[#f97316]/10 group-hover:bg-[#f97316]/20 border border-[#f97316]/30 rounded-lg p-2 shrink-0 transition-colors">
-          <div className="w-5 h-5 text-[#f97316] [&>svg]:w-5 [&>svg]:h-5">{icon}</div>
+    <div className="group bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#f97316]/60 rounded-xl p-5 transition-all shadow-sm">
+      <div className="flex items-start gap-3.5">
+        <div className="bg-[#f97316]/10 group-hover:bg-[#f97316]/20 border border-[#f97316]/30 rounded-lg p-2.5 shrink-0 transition-colors">
+          <div className="w-6 h-6 text-[#f97316] [&>svg]:w-6 [&>svg]:h-6">{icon}</div>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[#f97316] text-base font-bold mb-1 leading-tight">{title}</div>
-          <div className="text-slate-700 text-xs leading-relaxed">{desc}</div>
+          <div className="text-[#f97316] text-lg font-bold mb-1.5 leading-tight">{title}</div>
+          <div className="text-slate-700 text-sm leading-relaxed">{desc}</div>
         </div>
       </div>
     </div>
@@ -420,14 +440,14 @@ function FeatureCard({
   desc: string
 }) {
   return (
-    <div className="group bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#538bb0]/60 rounded-xl p-4 transition-all shadow-sm">
-      <div className="flex items-start gap-3">
-        <div className="bg-[#538bb0]/10 group-hover:bg-[#538bb0]/20 border border-[#538bb0]/30 rounded-lg p-2 shrink-0 transition-colors">
-          <div className="w-4 h-4 text-[#538bb0] [&>svg]:w-4 [&>svg]:h-4">{icon}</div>
+    <div className="group bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#538bb0]/60 rounded-xl p-5 transition-all shadow-sm">
+      <div className="flex items-start gap-3.5">
+        <div className="bg-[#538bb0]/10 group-hover:bg-[#538bb0]/20 border border-[#538bb0]/30 rounded-lg p-2.5 shrink-0 transition-colors">
+          <div className="w-6 h-6 text-[#538bb0] [&>svg]:w-6 [&>svg]:h-6">{icon}</div>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-slate-900 font-bold text-sm mb-1 leading-tight">{title}</div>
-          <div className="text-slate-600 text-xs leading-relaxed">{desc}</div>
+          <div className="text-slate-900 font-bold text-base mb-1.5 leading-tight">{title}</div>
+          <div className="text-slate-600 text-sm leading-relaxed">{desc}</div>
         </div>
       </div>
     </div>
@@ -462,29 +482,29 @@ function StepCard({
           ring: 'ring-[#538bb0]/20',
         }
   return (
-    <div className={`bg-white border ${colors.border} rounded-xl p-5 ring-1 ${colors.ring} shadow-sm`}>
-      <div className="flex items-start gap-4 mb-3">
-        <div className={`${colors.badge} font-bold text-base w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-md`}>
+    <div className={`bg-white border ${colors.border} rounded-xl p-6 ring-1 ${colors.ring} shadow-sm`}>
+      <div className="flex items-start gap-4 mb-4">
+        <div className={`${colors.badge} font-bold text-xl w-12 h-12 rounded-lg flex items-center justify-center shrink-0 shadow-md`}>
           {stepNum}
         </div>
         <div className="flex-1 min-w-0 pt-1">
-          <h3 className={`font-bold ${colors.title} text-base md:text-lg leading-tight mb-1.5`}>
+          <h3 className={`font-bold ${colors.title} text-lg md:text-xl leading-tight mb-2`}>
             {title}
           </h3>
-          <p className="text-slate-700 text-sm leading-relaxed">{description}</p>
+          <p className="text-slate-700 text-base leading-relaxed">{description}</p>
         </div>
       </div>
-      <div className="space-y-2 ml-0 md:ml-14">
+      <div className="space-y-2.5 ml-0 md:ml-16">
         {items.map((item) => (
           <div
             key={item.label}
-            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2"
+            className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5"
           >
-            <span className="text-slate-500 text-xs font-medium sm:w-28 shrink-0">
+            <span className="text-slate-600 text-sm font-medium sm:w-32 shrink-0">
               {item.label}
             </span>
             <code
-              className={`flex-1 px-2 py-1 rounded text-xs font-mono break-all ${
+              className={`flex-1 px-3 py-1.5 rounded text-sm font-mono break-all ${
                 item.warn
                   ? 'bg-red-50 text-red-700 border border-red-200'
                   : 'bg-slate-900 text-slate-100 border border-slate-700'
