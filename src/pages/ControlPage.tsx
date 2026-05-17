@@ -6,7 +6,6 @@ import CountControl from '../components/control/CountControl'
 import ScoreControl from '../components/control/ScoreControl'
 import LineupControl from '../components/control/LineupControl'
 import VisibilityControl, { stripeForSection } from '../components/control/VisibilityControl'
-import PanelSizeControl from '../components/control/PanelSizeControl'
 import TournamentControl from '../components/control/TournamentControl'
 import PinchHitterControl from '../components/control/PinchHitterControl'
 import TickerControl from '../components/control/TickerControl'
@@ -152,11 +151,8 @@ export default function ControlPage() {
           </div>
         </header>
 
-        {/* 最上段固定: 表示ON/OFFトグル */}
+        {/* 最上段固定: 表示ON/OFF + サイズ調整（統合パネル） */}
         <VisibilityControl />
-
-        {/* パネルサイズ調整（表示ON/OFFと対）— 表示の直下に固定 */}
-        <PanelSizeControl />
 
         {/* 試合管理（最上段固定・並び替え不可） */}
         <div>{PINNED.component}</div>
