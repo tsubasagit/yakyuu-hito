@@ -45,18 +45,18 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* ヒーロー画像（OBSオーバーレイ実例） */}
+        {/* ヒーロー画像（試合中のオーバーレイ表示イメージ） */}
         <div className="mb-12">
           <div className="rounded-xl overflow-hidden border border-slate-700 shadow-[0_8px_32px_rgba(0,0,0,0.5)] bg-slate-800">
             <img
-              src="images/hero-overlay-game.png"
-              alt="OBSオーバーレイ表示例：帝都大学 vs 早凌大学"
+              src="images/hero-stadium.jpg"
+              alt="試合中のオーバーレイ表示イメージ：帝都大学 vs 早凌大学"
               className="w-full block"
               loading="lazy"
             />
           </div>
           <p className="text-slate-500 text-xs text-center mt-2">
-            ▲ 実際のOBSオーバーレイ出力（1920×1080・透明背景）
+            ▲ 試合中のオーバーレイ表示イメージ（球場映像にスコア・スタメン・BSOを重ねて配信）
           </p>
         </div>
 
