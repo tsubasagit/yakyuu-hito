@@ -179,7 +179,7 @@ export default function HomePage() {
           {/* 要素サンプル一覧（ビジュアル） */}
           <div className="mb-6 rounded-xl overflow-hidden border border-slate-700 bg-slate-950">
             <img
-              src="images/manual-elements.jpg"
+              src="images/manual-elements.png"
               alt="オーバーレイ要素サンプル：ミニスコア・対戦カード・大型スコア・スタメン一覧・イニング別スコア・投手/打者カード・BSOパネル"
               className="w-full block"
               loading="lazy"
