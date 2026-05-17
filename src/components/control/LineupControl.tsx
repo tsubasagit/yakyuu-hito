@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
 import type { DhMode, LineupPlayer, Position } from '../../types'
-import { CARP_LINEUP, HAWKS_LINEUP } from '../../types'
+import { TEITO_LINEUP, SORYO_LINEUP } from '../../types'
 import { parseLineupCsv, LINEUP_CSV_SAMPLE } from '../../lib/csvImport'
 
 function downloadCsvSample() {
@@ -293,16 +293,16 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
             ⬇ サンプルCSV
           </button>
           <button
-            onClick={() => setLineup(side, [...CARP_LINEUP])}
+            onClick={() => setLineup(side, [...TEITO_LINEUP])}
             className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
           >
-            プリセット：広島カープ
+            プリセット：帝都大学
           </button>
           <button
-            onClick={() => setLineup(side, [...HAWKS_LINEUP])}
+            onClick={() => setLineup(side, [...SORYO_LINEUP])}
             className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
           >
-            プリセット：ソフトバンク
+            プリセット：早凌大学
           </button>
         </div>
       </div>
