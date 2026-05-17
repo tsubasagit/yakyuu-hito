@@ -235,31 +235,32 @@ function emptyLineup(): LineupPlayer[] {
 }
 
 // デモ用: 帝都大学 ホワイトイーグルス（架空 / 東都リーグ風）
+// 学生運用ではスタッツ表示なし。打順・名前・守備のみ
 export const TEITO_LINEUP: LineupPlayer[] = [
-  { order: 1, name: '三輪 蓮', number: '8', position: '中', battingAvg: '.322', homeRuns: '1', rbi: '12', ops: '.810' },
-  { order: 2, name: '古谷 颯太', number: '6', position: '遊', battingAvg: '.298', homeRuns: '2', rbi: '18', ops: '.785' },
-  { order: 3, name: '上條 蒼真', number: '7', position: '左', battingAvg: '.345', homeRuns: '5', rbi: '28', ops: '.910' },
-  { order: 4, name: '神宮 大和', number: '3', position: '一', battingAvg: '.312', homeRuns: '8', rbi: '32', ops: '.945' },
-  { order: 5, name: '久保田 凌', number: '9', position: '右', battingAvg: '.276', homeRuns: '6', rbi: '24', ops: '.832' },
-  { order: 6, name: '武藤 光輝', number: '24', position: 'DH', battingAvg: '.268', homeRuns: '4', rbi: '22', ops: '.788' },
-  { order: 7, name: '桐山 直人', number: '4', position: '二', battingAvg: '.254', homeRuns: '1', rbi: '11', ops: '.690' },
-  { order: 8, name: '河合 篤', number: '2', position: '捕', battingAvg: '.241', homeRuns: '2', rbi: '14', ops: '.665' },
-  { order: 9, name: '梶 拓海', number: '5', position: '三', battingAvg: '.233', homeRuns: '0', rbi: '8', ops: '.612' },
-  { order: 10, name: '倉本 龍之介', number: '1', position: '投', appearances: '12', record: '7勝3敗' },
+  { order: 1, name: '三輪 蓮', number: '8', position: '中' },
+  { order: 2, name: '古谷 颯太', number: '6', position: '遊' },
+  { order: 3, name: '上條 蒼真', number: '7', position: '左' },
+  { order: 4, name: '神宮 大和', number: '3', position: '一' },
+  { order: 5, name: '久保田 凌', number: '9', position: '右' },
+  { order: 6, name: '武藤 光輝', number: '24', position: 'DH' },
+  { order: 7, name: '桐山 直人', number: '4', position: '二' },
+  { order: 8, name: '河合 篤', number: '2', position: '捕' },
+  { order: 9, name: '梶 拓海', number: '5', position: '三' },
+  { order: 10, name: '倉本 龍之介', number: '1', position: '投' },
 ]
 
 // デモ用: 早凌大学 ブルーアロウズ（架空 / 東都リーグ風）
 export const SORYO_LINEUP: LineupPlayer[] = [
-  { order: 1, name: '高梨 啓人', number: '4', position: '二', battingAvg: '.305', homeRuns: '1', rbi: '14', ops: '.795' },
-  { order: 2, name: '安永 慎之介', number: '6', position: '遊', battingAvg: '.288', homeRuns: '3', rbi: '20', ops: '.802' },
-  { order: 3, name: '富田 凌空', number: '8', position: '中', battingAvg: '.333', homeRuns: '4', rbi: '25', ops: '.880' },
-  { order: 4, name: '黒田 颯', number: '3', position: '一', battingAvg: '.298', homeRuns: '9', rbi: '35', ops: '.928' },
-  { order: 5, name: '篠原 蓮', number: '9', position: '右', battingAvg: '.281', homeRuns: '6', rbi: '27', ops: '.845' },
-  { order: 6, name: '中野 海斗', number: '22', position: 'DH', battingAvg: '.272', homeRuns: '5', rbi: '22', ops: '.790' },
-  { order: 7, name: '平井 玲音', number: '7', position: '左', battingAvg: '.265', homeRuns: '2', rbi: '15', ops: '.720' },
-  { order: 8, name: '田所 智樹', number: '2', position: '捕', battingAvg: '.245', homeRuns: '3', rbi: '18', ops: '.708' },
-  { order: 9, name: '結城 隼', number: '5', position: '三', battingAvg: '.228', homeRuns: '0', rbi: '9', ops: '.625' },
-  { order: 10, name: '速水 翔太郎', number: '11', position: '投', appearances: '11', record: '8勝2敗' },
+  { order: 1, name: '高梨 啓人', number: '4', position: '二' },
+  { order: 2, name: '安永 慎之介', number: '6', position: '遊' },
+  { order: 3, name: '富田 凌空', number: '8', position: '中' },
+  { order: 4, name: '黒田 颯', number: '3', position: '一' },
+  { order: 5, name: '篠原 蓮', number: '9', position: '右' },
+  { order: 6, name: '中野 海斗', number: '22', position: 'DH' },
+  { order: 7, name: '平井 玲音', number: '7', position: '左' },
+  { order: 8, name: '田所 智樹', number: '2', position: '捕' },
+  { order: 9, name: '結城 隼', number: '5', position: '三' },
+  { order: 10, name: '速水 翔太郎', number: '11', position: '投' },
 ]
 
 export const DEFAULT_OVERLAY_POSITIONS: Record<string, OverlayPosition> = {
@@ -288,8 +289,8 @@ export const initialGameState: GameState = {
   homeErrors: 0,
   count: { balls: 0, strikes: 0, outs: 0 },
   runners: { first: false, second: false, third: false },
-  batter: { name: '三輪 蓮', number: '8', stat: '.322 1本 12打点 OPS.810', statLabel: '' },
-  pitcher: { name: '倉本 龍之介', number: '1', stat: '7勝3敗', statLabel: '12登板' },
+  batter: { name: '三輪 蓮', number: '8', stat: '', statLabel: '' },
+  pitcher: { name: '倉本 龍之介', number: '1', stat: '', statLabel: '' },
   awayLineup: [...TEITO_LINEUP],
   homeLineup: [...SORYO_LINEUP],
   awayBatterIndex: 0,

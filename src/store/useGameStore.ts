@@ -121,6 +121,8 @@ interface GameActions {
   setTeamName: (team: 'away' | 'home', name: string, shortName: string) => void
   setGameOver: (over: boolean) => void
   newGame: () => void
+  /** チーム情報（名前・色・打順・大会名・パネル位置等）を引き継いで試合データのみリセット */
+  newGameKeepTeams: () => void
   replaceState: (state: GameState) => void
   subtractBall: () => void
   subtractStrike: () => void
@@ -311,11 +313,12 @@ export const useGameStore = create<GameStore>()(
 
             // 同じ投手の場合は表示更新のみ（アピアランス重複防止）
             const activeIdx = history.findIndex(p => p.isActive)
+            // 学生運用簡素化のため、勝敗・登板数は overlay に伝播しない
             const pitcherInfo: PlayerInfo = {
               name: player.name,
               number: player.number,
-              stat: player.record || '',
-              statLabel: player.appearances ? `${player.appearances}登板` : '',
+              stat: '',
+              statLabel: '',
             }
 
             // このチームが現在守備中かどうか判定
@@ -449,6 +452,24 @@ export const useGameStore = create<GameStore>()(
 
       newGame: () => set({ ...initialGameState }),
 
+      newGameKeepTeams: () =>
+        set((s) => ({
+          ...initialGameState,
+          // チーム情報を引き継ぐ
+          awayTeam: s.awayTeam,
+          homeTeam: s.homeTeam,
+          awayLineup: s.awayLineup,
+          homeLineup: s.homeLineup,
+          awayDhMode: s.awayDhMode,
+          homeDhMode: s.homeDhMode,
+          // 大会・表示設定も引き継ぐ
+          tournament: s.tournament,
+          overlayPositions: s.overlayPositions,
+          overlayScale: s.overlayScale,
+          visibility: s.visibility,
+          mascotImages: s.mascotImages,
+        })),
+
       replaceState: (state) =>
         set((s) => ({
           ...state,
@@ -560,7 +581,7 @@ export const useGameStore = create<GameStore>()(
               base.pitcher = homeActive
             } else {
               const p = s.homeLineup[9]
-              if (p?.name) base.pitcher = { name: p.name, number: p.number, stat: p.record || '', statLabel: p.appearances ? `${p.appearances}登板` : '' }
+              if (p?.name) base.pitcher = { name: p.name, number: p.number, stat: '', statLabel: '' }
             }
             const hp = s.homePitcherHistory.find(p => p.isActive)
             if (hp) base.homePitchCount = hp.pitchCount
@@ -573,7 +594,7 @@ export const useGameStore = create<GameStore>()(
             base.pitcher = awayActive
           } else {
             const p = s.awayLineup[9]
-            if (p?.name) base.pitcher = { name: p.name, number: p.number, stat: p.record || '', statLabel: p.appearances ? `${p.appearances}登板` : '' }
+            if (p?.name) base.pitcher = { name: p.name, number: p.number, stat: '', statLabel: '' }
           }
           const ap = s.awayPitcherHistory.find(p => p.isActive)
           if (ap) base.awayPitchCount = ap.pitchCount
@@ -824,7 +845,7 @@ function advanceInningPatch(s: GameState): Partial<GameState> {
       if (p?.name) {
         resetState.pitcher = {
           name: p.name, number: p.number,
-          stat: p.record || '', statLabel: p.appearances ? `${p.appearances}登板` : '',
+          stat: '', statLabel: '',
         }
       }
     }
@@ -848,7 +869,7 @@ function advanceInningPatch(s: GameState): Partial<GameState> {
     if (p?.name) {
       resetState.pitcher = {
         name: p.name, number: p.number,
-        stat: p.record || '', statLabel: p.appearances ? `${p.appearances}登板` : '',
+        stat: '', statLabel: '',
       }
     }
   }

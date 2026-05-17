@@ -39,6 +39,7 @@ export default function GameControl() {
   const setTeamName = useGameStore((s) => s.setTeamName)
   const setGameOver = useGameStore((s) => s.setGameOver)
   const newGame = useGameStore((s) => s.newGame)
+  const newGameKeepTeams = useGameStore((s) => s.newGameKeepTeams)
   const setTeamColor = useGameStore((s) => s.setTeamColor)
   const resetOverlayPositions = useGameStore((s) => s.resetOverlayPositions)
   const overlayScale = useGameStore((s) => s.overlayScale ?? 1)
@@ -99,8 +100,14 @@ export default function GameControl() {
     return () => clearTimeout(timer)
   }, [awayName, homeName, setTeamName])
 
-  const handleNewGame = () => {
-    if (confirm('新しい試合を開始しますか？全データがリセットされます。')) {
+  const handleNewGameKeepTeams = () => {
+    if (confirm('新しい試合を開始しますか？\n\n● 同じチーム情報・打順・カラー・大会情報は引き継ぎます\n● スコア・カウント・走者・打席・投手履歴・プレーログはリセットされます')) {
+      newGameKeepTeams()
+    }
+  }
+
+  const handleNewGameFullReset = () => {
+    if (confirm('完全リセットして新しい試合を開始しますか？\n\nチーム情報・打順・カラー設定もすべて初期状態に戻ります。\nこの操作は取り消せません。')) {
       newGame()
     }
   }
@@ -148,12 +155,6 @@ export default function GameControl() {
           }`}
         >
           {isGameOver ? '試合再開' : '試合終了'}
-        </button>
-        <button
-          onClick={handleNewGame}
-          className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded text-sm font-bold"
-        >
-          新規試合
         </button>
         <button
           onClick={() => setColorEditorOpen((v) => !v)}
@@ -311,8 +312,40 @@ export default function GameControl() {
       </div>
 
       {isGameOver && (
-        <div className="bg-red-900/50 border border-red-500 rounded p-2 text-red-300 text-sm text-center">
-          試合終了
+        <div className="bg-gradient-to-br from-red-950/80 to-red-900/40 border-2 border-red-500/70 rounded-lg p-4 space-y-3">
+          <div className="text-center">
+            <div className="inline-block bg-red-600 text-white text-xs font-bold tracking-[0.3em] px-3 py-1 rounded mb-2">
+              GAME OVER
+            </div>
+            <div className="text-white text-base font-bold">試合終了</div>
+            <div className="text-gray-300 text-xs mt-1">
+              続行するか、新しい試合を作成してください
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => setGameOver(false)}
+              className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded font-bold text-sm"
+              title="誤って試合終了を押した場合や延長戦の場合"
+            >
+              ↩ この試合を再開する
+            </button>
+            <button
+              onClick={handleNewGameKeepTeams}
+              className="w-full bg-accent hover:bg-accent/80 text-white px-4 py-2.5 rounded font-bold text-sm"
+              title="チーム・打順・カラー・大会情報を引き継いで新試合"
+            >
+              ▶ 新しい試合を作成（同じチームで）
+            </button>
+            <button
+              onClick={handleNewGameFullReset}
+              className="w-full bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2.5 rounded font-bold text-xs border border-gray-600"
+              title="全データ初期化（チーム情報も含む）"
+            >
+              ⟲ 完全リセットして新試合
+            </button>
+          </div>
         </div>
       )}
     </div>
