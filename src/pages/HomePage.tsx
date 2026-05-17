@@ -175,6 +175,17 @@ export default function HomePage() {
             subtitle="必要なものだけON、不要なものはOFFでスッキリ画面に。"
             accent="primary"
           />
+
+          {/* 要素サンプル一覧（ビジュアル） */}
+          <div className="mb-6 rounded-xl overflow-hidden border border-slate-700 bg-slate-950">
+            <img
+              src="images/manual-elements.jpg"
+              alt="オーバーレイ要素サンプル：ミニスコア・対戦カード・大型スコア・スタメン一覧・イニング別スコア・投手/打者カード・BSOパネル"
+              className="w-full block"
+              loading="lazy"
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <FeatureCard icon={<BarChart3 />} title="ミニスコア" desc="左上の小型2行スコア。試合中の常設表示向け。" />
             <FeatureCard icon={<User />} title="現在の打者" desc="打順・守備・名前を中継風ロワーサードで表示。" />
@@ -195,6 +206,16 @@ export default function HomePage() {
             subtitle="2ステップで完了します。"
             accent="primary"
           />
+
+          {/* 全体ワークフロー図 */}
+          <div className="mb-6 rounded-xl overflow-hidden border border-slate-700 bg-slate-800/50">
+            <img
+              src="images/manual-workflow.jpg"
+              alt="操作方法：コントロールパネル→OBS Studio→YouTube Live の3ステップ"
+              className="w-full block"
+              loading="lazy"
+            />
+          </div>
 
           <a
             href="guide.html"
