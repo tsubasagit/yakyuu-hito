@@ -13,6 +13,7 @@ export default function InningScoreboard() {
   const homeTotal = useGameStore((s) => s.homeTotal)
   const currentInning = useGameStore((s) => s.currentInning)
   const currentHalf = useGameStore((s) => s.currentHalf)
+  const isGameOver = useGameStore((s) => s.isGameOver)
 
   const baseInnings = Math.max(9, currentInning)
   const MAX_INNINGS = Math.min(12, baseInnings)
@@ -26,23 +27,23 @@ export default function InningScoreboard() {
   const homeLetter = (homeTeam.shortName || homeTeam.name || 'X').charAt(0)
 
   return (
-    <div className="select-none shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+    <div className="select-none shadow-[0_4px_16px_rgba(0,0,0,0.4)] rounded-xl overflow-hidden">
       <table className="border-collapse tabular-nums font-bold" style={{ borderSpacing: 0 }}>
         <thead>
           <tr>
             {/* 左上角 */}
-            <th className="bg-[#0b1220] border-2 border-black" style={{ width: 36, height: 28 }} />
+            <th className="bg-[#0b1220]/85 backdrop-blur-sm border-2 border-black" style={{ width: 36, height: 28 }} />
             {displayInnings.map((inn) => (
               <th
                 key={inn.inning}
-                className="border-2 border-black text-sm text-center bg-[#0b1220] text-white"
+                className="border-2 border-black text-sm text-center bg-[#0b1220]/85 backdrop-blur-sm text-white"
                 style={{ width: 32, height: 28 }}
               >
                 {inn.inning}
               </th>
             ))}
             <th
-              className="bg-[#0b1220] text-amber-300 border-2 border-black text-base"
+              className="bg-[#0b1220]/85 backdrop-blur-sm text-amber-300 border-2 border-black text-base"
               style={{ width: 44, height: 28 }}
             >
               R
@@ -58,6 +59,9 @@ export default function InningScoreboard() {
             currentInning={currentInning}
             currentHalf={currentHalf}
             total={awayTotal}
+            isGameOver={isGameOver}
+            homeTotal={homeTotal}
+            awayTotal={awayTotal}
           />
           <ScoreRow
             letter={homeLetter}
@@ -67,6 +71,9 @@ export default function InningScoreboard() {
             currentInning={currentInning}
             currentHalf={currentHalf}
             total={homeTotal}
+            isGameOver={isGameOver}
+            homeTotal={homeTotal}
+            awayTotal={awayTotal}
           />
         </tbody>
       </table>
@@ -82,6 +89,9 @@ function ScoreRow({
   currentInning,
   currentHalf,
   total,
+  isGameOver,
+  homeTotal,
+  awayTotal,
 }: {
   letter: string
   color: string
@@ -90,7 +100,14 @@ function ScoreRow({
   currentInning: number
   currentHalf: 'top' | 'bottom'
   total: number
+  isGameOver: boolean
+  homeTotal: number
+  awayTotal: number
 }) {
+  // 試合終了時、後攻が勝っているなら「最終裏」セルに × を出す。
+  //  - 裏を未プレイ（攻撃なし: コールド・無得点勝ち）: "×" のみ
+  //  - 裏を得点で打ち切り（サヨナラ）: "{得点}×"
+  const homeWon = isGameOver && homeTotal > awayTotal
   return (
     <tr>
       {/* チームレターセル */}
@@ -111,13 +128,29 @@ function ScoreRow({
             : inn.inning < currentInning ||
               (inn.inning === currentInning && currentHalf === 'bottom')
         const value = half === 'top' ? inn.top : inn.bottom
+        const isLastBottomCell = half === 'bottom' && homeWon && inn.inning === currentInning
+        let display: React.ReactNode
+        if (isLastBottomCell) {
+          if (value === null || value === undefined) {
+            display = <span className="text-amber-300">×</span>
+          } else {
+            display = (
+              <span>
+                {value}
+                <span className="text-amber-300 ml-0.5">×</span>
+              </span>
+            )
+          }
+        } else {
+          display = played ? value ?? 0 : ''
+        }
         return (
           <td
             key={inn.inning}
-            className="border-2 border-black text-center text-base bg-[#0b1220] text-white"
+            className="border-2 border-black text-center text-base bg-[#0b1220]/85 backdrop-blur-sm text-white"
             style={{ width: 32, height: 36 }}
           >
-            {played ? value ?? 0 : ''}
+            {display}
           </td>
         )
       })}

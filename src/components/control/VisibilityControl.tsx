@@ -30,6 +30,7 @@ export const TOGGLE_META: ToggleMeta[] = [
   { id: 'statusPanel',      label: 'BSOパネル',   sources: ['イニング', 'BSOパネル'], scrollTarget: 'section-count',      stripe: 'bg-cyan-500'    },
   { id: 'currentBatter',    label: 'バッター',    sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-amber-500'   },
   { id: 'currentPitcher',   label: 'ピッチャー',  sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-red-500'     },
+  { id: 'ticker',           label: '速報テロップ', sources: ['速報テロップ'],          scrollTarget: 'section-ticker',     stripe: 'bg-yellow-500'  },
 ]
 
 /** scrollTarget → stripe color のマップ（ControlPage で使用） */
@@ -38,7 +39,7 @@ export function stripeForSection(sectionId: string): string | null {
   return found ? found.stripe : null
 }
 
-/** ElementId → ToggleMeta との対応用ラベル（pinchHitter は visibility flag 経由・分離扱い） */
+/** ElementId → ToggleMeta との対応用ラベル（pinchHitter は廃止・打順内チェックで代用） */
 const ELEMENT_TO_TOGGLE: Record<ElementId, ToggleMeta['id'] | null> = {
   miniScore:        'miniScore',
   lineup:           'lineup',
@@ -48,7 +49,8 @@ const ELEMENT_TO_TOGGLE: Record<ElementId, ToggleMeta['id'] | null> = {
   statusPanel:      'statusPanel',
   currentBatter:    'currentBatter',
   currentPitcher:   'currentPitcher',
-  pinchHitter:      null, // 代打カードは PinchHitterControl 側で表示制御
+  pinchHitter:      null, // 代打カードは廃止（2026-05-18）。打順行の代打チェックで代替
+  ticker:           'ticker',
 }
 
 const LINEUP_MODES: { key: LineupDisplayMode; label: string; hint: string }[] = [
@@ -129,13 +131,15 @@ export default function VisibilityControl() {
         ))}
       </div>
 
-      {/* スタメン表示モード（表示ON時のみ操作可） */}
+      {/* スタメン表示モード（OFF状態でも事前設定できるように常時操作可） */}
       <div className="border-t border-gray-700 pt-3">
         <div className="flex items-center justify-between mb-1.5">
           <div className="text-xs text-gray-300">
             スタメン表示モード
             {!lineupOn && (
-              <span className="ml-2 text-[10px] text-gray-500">（スタメンOFF中）</span>
+              <span className="ml-2 text-[10px] text-gray-500">
+                （OFF中・ON時に反映）
+              </span>
             )}
           </div>
           <div className="text-[10px] text-gray-500">
@@ -147,15 +151,12 @@ export default function VisibilityControl() {
             <button
               key={m.key}
               onClick={() => setLineupMode(m.key)}
-              disabled={!lineupOn}
               title={m.hint}
               className={`text-xs px-2 py-1.5 rounded font-bold transition-colors ${
-                !lineupOn
-                  ? 'bg-gray-700/40 text-gray-500 cursor-not-allowed'
-                  : lineupMode === m.key
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-              }`}
+                lineupMode === m.key
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+              } ${!lineupOn ? 'opacity-75' : ''}`}
             >
               {m.label}
             </button>

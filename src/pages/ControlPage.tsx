@@ -7,7 +7,6 @@ import ScoreControl from '../components/control/ScoreControl'
 import LineupControl from '../components/control/LineupControl'
 import VisibilityControl, { stripeForSection } from '../components/control/VisibilityControl'
 import TournamentControl from '../components/control/TournamentControl'
-import PinchHitterControl from '../components/control/PinchHitterControl'
 import TickerControl from '../components/control/TickerControl'
 import { useGameStore, extractGameState } from '../store/useGameStore'
 import { broadcastState, onStateRequest } from '../lib/sync'
@@ -68,7 +67,6 @@ export default function ControlPage() {
     { id: 'count',       label: 'BSOパネル',         component: <CountControl /> },
     { id: 'score',       label: '得点',              component: <ScoreControl /> },
     { id: 'lineup',      label: '打順・選手',        component: <LineupControl /> },
-    { id: 'pinchhitter', label: '代打カード',        component: <PinchHitterControl /> },
     { id: 'ticker',      label: '速報テロップ',      component: <TickerControl /> },
     { id: 'tournament',  label: '大会名',            component: <TournamentControl /> },
   ]

@@ -78,7 +78,7 @@ function TeamLineupCard({
   const showPitcherRow = dhMode !== 'none' && pitcher && pitcher.name.length > 0
 
   return (
-    <div className="text-white font-bold shadow-[0_6px_24px_rgba(0,0,0,0.55)]">
+    <div className="text-white font-bold shadow-[0_6px_24px_rgba(0,0,0,0.55)] rounded-xl overflow-hidden">
       {/* ヘッダー行: チーム名（チームカラー背景）+ スターティングメンバー黄帯 */}
       <div className="flex items-stretch border border-white/70">
         <div
@@ -91,7 +91,7 @@ function TeamLineupCard({
           {team.name || (label === '先攻' ? 'チームA' : 'チームX')}
         </div>
         <div
-          className="flex items-end justify-end px-3 pb-1 bg-[#0b1220]"
+          className="flex items-end justify-end px-3 pb-1 bg-[#0b1220]/85 backdrop-blur-sm"
           style={{ minWidth: 160 }}
         >
           <span
@@ -122,6 +122,11 @@ function LineupRow({
   pitcherRow?: boolean
 }) {
   const orderLabel = pitcherRow ? 'P' : String(player.order)
+  const positionText = pitcherRow
+    ? 'ピッチャー'
+    : player.isPinchHit
+      ? '代打'
+      : positionLabel(player.position)
   return (
     <div className="flex items-stretch border border-t-0 border-white/70">
       {/* 番号セル */}
@@ -133,26 +138,28 @@ function LineupRow({
       >
         {orderLabel}
       </div>
-      {/* ポジションセル（白文字） */}
+      {/* ポジションセル（白文字。代打はオレンジ強調） */}
       <div
-        className="flex items-center px-3 py-1 text-[15px] tracking-wide border-r border-white/70 whitespace-nowrap bg-[#0b1220] text-white"
-        style={{ minWidth: 128 }}
+        className={`flex items-center px-3 py-1 text-[13px] tracking-wide border-r border-white/70 whitespace-nowrap bg-[#0b1220]/85 backdrop-blur-sm ${
+          player.isPinchHit ? 'text-amber-300 font-black' : 'text-white'
+        }`}
+        style={{ minWidth: 116 }}
       >
-        {pitcherRow ? 'ピッチャー' : positionLabel(player.position)}
+        {positionText}
       </div>
       {/* 名前セル */}
       <div
-        className="flex items-center px-3 py-1 text-[16px] bg-[#0b1220] border-r border-white/70 whitespace-nowrap"
-        style={{ minWidth: 160 }}
+        className="flex items-center px-3 py-1 text-[16px] bg-[#0b1220]/85 backdrop-blur-sm border-r border-white/70 whitespace-nowrap"
+        style={{ minWidth: 180 }}
       >
         {player.name || '　'}
       </div>
-      {/* コメントセル（○○高校＋補足情報程度） */}
+      {/* 学年セル（コメント廃止 → 学年に置換） */}
       <div
-        className="flex items-center px-3 py-1 text-[13px] text-gray-200 bg-[#0b1220] whitespace-nowrap flex-1"
-        style={{ minWidth: 280 }}
+        className="flex items-center px-3 py-1 text-[14px] text-amber-100 bg-[#0b1220]/85 backdrop-blur-sm whitespace-nowrap"
+        style={{ minWidth: 88 }}
       >
-        {player.comment || ''}
+        {player.grade || ''}
       </div>
     </div>
   )

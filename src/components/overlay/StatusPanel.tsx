@@ -10,13 +10,13 @@ export default function StatusPanel() {
   const count = useGameStore((s) => s.count)
   const runners = useGameStore((s) => s.runners)
 
-  const awayLetter = (awayTeam.shortName || awayTeam.name || 'A').charAt(0)
-  const homeLetter = (homeTeam.shortName || homeTeam.name || 'X').charAt(0)
+  const awayLabel = teamLabel(awayTeam.shortName || awayTeam.name || 'A')
+  const homeLabel = teamLabel(homeTeam.shortName || homeTeam.name || 'X')
   const halfLabel = currentHalf === 'top' ? '表' : '裏'
 
   return (
     <div
-      className="select-none font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.5)] border-2 border-black bg-[#0b1220] inline-flex flex-col"
+      className="select-none font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.5)] border-2 border-black bg-[#0b1220]/85 backdrop-blur-sm inline-flex flex-col rounded-xl overflow-hidden"
     >
       {/* 上段: イニング + ダイヤ */}
       <div className="flex items-stretch border-b-2 border-black">
@@ -32,18 +32,18 @@ export default function StatusPanel() {
       <div className="flex items-stretch">
         <div className="flex flex-col">
           <ScoreRow
-            letter={awayLetter}
+            label={awayLabel}
             score={awayTotal}
             attacking={currentHalf === 'top'}
             bottomBorder
           />
           <ScoreRow
-            letter={homeLetter}
+            label={homeLabel}
             score={homeTotal}
             attacking={currentHalf === 'bottom'}
           />
         </div>
-        <div className="flex flex-col justify-center gap-1 px-3 py-2 border-l-2 border-black">
+        <div className="flex flex-col justify-center gap-1.5 px-3 py-2 border-l-2 border-black">
           <BSORow
             label="B"
             count={count.balls}
@@ -68,17 +68,28 @@ export default function StatusPanel() {
   )
 }
 
+/** チーム名は最大4文字（先頭から切り詰め）。空文字なら "—" を表示 */
+function teamLabel(raw: string): string {
+  const trimmed = raw.trim()
+  if (!trimmed) return '—'
+  // Array.from で絵文字含むサロゲートペアを1文字とカウント
+  return Array.from(trimmed).slice(0, 4).join('')
+}
+
 function ScoreRow({
-  letter,
+  label,
   score,
   attacking,
   bottomBorder,
 }: {
-  letter: string
+  label: string
   score: number
   attacking: boolean
   bottomBorder?: boolean
 }) {
+  const len = Array.from(label).length
+  // 文字数に応じて自動縮小（最大4文字想定）
+  const fontSize = len >= 4 ? 13 : len === 3 ? 15 : len === 2 ? 17 : 20
   return (
     <div className={`flex items-stretch ${bottomBorder ? 'border-b-2 border-black' : ''}`}>
       <div
@@ -88,10 +99,10 @@ function ScoreRow({
         }}
       />
       <div
-        className="flex items-center justify-center text-lg font-black border-r-2 border-black bg-[#0b1220] text-white"
-        style={{ width: 32, height: 36 }}
+        className="flex items-center justify-center font-black border-r-2 border-black bg-[#0b1220] text-white tracking-tight"
+        style={{ minWidth: 64, paddingInline: 6, height: 36, fontSize, lineHeight: 1 }}
       >
-        {letter}
+        {label}
       </div>
       <div
         className="text-center text-3xl font-black tabular-nums bg-white text-black"
@@ -113,13 +124,13 @@ function Diamond({
   third: boolean
 }) {
   const cls = (on: boolean) =>
-    `w-3 h-3 rotate-45 ${
+    `w-[18px] h-[18px] rotate-45 ${
       on
-        ? 'bg-[#ef4444] shadow-[0_0_5px_rgba(239,68,68,0.9)]'
+        ? 'bg-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.9)]'
         : 'bg-transparent border border-white/60'
     }`
   return (
-    <div className="relative" style={{ width: 40, height: 40 }}>
+    <div className="relative" style={{ width: 60, height: 60 }}>
       <div className={`absolute top-0 left-1/2 -translate-x-1/2 ${cls(second)}`} />
       <div className={`absolute top-1/2 left-0 -translate-y-1/2 ${cls(third)}`} />
       <div className={`absolute top-1/2 right-0 -translate-y-1/2 ${cls(first)}`} />
@@ -140,7 +151,7 @@ function BSORow({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[11px] font-black text-white w-3">{label}</span>
+      <span className="text-[15px] font-black text-white w-4 leading-none">{label}</span>
       <div className="flex gap-1.5">
         {Array.from({ length: max }, (_, i) => {
           const lit = i < count
@@ -149,8 +160,8 @@ function BSORow({
               key={i}
               className="rounded-full"
               style={{
-                width: 13,
-                height: 13,
+                width: 17,
+                height: 17,
                 background: lit ? gradient : 'transparent',
                 border: lit ? 'none' : '1px solid rgba(255,255,255,0.35)',
                 boxShadow: lit

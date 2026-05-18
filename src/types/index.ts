@@ -44,7 +44,9 @@ export interface LineupPlayer {
   record?: string       // 勝敗（例: "5勝3敗"）
   // 大学野球向け（yakyuu-hito 拡張）
   grade?: string        // 学年（"3年"など自由文字列）
-  comment?: string      // 代打時の一行コメント（"少年クラブ優勝経験あり"など）
+  comment?: string      // 一行コメント（"少年クラブ優勝経験あり"など）
+  /** 代打フラグ。true なら守備位置の代わりに「代打」を表示する */
+  isPinchHit?: boolean
 }
 
 export interface InningScore {
@@ -99,7 +101,7 @@ export interface OverlayPosition {
   scale?: number
 }
 
-/** yakyuu-hito の要素ID（2026-04-23 準拠 + currentBatter/currentPitcher 拡張） */
+/** yakyuu-hito の要素ID（2026-04-23 準拠 + currentBatter/currentPitcher/ticker 拡張） */
 export type ElementId =
   | 'miniScore'
   | 'pinchHitter'
@@ -110,6 +112,7 @@ export type ElementId =
   | 'statusPanel'
   | 'currentBatter'
   | 'currentPitcher'
+  | 'ticker'
 
 /** スタメンオーバーレイの表示モード */
 export type LineupDisplayMode =
@@ -148,6 +151,7 @@ export interface Visibility {
   statusPanel_diamond: boolean
   statusPanel_bso: boolean
   statusPanel_quickScore: boolean
+  ticker: boolean
 }
 
 /** モックアップ準拠の要素デフォルト座標（1920x1080基準） */
@@ -161,6 +165,7 @@ export const DEFAULT_ELEMENT_POSITIONS: Record<ElementId, OverlayPosition> = {
   statusPanel:      { x: 1600, y: 830  },
   currentBatter:    { x: 700,  y: 920  },
   currentPitcher:   { x: 700,  y: 800  },
+  ticker:           { x: 40,   y: 1020 },
 }
 
 export interface GameState {
@@ -325,7 +330,7 @@ export const initialGameState: GameState = {
   pinchHitter: null,
   visibility: {
     miniScore: true,
-    pinchHitter: true,
+    pinchHitter: false,
     lineup: true,
     tournamentHeader: false,
     bigScore: false,
@@ -336,6 +341,7 @@ export const initialGameState: GameState = {
     statusPanel_diamond: true,
     statusPanel_bso: true,
     statusPanel_quickScore: true,
+    ticker: false,
   },
 }
 

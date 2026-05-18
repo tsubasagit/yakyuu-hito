@@ -6,7 +6,6 @@ import { loadOverlayCache } from '../lib/overlayCache'
 import { DEFAULT_ELEMENT_POSITIONS } from '../types'
 import OverlayPanel from '../components/overlay/shared/OverlayPanel'
 import MiniScore from '../components/overlay/MiniScore'
-import PinchHitterCard from '../components/overlay/PinchHitterCard'
 import LineupPanel from '../components/overlay/LineupPanel'
 import TournamentHeader from '../components/overlay/TournamentHeader'
 import BigScore from '../components/overlay/BigScore'
@@ -14,6 +13,7 @@ import InningScoreboard from '../components/overlay/InningScoreboard'
 import StatusPanel from '../components/overlay/StatusPanel'
 import CurrentBatter from '../components/overlay/CurrentBatter'
 import CurrentPitcher from '../components/overlay/CurrentPitcher'
+import Ticker from '../components/overlay/Ticker'
 
 const CANVAS_W = 1920
 const CANVAS_H = 1080
@@ -90,11 +90,6 @@ export default function OverlayPage() {
         <MiniScore />
       </OverlayPanel>
 
-      {/* [2] 代打カード — 右上 */}
-      <OverlayPanel id="pinchHitter" defaultPos={DEFAULT_ELEMENT_POSITIONS.pinchHitter} scale={overlayScale}>
-        <PinchHitterCard />
-      </OverlayPanel>
-
       {/* [3] スタメン一覧 — 左 */}
       <OverlayPanel id="lineup" defaultPos={DEFAULT_ELEMENT_POSITIONS.lineup} scale={overlayScale}>
         <LineupPanel />
@@ -128,6 +123,11 @@ export default function OverlayPage() {
       {/* [9] 現在の投手 — 打者の少し上に配置 */}
       <OverlayPanel id="currentPitcher" defaultPos={DEFAULT_ELEMENT_POSITIONS.currentPitcher} scale={overlayScale}>
         <CurrentPitcher />
+      </OverlayPanel>
+
+      {/* [10] 速報テロップ — 画面下部 */}
+      <OverlayPanel id="ticker" defaultPos={DEFAULT_ELEMENT_POSITIONS.ticker} scale={overlayScale}>
+        <Ticker />
       </OverlayPanel>
     </div>
   )

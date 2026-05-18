@@ -15,7 +15,7 @@ export default function TickerControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
-      <SectionTitle title="速報テロップ" />
+      <SectionTitle title="速報テロップ" controls={['速報テロップ']} />
       <input
         className="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm"
         placeholder="テロップテキストを入力..."
@@ -42,6 +42,9 @@ export default function TickerControl() {
           表示中: {ticker}
         </div>
       )}
+      <div className="text-[11px] text-gray-500 leading-snug">
+        ※ 位置・サイズは上部「表示ON/OFF ＆ サイズ調整」パネルの「速報テロップ」枠から操作してください
+      </div>
     </div>
   )
 }

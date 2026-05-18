@@ -20,7 +20,7 @@ export default function BigScore() {
 
   return (
     <div
-      className="select-none text-white font-bold bg-[#0b1220] shadow-[0_8px_32px_rgba(0,0,0,0.6)] relative"
+      className="select-none text-white font-bold bg-[#0b1220]/85 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.6)] relative rounded-xl"
       style={{ minWidth: 720, overflow: 'visible' }}
     >
       <div className="flex items-end justify-center gap-6 px-10 pt-6 pb-6">

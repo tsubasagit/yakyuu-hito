@@ -21,6 +21,10 @@ function downloadCsvSample() {
 const POSITIONS_WITH_DH: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右', 'DH']
 const POSITIONS_NO_DH: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右']
 
+/** 学年候補。通常学部1-4年＋6年制学部の5・6年＋大学院。datalist で候補提示しつつ自由入力も許可 */
+const GRADE_OPTIONS = ['1年', '2年', '3年', '4年', '5年', '6年', '院1', '院2', '院3'] as const
+const GRADE_DATALIST_ID = 'yakyuu-grade-options'
+
 function BatterRow({
   player,
   isCurrent,
@@ -41,7 +45,7 @@ function BatterRow({
     <div
       className={`flex flex-wrap items-center gap-1.5 text-sm rounded px-1.5 py-1 ${
         isCurrent ? 'bg-accent/30 ring-1 ring-accent' : ''
-      }`}
+      } ${player.isPinchHit ? 'bg-amber-900/20 ring-1 ring-amber-500/40' : ''}`}
     >
       <span className="text-gray-500 w-4 text-center text-xs shrink-0">
         {player.order}
@@ -50,6 +54,8 @@ function BatterRow({
         className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-12 shrink-0"
         value={player.position}
         onChange={(e) => onChange({ ...player, position: e.target.value as Position })}
+        disabled={player.isPinchHit}
+        title={player.isPinchHit ? '代打中は守備位置の代わりに「代打」を表示します' : ''}
       >
         <option value="">--</option>
         {positions.map((p) => (
@@ -63,11 +69,35 @@ function BatterRow({
         onChange={(e) => onChange({ ...player, name: e.target.value })}
       />
       <input
-        className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[140px]"
-        placeholder="コメント（例: ○○高校・通算3HR）"
+        className="bg-gray-700 text-white rounded px-2 py-1 text-xs w-16 shrink-0"
+        placeholder="学年"
+        list={GRADE_DATALIST_ID}
+        value={player.grade ?? ''}
+        onChange={(e) => onChange({ ...player, grade: e.target.value })}
+        title="学年（プルダウンから選択 or 自由入力）"
+      />
+      <input
+        className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[120px]"
+        placeholder="コメント（打者テロップに表示）"
         value={player.comment ?? ''}
         onChange={(e) => onChange({ ...player, comment: e.target.value })}
       />
+      <label
+        className={`flex items-center gap-1 px-1.5 py-1 rounded shrink-0 text-[11px] font-bold cursor-pointer ${
+          player.isPinchHit
+            ? 'bg-amber-500 text-black'
+            : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+        }`}
+        title="ON にすると守備位置の代わりに「代打」が表示されます"
+      >
+        <input
+          type="checkbox"
+          className="accent-amber-500"
+          checked={player.isPinchHit ?? false}
+          onChange={(e) => onChange({ ...player, isPinchHit: e.target.checked })}
+        />
+        代打
+      </label>
       <button
         onClick={onSelect}
         className={`text-xs px-2 py-1 rounded shrink-0 font-bold ${
@@ -124,8 +154,16 @@ function PitcherRow({
         onChange={(e) => onChange({ ...player, name: e.target.value })}
       />
       <input
-        className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[140px]"
-        placeholder="コメント（例: ○○高校）"
+        className="bg-gray-700 text-white rounded px-2 py-1 text-xs w-16 shrink-0"
+        placeholder="学年"
+        list={GRADE_DATALIST_ID}
+        value={player.grade ?? ''}
+        onChange={(e) => onChange({ ...player, grade: e.target.value })}
+        title="学年（プルダウンから選択 or 自由入力）"
+      />
+      <input
+        className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[120px]"
+        placeholder="コメント（投手テロップに表示）"
         value={player.comment ?? ''}
         onChange={(e) => onChange({ ...player, comment: e.target.value })}
       />
@@ -352,11 +390,14 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
 
       {/* ラインナップ（1-9番打者） */}
       <div className="space-y-0.5">
-        {/* 列ヘッダ（CSV項目名と一致） */}
+        {/* 列ヘッダ */}
         <div className="flex items-center gap-1.5 text-[10px] text-gray-400 px-1.5 pt-1 pb-0.5 border-b border-gray-700">
           <span className="w-4 text-center shrink-0">順番</span>
           <span className="w-12 text-center shrink-0">守備</span>
           <span className="flex-1 min-w-0">名前</span>
+          <span className="w-16 text-center shrink-0">学年</span>
+          <span className="flex-1 min-w-0">コメント</span>
+          <span className="shrink-0 w-12 text-center">代打</span>
           <span className="shrink-0 w-[60px] text-center">　</span>
         </div>
         {lineup.slice(0, 9).map((player, idx) => (
@@ -384,11 +425,13 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
               ⚾ DH打者を投手行にコピー（大谷ルール）
             </button>
           )}
-          {/* 列ヘッダ（投手用 = 順番,守備,名前） */}
+          {/* 列ヘッダ（投手用） */}
           <div className="flex items-center gap-1.5 text-[10px] text-red-300/80 px-1.5 pt-1 pb-0.5 border-b border-red-800/40">
             <span className="w-4 text-center shrink-0">10</span>
             <span className="w-12 text-center shrink-0">守備</span>
             <span className="flex-1 min-w-0">名前</span>
+            <span className="w-16 text-center shrink-0">学年</span>
+            <span className="flex-1 min-w-0">コメント</span>
             <span className="shrink-0 w-[60px] text-center">　</span>
           </div>
           <PitcherRow
@@ -411,6 +454,12 @@ export default function LineupControl() {
       <div className="text-[11px] text-gray-500 -mt-1">
         ※ オーバーレイの表示モード（自動/先攻/後攻/VS）は上部「表示ON/OFF」枠で切替
       </div>
+      {/* 学年プルダウン候補（datalist は input から list 属性で参照される） */}
+      <datalist id={GRADE_DATALIST_ID}>
+        {GRADE_OPTIONS.map((g) => (
+          <option key={g} value={g} />
+        ))}
+      </datalist>
       <TeamLineupPanel side="away" />
       <TeamLineupPanel side="home" />
     </div>

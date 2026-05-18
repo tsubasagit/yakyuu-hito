@@ -13,12 +13,12 @@ export default function MiniScore() {
   const halfLabel = currentHalf === 'top' ? 'オモテ' : 'ウラ'
 
   return (
-    <div className="select-none text-white font-bold">
-      <div className="bg-[#0b1220] px-3 py-0.5 text-white text-xs tracking-widest text-center">
+    <div className="select-none text-white font-bold rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+      <div className="bg-[#0b1220]/85 backdrop-blur-sm px-3 py-0.5 text-white text-xs tracking-widest text-center">
         {currentInning}回 {halfLabel}
       </div>
 
-      <div className="flex items-stretch bg-[#0b1220]">
+      <div className="flex items-stretch bg-[#0b1220]/85 backdrop-blur-sm">
         <TeamCell letter={awayLetter} />
         <ScoreCell value={awayTotal} />
         <div className="flex items-center justify-center text-2xl font-black px-2 text-white">
