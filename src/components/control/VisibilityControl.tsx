@@ -30,7 +30,7 @@ export const TOGGLE_META: ToggleMeta[] = [
   { id: 'statusPanel',      label: 'BSOパネル',   sources: ['イニング', 'BSOパネル'], scrollTarget: 'section-count',      stripe: 'bg-cyan-500'    },
   { id: 'currentBatter',    label: 'バッター',    sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-amber-500'   },
   { id: 'currentPitcher',   label: 'ピッチャー',  sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-red-500'     },
-  { id: 'ticker',           label: '速報テロップ', sources: ['速報テロップ'],          scrollTarget: 'section-ticker',     stripe: 'bg-yellow-500'  },
+  // 速報テロップだけは特殊扱い: 文字入力と一体運用したいので TickerControl 内に ON/OFF・位置を統合
 ]
 
 /** scrollTarget → stripe color のマップ（ControlPage で使用） */
