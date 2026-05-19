@@ -19,9 +19,16 @@ function downloadCsvSample() {
   URL.revokeObjectURL(url)
 }
 
-/** 学年候補。通常学部1-4年＋6年制学部の5・6年＋大学院。datalist で候補提示しつつ自由入力も許可 */
+/** 学年候補。通常学部1-4年＋6年制学部の5・6年＋大学院。常時フルリスト表示のため select で固定 */
 const GRADE_OPTIONS = ['1年', '2年', '3年', '4年', '5年', '6年', '院1', '院2', '院3'] as const
-const GRADE_DATALIST_ID = 'yakyuu-grade-options'
+
+/** select 用にプリセット候補と過去値（CSV由来の自由入力など）をマージ */
+function gradeOptionsWith(current: string | undefined): readonly string[] {
+  if (current && !GRADE_OPTIONS.includes(current as (typeof GRADE_OPTIONS)[number])) {
+    return [current, ...GRADE_OPTIONS]
+  }
+  return GRADE_OPTIONS
+}
 
 function BatterRow({
   player,
@@ -66,14 +73,17 @@ function BatterRow({
         value={player.name}
         onChange={(e) => onChange({ ...player, name: e.target.value })}
       />
-      <input
-        className="bg-gray-700 text-white rounded px-2 py-1 text-xs w-16 shrink-0"
-        placeholder="学年"
-        list={GRADE_DATALIST_ID}
+      <select
+        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-16 shrink-0"
         value={player.grade ?? ''}
         onChange={(e) => onChange({ ...player, grade: e.target.value })}
-        title="学年（プルダウンから選択 or 自由入力）"
-      />
+        title="学年（プルダウンから選択）"
+      >
+        <option value="">学年</option>
+        {gradeOptionsWith(player.grade).map((g) => (
+          <option key={g} value={g}>{g}</option>
+        ))}
+      </select>
       <input
         className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[120px]"
         placeholder="コメント（打者テロップに表示）"
@@ -151,14 +161,17 @@ function PitcherRow({
         value={player.name}
         onChange={(e) => onChange({ ...player, name: e.target.value })}
       />
-      <input
-        className="bg-gray-700 text-white rounded px-2 py-1 text-xs w-16 shrink-0"
-        placeholder="学年"
-        list={GRADE_DATALIST_ID}
+      <select
+        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-16 shrink-0"
         value={player.grade ?? ''}
         onChange={(e) => onChange({ ...player, grade: e.target.value })}
-        title="学年（プルダウンから選択 or 自由入力）"
-      />
+        title="学年（プルダウンから選択）"
+      >
+        <option value="">学年</option>
+        {gradeOptionsWith(player.grade).map((g) => (
+          <option key={g} value={g}>{g}</option>
+        ))}
+      </select>
       <input
         className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[120px]"
         placeholder="コメント（投手テロップに表示）"
@@ -377,7 +390,7 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
       {/* バリデーション警告 */}
       {dhMode === 'none' && !hasPitcherInBatters && (
         <div className="bg-yellow-900/40 border border-yellow-600/60 rounded px-3 py-1.5 text-yellow-200 text-[11px]">
-          ⚠ DHなしモードでは 1-9番のいずれかに <span className="font-bold">投</span> を指定してください
+          ⚠ DHなしモードでは 1-9番のいずれかに <span className="font-bold">ピッチャー</span> を指定してください
         </div>
       )}
       {(dhMode === 'dh' || dhMode === 'twoWay') && !hasDhInBatters && (
@@ -452,12 +465,6 @@ export default function LineupControl() {
       <div className="text-[11px] text-gray-500 -mt-1">
         ※ オーバーレイの表示モード（自動/先攻/後攻/VS）は上部「表示ON/OFF」枠で切替
       </div>
-      {/* 学年プルダウン候補（datalist は input から list 属性で参照される） */}
-      <datalist id={GRADE_DATALIST_ID}>
-        {GRADE_OPTIONS.map((g) => (
-          <option key={g} value={g} />
-        ))}
-      </datalist>
       <TeamLineupPanel side="away" />
       <TeamLineupPanel side="home" />
     </div>
