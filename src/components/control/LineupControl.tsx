@@ -3,6 +3,7 @@ import { useGameStore } from '../../store/useGameStore'
 import type { DhMode, LineupPlayer, Position } from '../../types'
 import { TEITO_LINEUP, SORYO_LINEUP } from '../../types'
 import { parseLineupCsv, LINEUP_CSV_SAMPLE } from '../../lib/csvImport'
+import { positionLabel, POSITIONS_WITH_DH, POSITIONS_NO_DH } from '../../lib/positionLabel'
 import SectionTitle from './shared/SectionTitle'
 
 function downloadCsvSample() {
@@ -17,9 +18,6 @@ function downloadCsvSample() {
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 }
-
-const POSITIONS_WITH_DH: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右', 'DH']
-const POSITIONS_NO_DH: Position[] = ['投', '捕', '一', '二', '三', '遊', '左', '中', '右']
 
 /** 学年候補。通常学部1-4年＋6年制学部の5・6年＋大学院。datalist で候補提示しつつ自由入力も許可 */
 const GRADE_OPTIONS = ['1年', '2年', '3年', '4年', '5年', '6年', '院1', '院2', '院3'] as const
@@ -51,7 +49,7 @@ function BatterRow({
         {player.order}
       </span>
       <select
-        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-12 shrink-0"
+        className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-24 shrink-0"
         value={player.position}
         onChange={(e) => onChange({ ...player, position: e.target.value as Position })}
         disabled={player.isPinchHit}
@@ -59,7 +57,7 @@ function BatterRow({
       >
         <option value="">--</option>
         {positions.map((p) => (
-          <option key={p} value={p}>{p}</option>
+          <option key={p} value={p}>{positionLabel(p)}</option>
         ))}
       </select>
       <input
@@ -144,8 +142,8 @@ function PitcherRow({
       <span className="text-red-400 w-4 text-center text-xs shrink-0 font-bold">
         P
       </span>
-      <span className="text-red-400 text-xs w-12 shrink-0 text-center font-bold">
-        投
+      <span className="text-red-400 text-xs w-24 shrink-0 text-center font-bold">
+        ピッチャー
       </span>
       <input
         className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[100px]"

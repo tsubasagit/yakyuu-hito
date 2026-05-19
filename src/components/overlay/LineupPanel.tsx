@@ -1,5 +1,6 @@
 import { useGameStore } from '../../store/useGameStore'
 import type { DhMode, LineupPlayer, Team } from '../../types'
+import { positionLabel } from '../../lib/positionLabel'
 
 /**
  * スタメン一覧（画像準拠デザイン・2026-05-16 リファイン）。
@@ -165,19 +166,3 @@ function LineupRow({
   )
 }
 
-/** ポジション記号を長ラベルに変換（モックアップ準拠） */
-function positionLabel(position: string): string {
-  switch (position) {
-    case '投': return 'ピッチャー'
-    case '捕': return 'キャッチャー'
-    case '一': return 'ファースト'
-    case '二': return 'セカンド'
-    case '三': return 'サード'
-    case '遊': return 'ショート'
-    case '左': return 'レフト'
-    case '中': return 'センター'
-    case '右': return 'ライト'
-    case 'DH': return 'DH'
-    default: return position || '　'
-  }
-}
