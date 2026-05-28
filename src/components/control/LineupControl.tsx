@@ -235,7 +235,6 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
   const prevBatter = useGameStore((s) => s.prevBatter)
   const setLineupDisplayTeam = useGameStore((s) => s.setLineupDisplayTeam)
   const lineupDisplayTeam = useGameStore((s) => s.lineupDisplayTeam ?? 'away')
-  const setDhMode = useGameStore((s) => s.setDhMode)
   const copyDhToPitcher = useGameStore((s) => s.copyDhToPitcher)
   const currentBatterVisible = useGameStore((s) => s.visibility?.currentBatter ?? false)
   const currentPitcherVisible = useGameStore((s) => s.visibility?.currentPitcher ?? false)
@@ -397,32 +396,21 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
         </div>
       )}
 
-      {/* DH制モード切替（試合中はロック） */}
+      {/* DH制バッジ（読み取り専用）。
+          DH制の選択は「▶ 試合開始」ボタンのウィザードに一本化（2026-05-28）。
+          ここはチームカード上で現在のモードを把握できる表示専用。
+          試合終了→新試合の流れで変更したい場合は、試合終了モーダルから
+          「新しい試合を作成」→ 再度「▶ 試合開始」ウィザードで選び直す。 */}
       <div className="flex items-center gap-2 bg-gray-900/40 rounded px-2 py-1.5 border border-gray-700">
-        <span className="text-gray-300 text-[11px] font-bold shrink-0">
-          DH制{gameStarted && <span className="text-orange-400 ml-1">🔒</span>}:
+        <span className="text-gray-400 text-[11px] shrink-0">DH制：</span>
+        <span className="text-white text-[11px] font-bold">
+          {dhMode === 'dh' && 'DHあり（10名）'}
+          {dhMode === 'none' && 'DHなし（9名）'}
+          {dhMode === 'twoWay' && '二刀流（10名・大谷ルール）'}
         </span>
-        <div className="flex gap-1">
-          {([
-            { key: 'dh', label: 'DHあり（10名）', hint: '10番目=投手' },
-            { key: 'none', label: 'DHなし（9名）', hint: '投手も打席' },
-            { key: 'twoWay', label: '二刀流（10名）', hint: '大谷ルール' },
-          ] as { key: DhMode; label: string; hint: string }[]).map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => setDhMode(side, opt.key)}
-              disabled={gameStarted}
-              title={gameStarted ? '試合中はDH制を変更できません' : opt.hint}
-              className={`text-[11px] px-2 py-1 rounded font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                dhMode === opt.key
-                  ? 'bg-accent text-white disabled:bg-accent/60'
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+        <span className="text-gray-500 text-[10px] ml-auto">
+          変更は「▶ 試合開始」から
+        </span>
       </div>
 
       {/* バリデーション警告 */}
