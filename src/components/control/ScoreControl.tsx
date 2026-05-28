@@ -38,7 +38,7 @@ export default function ScoreControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
-      <SectionTitle title="得点" controls={['ミニスコア', 'スコアボード', '大型スコア']} />
+      <SectionTitle title="得点" controls={['ミニスコア', 'スコアボード', '大型スコア', 'BSOパネル']} />
 
       {/* クイック操作ボタン — アウェイ */}
       <div className="flex flex-wrap gap-1.5">

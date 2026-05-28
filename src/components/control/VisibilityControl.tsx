@@ -20,16 +20,20 @@ export interface ToggleMeta {
   stripe: string
 }
 
-/** 対応関係マスタ（VisibilityControl と ControlPage 両方で参照） */
+/** 対応関係マスタ（VisibilityControl と ControlPage 両方で参照）。
+ *  sources は「この表示パネルの中身を編集できるセクション」の網羅リスト。
+ *  学生がパネルをONにした後に「中身どこで直す？」と迷わないよう、
+ *  影響を受けるセクションを実情に合わせて列挙する。
+ *  （2026-05-28 顧客フィードバック対応: 表示と各セクションのテキスト名整合） */
 export const TOGGLE_META: ToggleMeta[] = [
-  { id: 'miniScore',        label: 'ミニスコア',  sources: ['試合管理', '得点'],     scrollTarget: 'section-score',      stripe: 'bg-sky-500'     },
-  { id: 'lineup',           label: 'スタメン',    sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-orange-500'  },
-  { id: 'tournamentHeader', label: '大会名',      sources: ['大会名'],                scrollTarget: 'section-tournament', stripe: 'bg-violet-500'  },
-  { id: 'bigScore',         label: '大型スコア',  sources: ['試合管理', '得点'],     scrollTarget: 'section-score',      stripe: 'bg-rose-500'    },
-  { id: 'inningScoreboard', label: 'スコアボード', sources: ['得点'],                  scrollTarget: 'section-score',      stripe: 'bg-emerald-500' },
-  { id: 'statusPanel',      label: 'BSOパネル',   sources: ['イニング', 'BSOパネル'], scrollTarget: 'section-count',      stripe: 'bg-cyan-500'    },
-  { id: 'currentBatter',    label: 'バッター',    sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-amber-500'   },
-  { id: 'currentPitcher',   label: 'ピッチャー',  sources: ['打順・選手'],            scrollTarget: 'section-lineup',     stripe: 'bg-red-500'     },
+  { id: 'miniScore',        label: 'ミニスコア',  sources: ['試合管理', 'イニング', '得点'],            scrollTarget: 'section-score',      stripe: 'bg-sky-500'     },
+  { id: 'lineup',           label: 'スタメン',    sources: ['打順・選手'],                                scrollTarget: 'section-lineup',     stripe: 'bg-orange-500'  },
+  { id: 'tournamentHeader', label: '大会名',      sources: ['大会名'],                                    scrollTarget: 'section-tournament', stripe: 'bg-violet-500'  },
+  { id: 'bigScore',         label: '大型スコア',  sources: ['試合管理', 'イニング', '得点'],            scrollTarget: 'section-score',      stripe: 'bg-rose-500'    },
+  { id: 'inningScoreboard', label: 'スコアボード', sources: ['試合管理', 'イニング', '得点'],            scrollTarget: 'section-score',      stripe: 'bg-emerald-500' },
+  { id: 'statusPanel',      label: 'BSOパネル',   sources: ['試合管理', 'イニング', 'BSO・走者', '得点'], scrollTarget: 'section-count',      stripe: 'bg-cyan-500'    },
+  { id: 'currentBatter',    label: 'バッター',    sources: ['打順・選手'],                                scrollTarget: 'section-lineup',     stripe: 'bg-amber-500'   },
+  { id: 'currentPitcher',   label: 'ピッチャー',  sources: ['打順・選手'],                                scrollTarget: 'section-lineup',     stripe: 'bg-red-500'     },
   // 速報テロップだけは特殊扱い: 文字入力と一体運用したいので TickerControl 内に ON/OFF・位置を統合
 ]
 
@@ -37,6 +41,34 @@ export const TOGGLE_META: ToggleMeta[] = [
 export function stripeForSection(sectionId: string): string | null {
   const found = TOGGLE_META.find((t) => t.scrollTarget === sectionId)
   return found ? found.stripe : null
+}
+
+/** セクション名 → ControlPage 上の section アンカー id。
+ *  「編集: XX」リンクから該当セクションへスクロールするのに使う。
+ *  ControlPage の orderableSections と整合。 */
+const SECTION_NAME_TO_ID: Record<string, string> = {
+  '試合管理':       'section-game',  // PINNED セクション（id 'game' で固定描画される DOM はないが安全側で）
+  'イニング':       'section-inning',
+  'BSO・走者':      'section-count',
+  '得点':           'section-score',
+  '打順・選手':     'section-lineup',
+  '速報テロップ':   'section-ticker',
+  '大会名':         'section-tournament',
+}
+
+/** セクション名でスムーズスクロール。存在しないアンカーは page top 付近に fallback。 */
+function scrollToSection(sectionName: string) {
+  const id = SECTION_NAME_TO_ID[sectionName]
+  if (!id) return
+  const el = document.getElementById(id)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    // 視覚的にハイライト（1秒）
+    el.classList.add('ring-2', 'ring-accent', 'ring-offset-2', 'ring-offset-gray-900')
+    setTimeout(() => {
+      el.classList.remove('ring-2', 'ring-accent', 'ring-offset-2', 'ring-offset-gray-900')
+    }, 1200)
+  }
 }
 
 /** ElementId → ToggleMeta との対応用ラベル（pinchHitter は廃止・打順内チェックで代用） */
@@ -81,9 +113,13 @@ export default function VisibilityControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-3 space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="text-xs text-gray-300 tracking-widest">表示ON/OFF ＆ サイズ調整</div>
-        <div className="text-[10px] text-gray-500">パネル毎にON/OFF・サイズを同じ場所で操作</div>
+      <div className="flex items-center justify-between flex-wrap gap-1">
+        <div className="text-sm text-white font-bold tracking-tight">
+          🎬 配信画面に出すパネルを選ぶ
+        </div>
+        <div className="text-[10px] text-gray-400">
+          ON/OFF・サイズ・位置をパネル毎に操作 ／ ⓘ「編集: ○○」をクリックすると編集場所へ移動
+        </div>
       </div>
 
       {/* 全体スケール */}
@@ -210,7 +246,7 @@ function PanelCard({
       {/* 左帯（対応する編集セクションの色） */}
       <span className={`absolute left-0 top-0 bottom-0 w-1.5 ${meta.stripe}`} />
 
-      {/* 上半分: トグル */}
+      {/* 上半分: トグル本体（クリックで ON/OFF） */}
       <button
         type="button"
         onClick={onToggle}
@@ -228,10 +264,28 @@ function PanelCard({
             {on ? 'ON' : 'OFF'}
           </span>
         </div>
-        <div className={`text-[10px] mt-0.5 truncate ${on ? 'text-white/70' : 'text-gray-400'}`}>
-          編集: {meta.sources.join(' / ')}
-        </div>
       </button>
+      {/* 編集セクションへのジャンプリンク。
+          学生が「このパネルの中身どこで直す？」と迷ったら、ここから1クリックで該当セクションへ。
+          トグルボタンの中に入れると onClick がバブリングしてしまうので外出し。
+          （2026-05-28 顧客フィードバック対応: 表示と各セクションの導線強化） */}
+      <div className={`pl-3 pr-2 pb-1.5 flex flex-wrap items-center gap-1 text-[10px] ${on ? 'text-white/70' : 'text-gray-400'}`}>
+        <span className="opacity-70 shrink-0">編集:</span>
+        {meta.sources.map((src) => (
+          <button
+            key={src}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              scrollToSection(src)
+            }}
+            className="px-1.5 py-0.5 rounded bg-gray-800/60 hover:bg-accent hover:text-white border border-gray-700/60 transition-colors"
+            title={`${src} セクションへ移動`}
+          >
+            {src} ↗
+          </button>
+        ))}
+      </div>
 
       {/* 下半分: サイズ + 位置（常時表示・コンパクト） */}
       <div className="border-t border-gray-700/70 px-3 py-2 space-y-1.5 bg-gray-900/30">

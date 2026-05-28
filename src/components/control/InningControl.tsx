@@ -9,7 +9,7 @@ export default function InningControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
-      <SectionTitle title="イニング" controls={['BSOパネル', 'スコアボード']} />
+      <SectionTitle title="イニング" controls={['BSOパネル', 'スコアボード', 'ミニスコア', '大型スコア']} />
 
       <div className="flex items-center gap-4">
         <button

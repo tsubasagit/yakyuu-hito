@@ -100,7 +100,7 @@ export default function ControlPage() {
 
   const orderableSections: Section[] = [
     { id: 'inning',      label: 'イニング',          component: <InningControl /> },
-    { id: 'count',       label: 'BSOパネル',         component: <CountControl /> },
+    { id: 'count',       label: 'BSO・走者',         component: <CountControl /> },
     { id: 'score',       label: '得点',              component: <ScoreControl /> },
     { id: 'lineup',      label: '打順・選手',        component: <LineupControl /> },
     { id: 'ticker',      label: '速報テロップ',      component: <TickerControl /> },

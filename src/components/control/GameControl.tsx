@@ -148,7 +148,10 @@ export default function GameControl() {
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-4">
-      <SectionTitle title="試合管理" controls={['ミニスコア', '大型スコア']} />
+      {/* チーム名・色は全スコア系パネル（ミニスコア・大型スコア・スコアボード・BSOパネル）に
+          反映されるため controls には全部を列挙する。学生が「チーム名を変えたいけど、
+          どの表示パネルに影響する？」と迷ったときの導線になる。 */}
+      <SectionTitle title="試合管理" controls={['ミニスコア', '大型スコア', 'スコアボード', 'BSOパネル']} />
 
       {/* 試合概要バナー: DH制 + 試合状態を一目で把握。
           DH制の変更は「▶ 試合開始」ウィザードに一本化（チームカード内は表示しない）。 */}
