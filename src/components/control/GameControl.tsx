@@ -21,6 +21,8 @@ export default function GameControl() {
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
   const isGameOver = useGameStore((s) => s.isGameOver)
+  const gameStarted = useGameStore((s) => s.gameStarted ?? false)
+  const setGameStarted = useGameStore((s) => s.setGameStarted)
   const setTeamName = useGameStore((s) => s.setTeamName)
   const setGameOver = useGameStore((s) => s.setGameOver)
   const newGame = useGameStore((s) => s.newGame)
@@ -118,16 +120,39 @@ export default function GameControl() {
         >
           チーム名を反映
         </button>
-        <button
-          onClick={() => setGameOver(!isGameOver)}
-          className={`px-4 py-2 rounded text-sm font-bold ${
-            isGameOver
-              ? 'bg-green-600 hover:bg-green-700 text-white'
-              : 'bg-red-600 hover:bg-red-700 text-white'
-          }`}
-        >
-          {isGameOver ? '試合再開' : '試合終了'}
-        </button>
+        {/* 試合開始 / 終了 ボタン
+            開始: gameStarted=true にしてDH制・打順並び替え・選手追加削除をロック
+            終了: setGameOver(true) を呼ぶと isGameOver=true & gameStarted=false（次試合準備のため編集可へ） */}
+        {!gameStarted && !isGameOver && (
+          <button
+            onClick={() => {
+              if (confirm('試合を開始しますか？\n\n● DH制（あり/なし/二刀流）の切替がロックされます\n● 打順並び替え・選手追加削除もロックされます\n● 名前・学年・コメント・守備位置・代打・投手交代は試合中も編集できます')) {
+                setGameStarted(true)
+              }
+            }}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-sm font-bold"
+            title="オーダー（DH制・打順）を確定して試合を開始"
+          >
+            ▶ 試合開始（オーダー確定）
+          </button>
+        )}
+        {gameStarted && !isGameOver && (
+          <button
+            onClick={() => setGameOver(true)}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-bold"
+            title="試合終了。スコアボードに×が表示され、オーダー編集が再度可能になります"
+          >
+            試合終了
+          </button>
+        )}
+        {isGameOver && (
+          <button
+            onClick={() => setGameOver(false)}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-bold"
+          >
+            試合再開
+          </button>
+        )}
         <button
           onClick={() => setColorEditorOpen((v) => !v)}
           className="bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2 rounded text-sm font-bold border border-gray-600 flex items-center gap-1"

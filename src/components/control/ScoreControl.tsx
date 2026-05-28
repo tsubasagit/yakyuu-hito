@@ -26,6 +26,16 @@ export default function ScoreControl() {
     }
   }
 
+  // プレイ済みイニングは null でも「0」として表示する。
+  // オーバーレイ側と同じロジックで、攻撃が終わった半回には 0 を自動表示。
+  // （2026-05-21 顧客フィードバック対応）
+  const isPlayed = (inning: number, half: HalfInning) =>
+    half === 'top'
+      ? inning <= currentInning
+      : inning < currentInning || (inning === currentInning && currentHalf === 'bottom')
+  const displayScore = (inning: number, half: HalfInning, value: number | null) =>
+    value ?? (isPlayed(inning, half) ? 0 : '-')
+
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
       <SectionTitle title="得点" controls={['ミニスコア', 'スコアボード', '大型スコア']} />
@@ -95,7 +105,7 @@ export default function ScoreControl() {
                   }`}
                   onClick={() => handleScoreClick(inn.inning, 'top')}
                 >
-                  {inn.top ?? '-'}
+                  {displayScore(inn.inning, 'top', inn.top)}
                 </td>
               ))}
               <td className="px-2 py-1 text-center text-yellow-400 font-bold">
@@ -114,7 +124,7 @@ export default function ScoreControl() {
                   }`}
                   onClick={() => handleScoreClick(inn.inning, 'bottom')}
                 >
-                  {inn.bottom ?? '-'}
+                  {displayScore(inn.inning, 'bottom', inn.bottom)}
                 </td>
               ))}
               <td className="px-2 py-1 text-center text-yellow-400 font-bold">

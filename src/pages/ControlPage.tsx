@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import SyncStatus from '../components/control/SyncStatus'
 import GameControl from '../components/control/GameControl'
 import InningControl from '../components/control/InningControl'
@@ -8,8 +8,8 @@ import LineupControl from '../components/control/LineupControl'
 import VisibilityControl, { stripeForSection } from '../components/control/VisibilityControl'
 import TournamentControl from '../components/control/TournamentControl'
 import TickerControl from '../components/control/TickerControl'
-import { useGameStore, extractGameState } from '../store/useGameStore'
-import { broadcastState, onStateRequest } from '../lib/sync'
+import { useGameStore, extractGameState, withBroadcastApply } from '../store/useGameStore'
+import { broadcastState, onStateRequest, onStateUpdate, TAB_ID } from '../lib/sync'
 
 /** コントロール側から定期的にフルステートをブロードキャストする */
 function usePeriodicBroadcast() {
@@ -19,6 +19,41 @@ function usePeriodicBroadcast() {
     }, 2000)
     return () => clearInterval(id)
   }, [])
+}
+
+/**
+ * 複数の Control タブが開かれている状況に対応するため、
+ * 他タブの broadcast を受信して自タブも追従する。
+ *
+ * 旧実装: Control は他タブからの broadcast を受信しなかった。
+ * → 複数 Control タブが独立した state を持ち、それぞれが古い state を
+ *   2秒ごとに送り続けてオーバーレイで新旧スコアが交互に入れ替わるバグの原因に。
+ * (2026-05-21 顧客フィードバック対応)
+ */
+function useMultiTabControlSync() {
+  const lastAppliedTsRef = useRef<number>(Date.now())
+  const replaceState = useGameStore((s) => s.replaceState)
+  useEffect(() => {
+    // 自タブの state 変更時にも lastAppliedTs を更新する。
+    // これがないと、自タブが操作した直後に他タブの古い periodic broadcast を
+    // 「より新しい」と誤判定して受け入れ、自タブの変更が消える事故が起きる。
+    const unsubLocal = useGameStore.subscribe(() => {
+      lastAppliedTsRef.current = Date.now()
+    })
+    const unsubBroadcast = onStateUpdate((state, meta) => {
+      // 自タブ発のメッセージは無視
+      if (meta.tabId === TAB_ID) return
+      // 古いメッセージ（自タブの直近変更より古い）は無視（last-write-wins）
+      if (meta.ts < lastAppliedTsRef.current) return
+      lastAppliedTsRef.current = meta.ts
+      // 受信由来の適用中は再ブロードキャストしない（エコーループ防止）
+      withBroadcastApply(() => replaceState(state))
+    })
+    return () => {
+      unsubLocal()
+      unsubBroadcast()
+    }
+  }, [replaceState])
 }
 
 interface Section {
@@ -56,6 +91,7 @@ export default function ControlPage() {
   }, [])
 
   usePeriodicBroadcast()
+  useMultiTabControlSync()
 
   /** 試合管理は最上段固定（並び替え不可）。それ以外を試合進行順にデフォルト配置 */
   const PINNED: Section = {

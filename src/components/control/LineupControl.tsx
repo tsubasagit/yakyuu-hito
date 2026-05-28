@@ -58,9 +58,16 @@ function BatterRow({
       <select
         className="bg-gray-700 text-white rounded px-1 py-1 text-xs w-24 shrink-0"
         value={player.position}
-        onChange={(e) => onChange({ ...player, position: e.target.value as Position })}
-        disabled={player.isPinchHit}
-        title={player.isPinchHit ? '代打中は守備位置の代わりに「代打」を表示します' : ''}
+        // 代打中でも守備位置を選べる。位置を選んだ瞬間に代打フラグを自動解除
+        // （代打選手がそのまま守備につく運用に対応／2026-05-21 顧客フィードバック）
+        onChange={(e) =>
+          onChange({
+            ...player,
+            position: e.target.value as Position,
+            isPinchHit: false,
+          })
+        }
+        title={player.isPinchHit ? '守備位置を選ぶと代打表示は自動解除されます' : ''}
       >
         <option value="">--</option>
         {positions.map((p) => (
@@ -84,9 +91,10 @@ function BatterRow({
           <option key={g} value={g}>{g}</option>
         ))}
       </select>
-      <input
-        className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[120px]"
-        placeholder="コメント（打者テロップに表示）"
+      <textarea
+        className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[120px] resize-y leading-snug"
+        placeholder="コメント（打者テロップに表示・Enterで改行）"
+        rows={2}
         value={player.comment ?? ''}
         onChange={(e) => onChange({ ...player, comment: e.target.value })}
       />
@@ -172,9 +180,10 @@ function PitcherRow({
           <option key={g} value={g}>{g}</option>
         ))}
       </select>
-      <input
-        className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[120px]"
-        placeholder="コメント（投手テロップに表示）"
+      <textarea
+        className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[120px] resize-y leading-snug"
+        placeholder="コメント（投手テロップに表示・Enterで改行）"
+        rows={2}
         value={player.comment ?? ''}
         onChange={(e) => onChange({ ...player, comment: e.target.value })}
       />
@@ -215,7 +224,10 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
   const lineup = useGameStore((s) => side === 'away' ? s.awayLineup : s.homeLineup)
   const batterIdx = useGameStore((s) => side === 'away' ? s.awayBatterIndex : s.homeBatterIndex)
   const currentHalf = useGameStore((s) => s.currentHalf)
-  const dhMode = useGameStore((s) => side === 'away' ? s.awayDhMode : s.homeDhMode)
+  // DH制は両チーム共通。旧データ互換のため away/home フィールドも fallback として参照。
+  const dhMode = useGameStore((s) => s.dhMode ?? s.awayDhMode ?? s.homeDhMode ?? 'dh')
+  // 試合開始フラグ。true の間は DH制・打順並び替え・選手追加削除・CSV をロック。
+  const gameStarted = useGameStore((s) => s.gameStarted ?? false)
   const setLineupPlayer = useGameStore((s) => s.setLineupPlayer)
   const setLineup = useGameStore((s) => s.setLineup)
   const selectBatter = useGameStore((s) => s.selectBatter)
@@ -240,10 +252,19 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
 
   // 打席ボタン: 攻守問わず動作。同じ打者（同チーム&同インデックス）なら currentBatter パネルを ON/OFF 切替、
   // 別打者・別チームなら選択 + パネルを ON。
+  // 打者OFFに切り替わるタイミングで、その打者の代打フラグも一緒に解除する
+  //（代打→打席ON→OFFで代打表示が残るのを防ぐ／2026-05-21 顧客フィードバック）
   const handleBatterButton = (idx: number) => {
     const isAlreadyCurrent = idx === batterIdx && lineupDisplayTeam === side
     if (isAlreadyCurrent) {
+      const willBeOff = currentBatterVisible
       toggleVisibility('currentBatter')
+      if (willBeOff) {
+        const player = lineup[idx]
+        if (player?.isPinchHit) {
+          setLineupPlayer(side, idx, { ...player, isPinchHit: false })
+        }
+      }
     } else {
       selectBatter(side, idx)
       if (!currentBatterVisible) toggleVisibility('currentBatter')
@@ -319,7 +340,15 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
         )}
       </div>
 
-      {/* CSV / プリセット */}
+      {/* 試合中ロック中のお知らせバナー */}
+      {gameStarted && (
+        <div className="bg-orange-900/40 border border-orange-500/60 rounded px-3 py-1.5 text-orange-200 text-[11px] leading-snug">
+          🔒 試合中：オーダーロック中（DH制・CSV・プリセットは変更不可）。
+          名前・学年・コメント・守備位置・代打・投手交代は試合中でも編集できます。
+        </div>
+      )}
+
+      {/* CSV / プリセット（試合中はロック） */}
       <div className="bg-gray-900/40 rounded p-2 space-y-1.5 border border-gray-700">
         <div className="flex flex-wrap gap-2 items-center">
           <input
@@ -331,7 +360,9 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold"
+            disabled={gameStarted}
+            className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed"
+            title={gameStarted ? '試合中はオーダー一括変更はできません' : ''}
           >
             CSV読込
           </button>
@@ -344,13 +375,17 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
           </button>
           <button
             onClick={() => setLineup(side, [...TEITO_LINEUP])}
-            className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
+            disabled={gameStarted}
+            className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+            title={gameStarted ? '試合中はオーダー一括変更はできません' : ''}
           >
             プリセット：帝都大学
           </button>
           <button
             onClick={() => setLineup(side, [...SORYO_LINEUP])}
-            className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
+            disabled={gameStarted}
+            className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+            title={gameStarted ? '試合中はオーダー一括変更はできません' : ''}
           >
             プリセット：早凌大学
           </button>
@@ -362,9 +397,11 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
         </div>
       )}
 
-      {/* DH制モード切替 */}
+      {/* DH制モード切替（試合中はロック） */}
       <div className="flex items-center gap-2 bg-gray-900/40 rounded px-2 py-1.5 border border-gray-700">
-        <span className="text-gray-300 text-[11px] font-bold shrink-0">DH制:</span>
+        <span className="text-gray-300 text-[11px] font-bold shrink-0">
+          DH制{gameStarted && <span className="text-orange-400 ml-1">🔒</span>}:
+        </span>
         <div className="flex gap-1">
           {([
             { key: 'dh', label: 'DHあり（10名）', hint: '10番目=投手' },
@@ -374,10 +411,11 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
             <button
               key={opt.key}
               onClick={() => setDhMode(side, opt.key)}
-              title={opt.hint}
-              className={`text-[11px] px-2 py-1 rounded font-bold transition-colors ${
+              disabled={gameStarted}
+              title={gameStarted ? '試合中はDH制を変更できません' : opt.hint}
+              className={`text-[11px] px-2 py-1 rounded font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                 dhMode === opt.key
-                  ? 'bg-accent text-white'
+                  ? 'bg-accent text-white disabled:bg-accent/60'
                   : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
               }`}
             >
@@ -401,14 +439,13 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
 
       {/* ラインナップ（1-9番打者） */}
       <div className="space-y-0.5">
-        {/* 列ヘッダ */}
+        {/* 列ヘッダ（代打はデータ行内のチェックボックスで操作するため列としては出さない） */}
         <div className="flex items-center gap-1.5 text-[10px] text-gray-400 px-1.5 pt-1 pb-0.5 border-b border-gray-700">
           <span className="w-4 text-center shrink-0">順番</span>
           <span className="w-12 text-center shrink-0">守備</span>
           <span className="flex-1 min-w-0">名前</span>
           <span className="w-16 text-center shrink-0">学年</span>
           <span className="flex-1 min-w-0">コメント</span>
-          <span className="shrink-0 w-12 text-center">代打</span>
           <span className="shrink-0 w-[60px] text-center">　</span>
         </div>
         {lineup.slice(0, 9).map((player, idx) => (
