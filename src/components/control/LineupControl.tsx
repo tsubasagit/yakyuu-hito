@@ -235,7 +235,6 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
   const prevBatter = useGameStore((s) => s.prevBatter)
   const setLineupDisplayTeam = useGameStore((s) => s.setLineupDisplayTeam)
   const lineupDisplayTeam = useGameStore((s) => s.lineupDisplayTeam ?? 'away')
-  const copyDhToPitcher = useGameStore((s) => s.copyDhToPitcher)
   const currentBatterVisible = useGameStore((s) => s.visibility?.currentBatter ?? false)
   const currentPitcherVisible = useGameStore((s) => s.visibility?.currentPitcher ?? false)
   const toggleVisibility = useGameStore((s) => s.toggleVisibility)
@@ -396,22 +395,8 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
         </div>
       )}
 
-      {/* DH制バッジ（読み取り専用）。
-          DH制の選択は「▶ 試合開始」ボタンのウィザードに一本化（2026-05-28）。
-          ここはチームカード上で現在のモードを把握できる表示専用。
-          試合終了→新試合の流れで変更したい場合は、試合終了モーダルから
-          「新しい試合を作成」→ 再度「▶ 試合開始」ウィザードで選び直す。 */}
-      <div className="flex items-center gap-2 bg-gray-900/40 rounded px-2 py-1.5 border border-gray-700">
-        <span className="text-gray-400 text-[11px] shrink-0">DH制：</span>
-        <span className="text-white text-[11px] font-bold">
-          {dhMode === 'dh' && 'DHあり（10名）'}
-          {dhMode === 'none' && 'DHなし（9名）'}
-          {dhMode === 'twoWay' && '二刀流（10名・大谷ルール）'}
-        </span>
-        <span className="text-gray-500 text-[10px] ml-auto">
-          変更は「▶ 試合開始」から
-        </span>
-      </div>
+      {/* DH制の表示は廃止。試合概要（GameControl 上部）にまとめて表示する。
+          選択は「▶ 試合開始」ウィザードに一本化（2026-05-28）。 */}
 
       {/* バリデーション警告 */}
       {dhMode === 'none' && !hasPitcherInBatters && (
@@ -449,19 +434,14 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
         ))}
       </div>
 
-      {/* 投手（10番目）— DHなしモードでは非表示 */}
-      {dhMode !== 'none' && lineup[9] && (
+      {/* 投手（10番目）。
+          - DHなしモード: 10番行は非表示（投手は1-9番打順内）
+          - DHありモード: 通常の編集可能行 + 登板ON/OFFボタン
+          - 二刀流モード: DH選手と同一人物のため、編集不可の同期表示のみ。
+            DH選手の編集が即 10番行に反映される（store で自動同期）。
+            登板ON/OFFは上部「表示ON/OFF」パネルから操作する。 */}
+      {dhMode === 'dh' && lineup[9] && (
         <>
-          {dhMode === 'twoWay' && hasDhInBatters && (
-            <button
-              onClick={() => copyDhToPitcher(side)}
-              className="w-full bg-purple-700 hover:bg-purple-600 text-white px-2 py-1 rounded text-[11px] font-bold"
-              title="DH打者と投手を同一人物にする（大谷ルール）"
-            >
-              ⚾ DH打者を投手行にコピー（大谷ルール）
-            </button>
-          )}
-          {/* 列ヘッダ（投手用） */}
           <div className="flex items-center gap-1.5 text-[10px] text-red-300/80 px-1.5 pt-1 pb-0.5 border-b border-red-800/40">
             <span className="w-4 text-center shrink-0">10</span>
             <span className="w-12 text-center shrink-0">守備</span>
@@ -478,6 +458,18 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
             onChange={(p) => setLineupPlayer(side, 9, p)}
           />
         </>
+      )}
+      {dhMode === 'twoWay' && lineup[9] && (
+        <div className="rounded border border-purple-700/40 bg-purple-900/15 px-2.5 py-2 text-[11px] text-purple-100 flex items-center gap-2">
+          <span className="text-purple-300 font-bold tracking-wide">10 P</span>
+          <span className="text-gray-400">二刀流中・DH選手と同期：</span>
+          <span className="text-white font-bold truncate">
+            {lineup[9].name || '（DH選手未入力）'}
+          </span>
+          <span className="ml-auto text-[10px] text-purple-300/70">
+            編集は6番DH行で／表示切替は上部「表示ON/OFF」から
+          </span>
+        </div>
       )}
     </div>
   )

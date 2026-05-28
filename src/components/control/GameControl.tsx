@@ -126,9 +126,45 @@ export default function GameControl() {
     }
   }
 
+  // 試合概要バナー用ラベル。
+  // DH 制 + 試合状態 を1行で把握できる位置に置き、各チームカードからは重複表示を撤去。
+  // （2026-05-28 顧客フィードバック対応: 試合概要に開始ルールを集約）
+  const dhLabel =
+    currentDhMode === 'dh'
+      ? 'DHあり（10名・10番=投手）'
+      : currentDhMode === 'none'
+        ? 'DHなし（9名・投手も打席）'
+        : '二刀流（10名・大谷ルール）'
+  const phaseLabel = isGameOver
+    ? '試合終了'
+    : gameStarted
+      ? '試合中（オーダーロック）'
+      : '試合前（準備中）'
+  const phaseColor = isGameOver
+    ? 'bg-red-900/40 border-red-500/50 text-red-200'
+    : gameStarted
+      ? 'bg-orange-900/40 border-orange-500/50 text-orange-200'
+      : 'bg-emerald-900/30 border-emerald-500/40 text-emerald-200'
+
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-4">
       <SectionTitle title="試合管理" controls={['ミニスコア', '大型スコア']} />
+
+      {/* 試合概要バナー: DH制 + 試合状態を一目で把握。
+          DH制の変更は「▶ 試合開始」ウィザードに一本化（チームカード内は表示しない）。 */}
+      <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 rounded border px-3 py-2 text-xs ${phaseColor}`}>
+        <span className="font-bold tracking-wide">{phaseLabel}</span>
+        <span className="opacity-60">|</span>
+        <span>
+          <span className="opacity-70">DH制：</span>
+          <span className="font-bold">{dhLabel}</span>
+        </span>
+        {!gameStarted && !isGameOver && (
+          <span className="ml-auto opacity-70 text-[11px]">
+            DH制の変更は「▶ 試合開始」ウィザードから
+          </span>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">

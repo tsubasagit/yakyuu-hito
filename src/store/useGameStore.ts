@@ -130,6 +130,45 @@ function clearPinchHitAt(
   return updated
 }
 
+/**
+ * 二刀流（大谷ルール）モード時に、1-9番のうち position='DH' の選手を
+ * 10番投手スロットへコピーして返す。
+ *
+ * - 6番DH ↔ 10番投手 を「同一選手」として保つための内部同期処理
+ * - DH選手が見つからない／既に同期済みの場合は null（呼び出し側で no-op 判定）
+ * - 学年・コメントもコピーする（テロップ表示時に整合させるため）
+ *
+ * setLineupPlayer / setLineup / setDhMode から呼び出される。
+ * （2026-05-28 顧客フィードバック対応: 手動コピーボタン廃止に伴う自動同期）
+ */
+function syncTwoWayPitcher(lineup: LineupPlayer[]): LineupPlayer[] | null {
+  const dhIdx = lineup.slice(0, 9).findIndex((p) => p.position === 'DH')
+  if (dhIdx === -1) return null
+  const dh = lineup[dhIdx]!
+  const current = lineup[9]
+  // 既に同期済みなら何もしない（無限ループ防止＋不要な再レンダ抑制）
+  if (
+    current &&
+    current.name === dh.name &&
+    current.number === dh.number &&
+    current.grade === dh.grade &&
+    current.comment === dh.comment &&
+    current.position === '投'
+  ) {
+    return null
+  }
+  const updated = [...lineup]
+  updated[9] = {
+    ...(current ?? { order: 10, name: '', number: '', position: '投' as const }),
+    name: dh.name,
+    number: dh.number,
+    grade: dh.grade,
+    comment: dh.comment,
+    position: '投',
+  }
+  return updated
+}
+
 /** 両チームの全打者の代打フラグを解除した patch を返す（回送り時に使用） */
 function clearAllPinchHitsPatch(s: GameState): Partial<GameState> {
   const patch: Partial<GameState> = {}
@@ -343,7 +382,14 @@ export const useGameStore = create<GameStore>()(
         // 前試合や読込元データに残った代打フラグが新ラインナップへ混入するのを防ぐ。
         // (2026-05-21 顧客フィードバック対応: 学生運用の混乱防止)
         const sanitized = lineup.map((p) => p.isPinchHit ? { ...p, isPinchHit: false } : p)
-        set(team === 'away' ? { awayLineup: sanitized } : { homeLineup: sanitized })
+        set((s) => {
+          const key = team === 'away' ? 'awayLineup' : 'homeLineup'
+          // 二刀流モード時は DH→投手 を自動同期（手動コピー廃止のため）
+          const synced = s.dhMode === 'twoWay'
+            ? (syncTwoWayPitcher(sanitized) ?? sanitized)
+            : sanitized
+          return { [key]: synced }
+        })
       },
 
       setLineupPlayer: (team, index, player) =>
@@ -351,6 +397,13 @@ export const useGameStore = create<GameStore>()(
           const key = team === 'away' ? 'awayLineup' : 'homeLineup'
           const lineup = [...s[key]]
           lineup[index] = player
+          // 二刀流モード時: DH 行が更新されたら投手行を追従させる（自動同期）。
+          // 10番投手行への直接編集は LineupControl 側で read-only にして来ない想定。
+          // （2026-05-28 顧客フィードバック対応: 手動コピーボタン廃止）
+          if (s.dhMode === 'twoWay') {
+            const synced = syncTwoWayPitcher(lineup)
+            if (synced) return { [key]: synced }
+          }
           return { [key]: lineup }
         }),
 
@@ -726,11 +779,22 @@ export const useGameStore = create<GameStore>()(
         // 共通の dhMode と旧 away/home を全て同じ値で同期。
         // （2026-05-25 一元化: 野球ルール上、片チームのみDHあり/なしはありえない）
         void team
-        set(() => ({
-          dhMode: mode,
-          awayDhMode: mode,
-          homeDhMode: mode,
-        }))
+        set((s) => {
+          const patch: Partial<GameState> = {
+            dhMode: mode,
+            awayDhMode: mode,
+            homeDhMode: mode,
+          }
+          // 二刀流へ切り替えた瞬間に DH→投手 を両チーム同期。
+          // （2026-05-28 顧客フィードバック対応: 手動コピーボタン廃止）
+          if (mode === 'twoWay') {
+            const awaySync = syncTwoWayPitcher(s.awayLineup)
+            const homeSync = syncTwoWayPitcher(s.homeLineup)
+            if (awaySync) patch.awayLineup = awaySync
+            if (homeSync) patch.homeLineup = homeSync
+          }
+          return patch
+        })
       },
 
       copyDhToPitcher: (team) =>
