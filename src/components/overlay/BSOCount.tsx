@@ -34,7 +34,7 @@ export default function BSOCount() {
   const count = useGameStore((s) => s.count)
 
   return (
-    <div className="bg-black/55 backdrop-blur-sm rounded-xl px-4 py-3 flex flex-col gap-1.5">
+    <div className="bg-black/95 backdrop-blur-sm rounded-[3px] px-4 py-3 flex flex-col gap-1.5">
       <Dots label="B" count={count.balls} max={4} activeColor="bg-green-500" />
       <Dots
         label="S"

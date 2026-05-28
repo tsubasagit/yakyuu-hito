@@ -1,4 +1,5 @@
 import { useGameStore } from '../../store/useGameStore'
+import { pickTeamLabel } from '../../lib/teamLabel'
 
 /**
  * 大型スコア（画像準拠 v3・2026-05-17）。
@@ -14,13 +15,15 @@ export default function BigScore() {
   const currentInning = useGameStore((s) => s.currentInning)
   const currentHalf = useGameStore((s) => s.currentHalf)
 
-  const awayLetter = (awayTeam.shortName || awayTeam.name || 'A').charAt(0)
-  const homeLetter = (homeTeam.shortName || homeTeam.name || 'X').charAt(0)
+  // チーム名は最大4文字。name と shortName の長い方を採用（旧データで shortName
+  // が短縮済みのケースでも、name にフルネームがあればそれを優先）。
+  const awayLetter = pickTeamLabel(awayTeam, 'A')
+  const homeLetter = pickTeamLabel(homeTeam, 'X')
   const halfLabel = currentHalf === 'top' ? 'オモテ' : 'ウラ'
 
   return (
     <div
-      className="select-none text-white font-bold bg-[#0b1220]/85 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.6)] relative rounded-xl"
+      className="select-none text-white font-bold bg-[#0b1220]/95 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.6)] relative rounded-[3px]"
       style={{ minWidth: 720, overflow: 'visible' }}
     >
       <div className="flex items-end justify-center gap-6 px-10 pt-6 pb-6">
@@ -40,13 +43,18 @@ export default function BigScore() {
 }
 
 function TeamLetter({ letter }: { letter: string }) {
+  const len = Array.from(letter).length
+  // 1文字=88px / 2文字=64px / 3文字=48px / 4文字=38px（最大4文字想定）
+  const fontSize = len <= 1 ? 88 : len === 2 ? 64 : len === 3 ? 48 : 38
+  // 4文字を1セルに収めるため横幅を可変に
+  const minWidth = len <= 1 ? 112 : len === 2 ? 140 : len === 3 ? 168 : 200
   return (
     <div
-      className="flex items-center justify-center text-white font-black"
+      className="flex items-center justify-center text-white font-black tracking-tight whitespace-nowrap"
       style={{
-        width: 112,
+        minWidth,
         height: 112,
-        fontSize: 88,
+        fontSize,
         lineHeight: 1,
         textShadow: '0 3px 6px rgba(0,0,0,0.55)',
       }}

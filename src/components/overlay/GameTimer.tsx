@@ -26,7 +26,7 @@ export default function GameTimer() {
   const elapsed = now - gameStartTime
 
   return (
-    <div className="bg-black/80 backdrop-blur-sm rounded-lg px-3 py-2 text-white text-sm font-mono font-bold">
+    <div className="bg-black/95 backdrop-blur-sm rounded-[3px] px-3 py-2 text-white text-sm font-mono font-bold">
       {formatElapsed(elapsed)}
     </div>
   )

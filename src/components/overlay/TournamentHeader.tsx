@@ -12,7 +12,7 @@ export default function TournamentHeader() {
 
   return (
     <div
-      className="select-none text-white font-bold border border-white/70 bg-[#0b1220]/85 backdrop-blur-sm shadow-[0_6px_24px_rgba(0,0,0,0.5)] px-8 py-4 text-center rounded-xl"
+      className="select-none text-white font-bold border border-white/70 bg-[#0b1220]/95 backdrop-blur-sm shadow-[0_6px_24px_rgba(0,0,0,0.5)] px-8 py-4 text-center rounded-[3px]"
       style={{ minWidth: 600 }}
     >
       {hasTitle && (

@@ -1,4 +1,5 @@
 import { useGameStore } from '../../store/useGameStore'
+import { pickTeamLabel } from '../../lib/teamLabel'
 
 /**
  * イニング別スコアボード（画像準拠デザイン・2026-05-16 リファイン）。
@@ -23,27 +24,31 @@ export default function InningScoreboard() {
     return existing ?? { inning: num, top: null, bottom: null }
   })
 
-  const awayLetter = (awayTeam.shortName || awayTeam.name || 'A').charAt(0)
-  const homeLetter = (homeTeam.shortName || homeTeam.name || 'X').charAt(0)
+  // チーム名は最大4文字。name と shortName の長い方を採用。
+  const awayLetter = pickTeamLabel(awayTeam, 'A')
+  const homeLetter = pickTeamLabel(homeTeam, 'X')
+  // チームレター列の幅は最長文字数で揃える（1文字=36px、4文字でも収まるよう拡張）。
+  const maxLen = Math.max(Array.from(awayLetter).length, Array.from(homeLetter).length)
+  const letterColWidth = maxLen <= 1 ? 36 : maxLen === 2 ? 48 : maxLen === 3 ? 60 : 72
 
   return (
-    <div className="select-none shadow-[0_4px_16px_rgba(0,0,0,0.4)] rounded-xl overflow-hidden">
+    <div className="select-none shadow-[0_4px_16px_rgba(0,0,0,0.4)] rounded-[3px] overflow-hidden">
       <table className="border-collapse tabular-nums font-bold" style={{ borderSpacing: 0 }}>
         <thead>
           <tr>
             {/* 左上角 */}
-            <th className="bg-[#0b1220]/85 backdrop-blur-sm border-2 border-black" style={{ width: 36, height: 28 }} />
+            <th className="bg-[#0b1220]/95 backdrop-blur-sm border-2 border-black" style={{ width: letterColWidth, height: 28 }} />
             {displayInnings.map((inn) => (
               <th
                 key={inn.inning}
-                className="border-2 border-black text-sm text-center bg-[#0b1220]/85 backdrop-blur-sm text-white"
+                className="border-2 border-black text-sm text-center bg-[#0b1220]/95 backdrop-blur-sm text-white"
                 style={{ width: 32, height: 28 }}
               >
                 {inn.inning}
               </th>
             ))}
             <th
-              className="bg-[#0b1220]/85 backdrop-blur-sm text-amber-300 border-2 border-black text-base"
+              className="bg-[#0b1220]/95 backdrop-blur-sm text-amber-300 border-2 border-black text-base"
               style={{ width: 44, height: 28 }}
             >
               R
@@ -60,8 +65,7 @@ export default function InningScoreboard() {
             currentHalf={currentHalf}
             total={awayTotal}
             isGameOver={isGameOver}
-            homeTotal={homeTotal}
-            awayTotal={awayTotal}
+            letterColWidth={letterColWidth}
           />
           <ScoreRow
             letter={homeLetter}
@@ -72,8 +76,7 @@ export default function InningScoreboard() {
             currentHalf={currentHalf}
             total={homeTotal}
             isGameOver={isGameOver}
-            homeTotal={homeTotal}
-            awayTotal={awayTotal}
+            letterColWidth={letterColWidth}
           />
         </tbody>
       </table>
@@ -90,8 +93,7 @@ function ScoreRow({
   currentHalf,
   total,
   isGameOver,
-  homeTotal,
-  awayTotal,
+  letterColWidth,
 }: {
   letter: string
   color: string
@@ -101,22 +103,35 @@ function ScoreRow({
   currentHalf: 'top' | 'bottom'
   total: number
   isGameOver: boolean
-  homeTotal: number
-  awayTotal: number
+  letterColWidth: number
 }) {
-  // 試合終了時、後攻が勝っているなら「最終裏」セルに × を出す。
-  //  - 裏を未プレイ（攻撃なし: コールド・無得点勝ち）: "×" のみ
-  //  - 裏を得点で打ち切り（サヨナラ）: "{得点}×"
-  const homeWon = isGameOver && homeTotal > awayTotal
+  // 文字数に応じてフォントを自動縮小（最大4文字想定）
+  const len = Array.from(letter).length
+  const letterFontSize = len <= 1 ? 18 : len === 2 ? 15 : len === 3 ? 13 : 11
+  // 試合終了時、最終回の裏セルに × を出す（home勝ち / away勝ち / 引き分け 共通）。
+  //  - 裏を未プレイ（home コールド勝ち等）: "×" のみ
+  //  - 裏を得点 or 0で打ち切り: "{得点}×"
+  // 2026-05-24 仕様変更: 旧来は「homeリード時のみ」だったが、
+  // 「試合終了マーカーとして×を出したい」という顧客要望（原田氏）に合わせて全パターン共通化。
+  // 2026-05-25 修正: 裏まで打ち切って次回表に遷移済みの状態（先攻勝ち等）で
+  // currentInning が +1 されている場合、isLastBottomCell の判定がズレて × が出ない問題を修正。
+  //   - currentHalf === 'bottom' : 裏進行中 or 裏終了直後 → 最終プレイ回 = currentInning
+  //   - currentHalf === 'top'    : 次回表に進んだ後 → 最終プレイ回 = currentInning - 1
+  const gameEnded = isGameOver
+  const lastPlayedInning = currentHalf === 'bottom'
+    ? currentInning
+    : Math.max(1, currentInning - 1)
   return (
     <tr>
-      {/* チームレターセル */}
+      {/* チームレターセル（最大4文字、列幅とフォントは自動調整） */}
       <td
-        className="border-2 border-black text-white text-center text-lg font-black"
+        className="border-2 border-black text-white text-center font-black tracking-tight whitespace-nowrap"
         style={{
           backgroundColor: color || '#1e3a5f',
-          width: 36,
+          width: letterColWidth,
           height: 36,
+          fontSize: letterFontSize,
+          paddingInline: 4,
         }}
       >
         {letter}
@@ -128,7 +143,7 @@ function ScoreRow({
             : inn.inning < currentInning ||
               (inn.inning === currentInning && currentHalf === 'bottom')
         const value = half === 'top' ? inn.top : inn.bottom
-        const isLastBottomCell = half === 'bottom' && homeWon && inn.inning === currentInning
+        const isLastBottomCell = half === 'bottom' && gameEnded && inn.inning === lastPlayedInning
         let display: React.ReactNode
         if (isLastBottomCell) {
           if (value === null || value === undefined) {
@@ -147,7 +162,7 @@ function ScoreRow({
         return (
           <td
             key={inn.inning}
-            className="border-2 border-black text-center text-base bg-[#0b1220]/85 backdrop-blur-sm text-white"
+            className="border-2 border-black text-center text-base bg-[#0b1220]/95 backdrop-blur-sm text-white"
             style={{ width: 32, height: 36 }}
           >
             {display}

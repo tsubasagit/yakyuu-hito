@@ -13,7 +13,7 @@ export default function WaitingScreen() {
 
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-50">
-      <div className="bg-black/70 backdrop-blur-sm rounded-2xl px-16 py-12 flex flex-col items-center gap-6">
+      <div className="bg-black/95 backdrop-blur-sm rounded-[3px] px-16 py-12 flex flex-col items-center gap-6">
         <img
           src={mascotSrc}
           alt="マスコット"

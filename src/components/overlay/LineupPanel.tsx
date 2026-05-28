@@ -2,6 +2,11 @@ import { useGameStore } from '../../store/useGameStore'
 import type { DhMode, LineupPlayer, Team } from '../../types'
 import { positionLabel } from '../../lib/positionLabel'
 
+/** "2学年" や "2年生" のような表記から「学」「生」を除去し "2年" 形式に正規化 */
+function normalizeGrade(raw: string): string {
+  return raw.replace(/学(?=年)/g, '').replace(/年生/g, '年').trim()
+}
+
 /**
  * スタメン一覧（画像準拠デザイン・2026-05-16 リファイン）。
  *
@@ -18,8 +23,8 @@ export default function LineupPanel() {
   const homeTeam = useGameStore((s) => s.homeTeam)
   const awayLineup = useGameStore((s) => s.awayLineup)
   const homeLineup = useGameStore((s) => s.homeLineup)
-  const awayDhMode = useGameStore((s) => s.awayDhMode ?? 'dh')
-  const homeDhMode = useGameStore((s) => s.homeDhMode ?? 'dh')
+  // DH制は両チーム共通。旧データ互換のため away/home フィールドも fallback として参照。
+  const dhMode = useGameStore((s) => s.dhMode ?? s.awayDhMode ?? s.homeDhMode ?? 'dh')
   const mode = useGameStore((s) => s.lineupDisplayMode ?? 'attacking')
   const currentHalf = useGameStore((s) => s.currentHalf)
 
@@ -28,10 +33,10 @@ export default function LineupPanel() {
   if (!awayHasPlayers && !homeHasPlayers) return null
 
   const awayCard = (
-    <TeamLineupCard team={awayTeam} lineup={awayLineup} dhMode={awayDhMode} label="先攻" />
+    <TeamLineupCard team={awayTeam} lineup={awayLineup} dhMode={dhMode} label="先攻" />
   )
   const homeCard = (
-    <TeamLineupCard team={homeTeam} lineup={homeLineup} dhMode={homeDhMode} label="後攻" />
+    <TeamLineupCard team={homeTeam} lineup={homeLineup} dhMode={dhMode} label="後攻" />
   )
 
   if (mode === 'both') {
@@ -79,7 +84,7 @@ function TeamLineupCard({
   const showPitcherRow = dhMode !== 'none' && pitcher && pitcher.name.length > 0
 
   return (
-    <div className="text-white font-bold shadow-[0_6px_24px_rgba(0,0,0,0.55)] rounded-xl overflow-hidden">
+    <div className="text-white font-bold shadow-[0_6px_24px_rgba(0,0,0,0.55)] rounded-[3px] overflow-hidden">
       {/* ヘッダー行: チーム名（チームカラー背景）+ スターティングメンバー黄帯 */}
       <div className="flex items-stretch border border-white/70">
         <div
@@ -92,7 +97,7 @@ function TeamLineupCard({
           {team.name || (label === '先攻' ? 'チームA' : 'チームX')}
         </div>
         <div
-          className="flex items-end justify-end px-3 pb-1 bg-[#0b1220]/85 backdrop-blur-sm"
+          className="flex items-end justify-end px-3 pb-1 bg-[#0b1220]/95 backdrop-blur-sm"
           style={{ minWidth: 160 }}
         >
           <span
@@ -141,7 +146,7 @@ function LineupRow({
       </div>
       {/* ポジションセル（白文字。代打はオレンジ強調） */}
       <div
-        className={`flex items-center px-3 py-1 text-[13px] tracking-wide border-r border-white/70 whitespace-nowrap bg-[#0b1220]/85 backdrop-blur-sm ${
+        className={`flex items-center px-3 py-1 text-[13px] tracking-wide border-r border-white/70 whitespace-nowrap bg-[#0b1220]/95 backdrop-blur-sm ${
           player.isPinchHit ? 'text-amber-300 font-black' : 'text-white'
         }`}
         style={{ minWidth: 116 }}
@@ -150,17 +155,21 @@ function LineupRow({
       </div>
       {/* 名前セル */}
       <div
-        className="flex items-center px-3 py-1 text-[16px] bg-[#0b1220]/85 backdrop-blur-sm border-r border-white/70 whitespace-nowrap"
+        className="flex items-center px-3 py-1 text-[16px] bg-[#0b1220]/95 backdrop-blur-sm border-r border-white/70 whitespace-nowrap"
         style={{ minWidth: 180 }}
       >
         {player.name || '　'}
       </div>
-      {/* 学年セル（コメント廃止 → 学年に置換） */}
+      {/* 学年セル（コメント廃止 → 学年に置換）
+          flex-1 で右端まで広がり、ヘッダーの「スターティングメンバー」帯と
+          打者行の右端を揃える（学年が空でも背景は伸びるため右側余白が消える）。
+          「2学年」「2年生」等の表記揺れは "2年" に正規化して表示。
+          （2026-05-21 顧客フィードバック: 「学」不要 / 2026-05-24: 右側余白解消） */}
       <div
-        className="flex items-center px-3 py-1 text-[14px] text-amber-100 bg-[#0b1220]/85 backdrop-blur-sm whitespace-nowrap"
+        className="flex items-center px-3 py-1 text-[14px] text-amber-100 bg-[#0b1220]/95 backdrop-blur-sm whitespace-nowrap flex-1"
         style={{ minWidth: 88 }}
       >
-        {player.grade || ''}
+        {normalizeGrade(player.grade || '')}
       </div>
     </div>
   )

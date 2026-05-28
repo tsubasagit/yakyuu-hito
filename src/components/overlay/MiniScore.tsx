@@ -1,4 +1,5 @@
 import { useGameStore } from '../../store/useGameStore'
+import { pickTeamLabel } from '../../lib/teamLabel'
 
 export default function MiniScore() {
   const awayTeam = useGameStore((s) => s.awayTeam)
@@ -8,17 +9,18 @@ export default function MiniScore() {
   const currentInning = useGameStore((s) => s.currentInning)
   const currentHalf = useGameStore((s) => s.currentHalf)
 
-  const awayLetter = (awayTeam.shortName || awayTeam.name || 'A').charAt(0)
-  const homeLetter = (homeTeam.shortName || homeTeam.name || 'X').charAt(0)
+  // チーム名は最大4文字。name と shortName の長い方を採用。
+  const awayLetter = pickTeamLabel(awayTeam, 'A')
+  const homeLetter = pickTeamLabel(homeTeam, 'X')
   const halfLabel = currentHalf === 'top' ? 'オモテ' : 'ウラ'
 
   return (
-    <div className="select-none text-white font-bold rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
-      <div className="bg-[#0b1220]/85 backdrop-blur-sm px-3 py-0.5 text-white text-xs tracking-widest text-center">
+    <div className="select-none text-white font-bold rounded-[3px] overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+      <div className="bg-[#0b1220]/95 backdrop-blur-sm px-3 py-0.5 text-white text-xs tracking-widest text-center">
         {currentInning}回 {halfLabel}
       </div>
 
-      <div className="flex items-stretch bg-[#0b1220]/85 backdrop-blur-sm">
+      <div className="flex items-stretch bg-[#0b1220]/95 backdrop-blur-sm">
         <TeamCell letter={awayLetter} />
         <ScoreCell value={awayTotal} />
         <div className="flex items-center justify-center text-2xl font-black px-2 text-white">
@@ -32,10 +34,14 @@ export default function MiniScore() {
 }
 
 function TeamCell({ letter }: { letter: string }) {
+  // 文字数に応じてフォント・最小幅を自動調整（最大4文字想定）
+  const len = Array.from(letter).length
+  const fontSize = len <= 1 ? 24 : len === 2 ? 20 : len === 3 ? 16 : 14
+  const minWidth = len <= 1 ? 44 : len === 2 ? 56 : len === 3 ? 68 : 80
   return (
     <div
-      className="flex items-center justify-center text-white text-2xl font-black px-3"
-      style={{ minWidth: 44 }}
+      className="flex items-center justify-center text-white font-black px-3 whitespace-nowrap tracking-tight"
+      style={{ minWidth, fontSize }}
     >
       {letter}
     </div>

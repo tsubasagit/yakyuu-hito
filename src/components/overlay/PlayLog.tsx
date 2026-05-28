@@ -8,7 +8,7 @@ export default function PlayLog() {
   const display = playLog.slice(0, 8)
 
   return (
-    <div className="bg-black/80 backdrop-blur-sm rounded-lg px-4 py-3 text-white text-xs max-w-[260px]">
+    <div className="bg-black/95 backdrop-blur-sm rounded-[3px] px-4 py-3 text-white text-xs max-w-[260px]">
       <div className="text-accent font-bold text-xs mb-2">経過</div>
       <div className="flex flex-col gap-1">
         {display.map((entry) => (

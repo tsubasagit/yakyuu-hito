@@ -1,21 +1,39 @@
 import { useGameStore } from '../../store/useGameStore'
 
 /**
- * 現在の打者: 攻守問わず lineupDisplayTeam で選択中のチーム・打者を表示。
+ * 現在の打者: スタメン表示モードと攻守の組み合わせで表示元チームを決定する。
+ *  - 'attacking': 攻撃中チーム（表=先攻 / 裏=後攻）に自動追従
+ *  - 'away' / 'home': 指定チーム固定
+ *  - 'both': 直近に選択した側（lineupDisplayTeam）
  * スタッツの代わりに 1行コメント（高校名等）を表示する（2026-05-12 改修）。
+ * （2026-05-25 修正: 旧来は lineupDisplayTeam 固定で、攻守入れ替え時に
+ *  バッターチームが切り替わらないバグを解消）
  */
 export default function CurrentBatter() {
-  const lineupDisplayTeam = useGameStore((s) => s.lineupDisplayTeam ?? 'away')
   const awayLineup = useGameStore((s) => s.awayLineup)
   const homeLineup = useGameStore((s) => s.homeLineup)
   const awayBatterIndex = useGameStore((s) => s.awayBatterIndex)
   const homeBatterIndex = useGameStore((s) => s.homeBatterIndex)
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
+  const currentHalf = useGameStore((s) => s.currentHalf)
+  const lineupDisplayMode = useGameStore((s) => s.lineupDisplayMode ?? 'attacking')
+  const lineupDisplayTeam = useGameStore((s) => s.lineupDisplayTeam ?? 'away')
 
-  const team = lineupDisplayTeam === 'away' ? awayTeam : homeTeam
-  const lineup = lineupDisplayTeam === 'away' ? awayLineup : homeLineup
-  const batterIndex = lineupDisplayTeam === 'away' ? awayBatterIndex : homeBatterIndex
+  // 表示元チームを決定（CurrentPitcher と同じ判定ロジック）。
+  let displayTeam: 'away' | 'home'
+  if (lineupDisplayMode === 'away' || lineupDisplayMode === 'home') {
+    displayTeam = lineupDisplayMode
+  } else if (lineupDisplayMode === 'both') {
+    displayTeam = lineupDisplayTeam
+  } else {
+    // attacking: 表=先攻が攻撃 / 裏=後攻が攻撃
+    displayTeam = currentHalf === 'top' ? 'away' : 'home'
+  }
+
+  const team = displayTeam === 'away' ? awayTeam : homeTeam
+  const lineup = displayTeam === 'away' ? awayLineup : homeLineup
+  const batterIndex = displayTeam === 'away' ? awayBatterIndex : homeBatterIndex
   const lineupPlayer = lineup[batterIndex]
   const name = lineupPlayer?.name ?? ''
   if (!name) return null
@@ -31,13 +49,13 @@ export default function CurrentBatter() {
       {/* チーム名（フル表示・枠の上） */}
       {team.name && (
         <div
-          className="inline-block px-4 py-1 text-white text-sm font-bold tracking-wider rounded-t-xl"
+          className="inline-block px-4 py-1 text-white text-sm font-bold tracking-wider rounded-t-[3px]"
           style={{ backgroundColor: team.color }}
         >
           {team.name}
         </div>
       )}
-      <div className="bg-[#0b1220]/85 backdrop-blur-sm rounded-xl rounded-tl-none text-white overflow-hidden shadow-[0_4px_18px_rgba(0,0,0,0.5)] border border-white/10">
+      <div className="bg-[#0b1220]/95 backdrop-blur-sm rounded-[3px] rounded-tl-none text-white overflow-hidden shadow-[0_4px_18px_rgba(0,0,0,0.5)] border border-white/10">
         <div className="flex items-stretch">
           {/* 左: 打順バッジ（チーム色） */}
           <div
@@ -65,30 +83,42 @@ export default function CurrentBatter() {
             </span>
           </div>
 
-          {/* 学年枠（コメント枠の前。常時表示・空ならプレースホルダ） */}
+          {/* 学年枠（コメント枠の前。常時表示・空ならプレースホルダ）
+              ラベル「学年」は撤去し値のみ表示（例: "2年"）。
+              ストア値に「学」が紛れた場合は除去して "2年" 表示に正規化する。
+              （2026-05-21 顧客フィードバック: 「学」不要） */}
           <div
             className="flex flex-col items-center justify-center px-3 py-2 border-l border-white/15"
             style={{ minWidth: 64 }}
           >
-            <span className="text-[9px] tracking-[0.2em] text-gray-500">学年</span>
-            <span className="text-base font-bold text-amber-100 leading-tight">
-              {grade || '—'}
+            <span className="text-lg font-bold text-amber-100 leading-tight">
+              {normalizeGrade(grade) || '—'}
             </span>
           </div>
 
-          {/* コメント枠（あれば表示・なければ詰める） */}
+          {/* コメント枠（あれば表示・なければ詰める）。
+              - 幅は最大 200px（短文でも 14〜16 文字程度で自動折返しが効くサイズ）
+              - whitespace-pre-wrap: 手入力の改行（\n）はそのまま尊重
+              - break-words: 長単語・URL・英数字も枠内で折り返す
+              - 「 / 」「、」「。」「・」 区切りでも視認性確保のため leading-snug */}
           {comment && (
             <div
-              className="flex items-center px-4 py-2 border-l border-white/15 text-sm text-gray-200 max-w-[260px]"
+              className="flex items-center px-4 py-2 border-l border-white/15 text-sm text-gray-200"
+              style={{ maxWidth: 200 }}
               title={comment}
             >
-              <span className="truncate">{comment}</span>
+              <span className="whitespace-pre-wrap break-words leading-snug">{comment}</span>
             </div>
           )}
         </div>
       </div>
     </div>
   )
+}
+
+/** "2学年" や "2年生" のような表記から「学」「生」を除去し "2年" 形式に正規化 */
+function normalizeGrade(raw: string): string {
+  return raw.replace(/学(?=年)/g, '').replace(/年生/g, '年').trim()
 }
 
 function positionLabel(position: string): string {

@@ -7,7 +7,7 @@ export default function RunnerDiamond() {
     on ? 'fill-yellow-400 stroke-yellow-500' : 'fill-gray-700 stroke-gray-500'
 
   return (
-    <div className="bg-black/80 backdrop-blur-sm rounded-lg p-3">
+    <div className="bg-black/95 backdrop-blur-sm rounded-[3px] p-3">
       <svg viewBox="0 0 80 80" className="w-20 h-20">
         {/* 二塁 */}
         <rect

@@ -1,4 +1,5 @@
 import { useGameStore } from '../../store/useGameStore'
+import { pickTeamLabel } from '../../lib/teamLabel'
 
 export default function StatusPanel() {
   const awayTeam = useGameStore((s) => s.awayTeam)
@@ -10,20 +11,22 @@ export default function StatusPanel() {
   const count = useGameStore((s) => s.count)
   const runners = useGameStore((s) => s.runners)
 
-  const awayLabel = teamLabel(awayTeam.shortName || awayTeam.name || 'A')
-  const homeLabel = teamLabel(homeTeam.shortName || homeTeam.name || 'X')
+  const awayLabel = pickTeamLabel(awayTeam, 'A')
+  const homeLabel = pickTeamLabel(homeTeam, 'X')
   const halfLabel = currentHalf === 'top' ? '表' : '裏'
 
   return (
     <div
-      className="select-none font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.5)] border-2 border-black bg-[#0b1220]/85 backdrop-blur-sm inline-flex flex-col rounded-xl overflow-hidden"
+      className="select-none font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.5)] border-2 border-black bg-[#0b1220]/95 backdrop-blur-sm inline-flex flex-col rounded-[3px] overflow-hidden"
     >
-      {/* 上段: イニング + ダイヤ */}
+      {/* 上段: イニング + ダイヤ。
+          「1回表」セルを大きめにしてダイヤ側 flex-1 領域を縮め、
+          ダイヤ周辺の左右余白を圧縮する（2026-05-24 顧客FB対応）。 */}
       <div className="flex items-stretch border-b-2 border-black">
-        <div className="flex items-center text-white text-base tracking-wider px-3 py-1 border-r-2 border-black flex-1">
+        <div className="flex items-center text-white text-base font-bold tracking-wider px-5 py-1 border-r-2 border-black whitespace-nowrap">
           {currentInning}回{halfLabel}
         </div>
-        <div className="flex items-center justify-center px-2 py-1">
+        <div className="flex items-center justify-center px-2 py-1 flex-1">
           <Diamond first={runners.first} second={runners.second} third={runners.third} />
         </div>
       </div>
@@ -66,14 +69,6 @@ export default function StatusPanel() {
       </div>
     </div>
   )
-}
-
-/** チーム名は最大4文字（先頭から切り詰め）。空文字なら "—" を表示 */
-function teamLabel(raw: string): string {
-  const trimmed = raw.trim()
-  if (!trimmed) return '—'
-  // Array.from で絵文字含むサロゲートペアを1文字とカウント
-  return Array.from(trimmed).slice(0, 4).join('')
 }
 
 function ScoreRow({
@@ -129,8 +124,10 @@ function Diamond({
         ? 'bg-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.9)]'
         : 'bg-transparent border border-white/60'
     }`
+  // ダイヤモンドの幅は 80px に固定（旧 60px から拡大）。
+  // 1塁・3塁の左右余白を減らしつつ、菱形のバランスは保つ（2026-05-24 顧客FB対応）。
   return (
-    <div className="relative" style={{ width: 60, height: 60 }}>
+    <div className="relative" style={{ width: 80, height: 60 }}>
       <div className={`absolute top-0 left-1/2 -translate-x-1/2 ${cls(second)}`} />
       <div className={`absolute top-1/2 left-0 -translate-y-1/2 ${cls(third)}`} />
       <div className={`absolute top-1/2 right-0 -translate-y-1/2 ${cls(first)}`} />

@@ -9,14 +9,39 @@ export default function CurrentPitcher() {
   const homeLineup = useGameStore((s) => s.homeLineup)
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
+  // DH制は両チーム共通。旧データ互換のため away/home フィールドも fallback として参照。
+  const dhMode = useGameStore((s) => s.dhMode ?? s.awayDhMode ?? s.homeDhMode ?? 'dh')
   const currentHalf = useGameStore((s) => s.currentHalf)
+  const lineupDisplayMode = useGameStore((s) => s.lineupDisplayMode ?? 'attacking')
+  const lineupDisplayTeam = useGameStore((s) => s.lineupDisplayTeam ?? 'away')
 
-  // 表中=後攻が守備、裏中=先攻が守備。常に「守備中チーム」のピッチャーを表示する。
-  // 旧仕様では lineupDisplayTeam に追従していたため、攻撃側ピッチャーが出るバグがあった。
-  const defendingSide: 'away' | 'home' = currentHalf === 'top' ? 'home' : 'away'
-  const team = defendingSide === 'away' ? awayTeam : homeTeam
-  const lineup = defendingSide === 'away' ? awayLineup : homeLineup
-  const pitcherPlayer = lineup[9]
+  // 投手の表示元チームを決定。
+  //  - attacking（自動・既定）: 守備側のピッチャーを表示（標準運用）
+  //  - away / home 明示指定 :   指定チームのピッチャーを表示
+  //  - both（VS表示）        :   lineupDisplayTeam に追従（直近にハイライトされた側）
+  // DH/二刀流の試合で「攻撃中チームの投手名を出したい」ケースは、表示モードを
+  // away/home に切り替えるか、both の状態で対象チーム側のカードを選択する運用で対応する。
+  let pitcherSide: 'away' | 'home'
+  if (lineupDisplayMode === 'away' || lineupDisplayMode === 'home') {
+    pitcherSide = lineupDisplayMode
+  } else if (lineupDisplayMode === 'both') {
+    pitcherSide = lineupDisplayTeam
+  } else {
+    pitcherSide = currentHalf === 'top' ? 'home' : 'away'
+  }
+  const team = pitcherSide === 'away' ? awayTeam : homeTeam
+  const lineup = pitcherSide === 'away' ? awayLineup : homeLineup
+
+  // 投手データの取得元を DH モードで切り替える：
+  //  - DHあり/二刀流: lineup[9]（10番目=投手専用枠）
+  //  - DHなし:        打順1〜9番のうち position==='投' の選手
+  //                   （DHなし時に lineup[9] を見ると、過去の試合の残骸データを
+  //                    「どこにも属さない人」として誤表示する問題があったため）
+  // （2026-05-25 顧客フィードバック対応）
+  const pitcherPlayer =
+    dhMode === 'none'
+      ? lineup.slice(0, 9).find((p) => p.position === '投')
+      : lineup[9]
   const name = pitcherPlayer?.name ?? ''
   if (!name) return null
 
@@ -28,13 +53,13 @@ export default function CurrentPitcher() {
       {/* チーム名（フル表示・枠の上） */}
       {team.name && (
         <div
-          className="inline-block px-4 py-1 text-white text-sm font-bold tracking-wider rounded-t-xl"
+          className="inline-block px-4 py-1 text-white text-sm font-bold tracking-wider rounded-t-[3px]"
           style={{ backgroundColor: team.color }}
         >
           {team.name}
         </div>
       )}
-      <div className="bg-[#0b1220]/85 backdrop-blur-sm rounded-xl rounded-tl-none text-white overflow-hidden shadow-[0_4px_18px_rgba(0,0,0,0.5)] border border-white/10">
+      <div className="bg-[#0b1220]/95 backdrop-blur-sm rounded-[3px] rounded-tl-none text-white overflow-hidden shadow-[0_4px_18px_rgba(0,0,0,0.5)] border border-white/10">
         <div className="flex items-stretch">
           {/* 左: ピッチャー バッジ（チーム色） */}
           <div
@@ -57,28 +82,36 @@ export default function CurrentPitcher() {
             </span>
           </div>
 
-          {/* 学年枠（コメント枠の前。常時表示） */}
+          {/* 学年枠（コメント枠の前。常時表示）
+              ラベル「学年」は撤去し値のみ表示（例: "2年"）。
+              （2026-05-21 顧客フィードバック: 「学」不要） */}
           <div
             className="flex flex-col items-center justify-center px-3 py-2 border-l border-white/15"
             style={{ minWidth: 64 }}
           >
-            <span className="text-[9px] tracking-[0.2em] text-gray-500">学年</span>
-            <span className="text-base font-bold text-amber-100 leading-tight">
-              {grade || '—'}
+            <span className="text-lg font-bold text-amber-100 leading-tight">
+              {normalizeGrade(grade) || '—'}
             </span>
           </div>
 
-          {/* コメント枠 */}
+          {/* コメント枠（長文は自動改行：手入力改行は尊重、長単語も折返し）
+              幅 200px に揃えて短文でも自動的に折返しやすくする。 */}
           {comment && (
             <div
-              className="flex items-center px-4 py-2 border-l border-white/15 text-sm text-gray-200 max-w-[260px]"
+              className="flex items-center px-4 py-2 border-l border-white/15 text-sm text-gray-200"
+              style={{ maxWidth: 200 }}
               title={comment}
             >
-              <span className="truncate">{comment}</span>
+              <span className="whitespace-pre-wrap break-words leading-snug">{comment}</span>
             </div>
           )}
         </div>
       </div>
     </div>
   )
+}
+
+/** "2学年" や "2年生" のような表記から「学」「生」を除去し "2年" 形式に正規化 */
+function normalizeGrade(raw: string): string {
+  return raw.replace(/学(?=年)/g, '').replace(/年生/g, '年').trim()
 }

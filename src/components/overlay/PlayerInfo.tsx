@@ -11,7 +11,7 @@ export default function PlayerInfo() {
   if (!hasBatter && !hasPitcher) return null
 
   return (
-    <div className="bg-black/80 backdrop-blur-sm rounded-lg px-4 py-2 text-white text-sm flex gap-6">
+    <div className="bg-black/95 backdrop-blur-sm rounded-[3px] px-4 py-2 text-white text-sm flex gap-6">
       {hasBatter && (
         <div className="flex items-center gap-2">
           <span className="text-accent font-bold text-xs">打者</span>
