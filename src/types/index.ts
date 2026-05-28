@@ -211,9 +211,20 @@ export interface GameState {
   showBothLineups: boolean
   /** スタメンオーバーレイの表示モード（先攻/後攻/両方/自動） */
   lineupDisplayMode: LineupDisplayMode
-  /** DH制モード（チーム別） */
-  awayDhMode: DhMode
-  homeDhMode: DhMode
+  /** DH制モード（試合単位で両チーム共通）。
+   *  野球のルール上 DH 制はリーグ／試合単位で決まり、片チームのみDHあり/なしは存在しない。
+   *  旧 awayDhMode / homeDhMode は互換のため残しているが、新コードは dhMode を参照する。
+   *  （2026-05-25 一元化） */
+  dhMode: DhMode
+  /** @deprecated dhMode を使うこと。旧データ互換のため残置 */
+  awayDhMode?: DhMode
+  /** @deprecated dhMode を使うこと。旧データ互換のため残置 */
+  homeDhMode?: DhMode
+  /** 試合開始フラグ。true の間は DH制・打順並び替え・選手追加/削除/CSVインポートをロック。
+   *  名前・学年・コメント・守備位置・代打フラグ・投手交代 は試合中も編集可能。
+   *  「試合終了」ボタンで false に戻る（新試合準備のためオーダー編集可へ）。
+   *  （2026-05-25 顧客フィードバック: 試合中のDH切替で表示崩れが起きるため） */
+  gameStarted: boolean
   // --- yakyuu-hito 拡張（2026-04-23 キックオフ） ---
   /** 大会情報（tournamentHeader 用） */
   tournament: Tournament
@@ -319,8 +330,8 @@ export const initialGameState: GameState = {
   lineupDisplayTeam: 'away',
   showBothLineups: false,
   lineupDisplayMode: 'attacking',
-  awayDhMode: 'dh',
-  homeDhMode: 'dh',
+  dhMode: 'dh',
+  gameStarted: false,
   tournament: {
     title: '',
     subtitle: '',

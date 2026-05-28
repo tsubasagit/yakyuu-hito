@@ -28,6 +28,23 @@ export function setPreventPersistWrites(prevent: boolean) {
  */
 let _idbRestoreInProgress = false
 
+/**
+ * BroadcastChannel 経由で受信した state を replaceState で適用している最中は
+ * 再ブロードキャストしないためのフラグ。
+ * これを立てないと Control タブが複数あるとき、Tab A → Tab B → Tab A の
+ * 無限エコーループが発生する。
+ * (2026-05-21 対応: 試合終了直後にスコアが交互に入れ替わるバグの根本対策)
+ */
+let _applyingFromBroadcast = false
+export function withBroadcastApply<T>(fn: () => T): T {
+  _applyingFromBroadcast = true
+  try {
+    return fn()
+  } finally {
+    _applyingFromBroadcast = false
+  }
+}
+
 /** エフェクト自動クリア用タイマー。多重発火を防ぐため前回をクリアしてから再セットする。 */
 let _effectTimer: ReturnType<typeof setTimeout> | null = null
 const EFFECT_DURATION_MS = 6000
@@ -43,7 +60,8 @@ const DATA_KEYS: (keyof GameState)[] = [
   'showMascot', 'mascotMode', 'mascotImages', 'autoChangeEffect', 'showWaitingScreen',
   'overlayPositions', 'overlayScale', 'lineupDisplayTeam', 'showBothLineups',
   'lineupDisplayMode',
-  'awayDhMode', 'homeDhMode',
+  'dhMode', 'awayDhMode', 'homeDhMode',
+  'gameStarted',
   // yakyuu-hito 拡張
   'tournament', 'pinchHitter', 'visibility',
 ]
@@ -94,6 +112,36 @@ function getActivePitcherInfo(history: PitcherAppearance[]): PlayerInfo | null {
   }
 }
 
+/**
+ * 指定スロットの代打フラグを解除した lineup を返す。
+ * 元から代打でない場合は null を返す（呼び出し側で no-op 判定に使う）。
+ *
+ * 代打は1打席限りの起用なので、別打者へ進んだ瞬間に自動解除する設計。
+ * （2026-05-21 顧客フィードバック対応）
+ */
+function clearPinchHitAt(
+  lineup: LineupPlayer[],
+  idx: number,
+): LineupPlayer[] | null {
+  const p = lineup[idx]
+  if (!p?.isPinchHit) return null
+  const updated = [...lineup]
+  updated[idx] = { ...p, isPinchHit: false }
+  return updated
+}
+
+/** 両チームの全打者の代打フラグを解除した patch を返す（回送り時に使用） */
+function clearAllPinchHitsPatch(s: GameState): Partial<GameState> {
+  const patch: Partial<GameState> = {}
+  if (s.awayLineup.some((p) => p.isPinchHit)) {
+    patch.awayLineup = s.awayLineup.map((p) => p.isPinchHit ? { ...p, isPinchHit: false } : p)
+  }
+  if (s.homeLineup.some((p) => p.isPinchHit)) {
+    patch.homeLineup = s.homeLineup.map((p) => p.isPinchHit ? { ...p, isPinchHit: false } : p)
+  }
+  return patch
+}
+
 interface GameActions {
   addBall: () => void
   addStrike: () => void
@@ -120,6 +168,8 @@ interface GameActions {
   clearPlayLog: () => void
   setTeamName: (team: 'away' | 'home', name: string, shortName: string) => void
   setGameOver: (over: boolean) => void
+  /** 試合開始（オーダー確定・ロック）。DH制・打順並び替え・選手追加削除をロックする。 */
+  setGameStarted: (started: boolean) => void
   newGame: () => void
   /** チーム情報（名前・色・打順・大会名・パネル位置等）を引き継いで試合データのみリセット */
   newGameKeepTeams: () => void
@@ -288,8 +338,13 @@ export const useGameStore = create<GameStore>()(
       setErrors: (team, count) =>
         set(team === 'away' ? { awayErrors: count } : { homeErrors: count }),
 
-      setLineup: (team, lineup) =>
-        set(team === 'away' ? { awayLineup: lineup } : { homeLineup: lineup }),
+      setLineup: (team, lineup) => {
+        // CSV/プリセット読み込みでは isPinchHit を必ず false に正規化する。
+        // 前試合や読込元データに残った代打フラグが新ラインナップへ混入するのを防ぐ。
+        // (2026-05-21 顧客フィードバック対応: 学生運用の混乱防止)
+        const sanitized = lineup.map((p) => p.isPinchHit ? { ...p, isPinchHit: false } : p)
+        set(team === 'away' ? { awayLineup: sanitized } : { homeLineup: sanitized })
+      },
 
       setLineupPlayer: (team, index, player) =>
         set((s) => {
@@ -304,6 +359,18 @@ export const useGameStore = create<GameStore>()(
           const key = team === 'away' ? 'awayLineup' : 'homeLineup'
           const player = s[key][index]
           if (!player) return s
+
+          // 別打者・別チームに切り替わった時、前打者の代打フラグを自動解除。
+          // 投手選択(index=9)は打者交代に当たらないので対象外。
+          const prevTeam: 'away' | 'home' = s.lineupDisplayTeam ?? 'away'
+          const prevIdx = prevTeam === 'away' ? s.awayBatterIndex : s.homeBatterIndex
+          const prevKey: 'awayLineup' | 'homeLineup' = prevTeam === 'away' ? 'awayLineup' : 'homeLineup'
+          const isSameSlot = prevTeam === team && prevIdx === index
+          const clearPrevPatch: Partial<GameState> = {}
+          if (!isSameSlot && index !== 9) {
+            const cleared = clearPinchHitAt(s[prevKey], prevIdx)
+            if (cleared) clearPrevPatch[prevKey] = cleared
+          }
 
           // 10番目（index 9）は投手 → 投手交代（履歴付き）
           if (index === 9) {
@@ -372,6 +439,7 @@ export const useGameStore = create<GameStore>()(
 
           const idxKey = team === 'away' ? 'awayBatterIndex' : 'homeBatterIndex'
           return {
+            ...clearPrevPatch,
             [idxKey]: index,
             batter: {
               name: player.name,
@@ -393,7 +461,10 @@ export const useGameStore = create<GameStore>()(
           const nextIdx = (currentIdx + 1) % 9  // 1-9番のみ巡回（10番目=投手は除外）
           const player = s[key][nextIdx]
           if (!player) return s
+          // 進む直前の打者の代打フラグを自動解除
+          const cleared = clearPinchHitAt(s[key], currentIdx)
           return {
+            ...(cleared ? { [key]: cleared } : {}),
             [idxKey]: nextIdx,
             batter: {
               name: player.name,
@@ -414,7 +485,10 @@ export const useGameStore = create<GameStore>()(
           const prevIdx = (currentIdx - 1 + 9) % 9
           const player = s[key][prevIdx]
           if (!player) return s
+          // 戻る直前の打者の代打フラグを自動解除
+          const cleared = clearPinchHitAt(s[key], currentIdx)
           return {
+            ...(cleared ? { [key]: cleared } : {}),
             [idxKey]: prevIdx,
             batter: {
               name: player.name,
@@ -448,20 +522,27 @@ export const useGameStore = create<GameStore>()(
           return { homeTeam: { ...s.homeTeam, name, shortName } }
         }),
 
-      setGameOver: (over) => set({ isGameOver: over }),
+      setGameOver: (over) => set((s) => ({
+        isGameOver: over,
+        // 試合終了時はオーダー編集を再度許可（次試合準備のため gameStarted=false）。
+        // 終了押下→再開した場合はそのまま試合中扱いで再ロックする運用。
+        gameStarted: over ? false : s.gameStarted,
+      })),
+
+      setGameStarted: (started) => set({ gameStarted: started }),
 
       newGame: () => set({ ...initialGameState }),
 
       newGameKeepTeams: () =>
         set((s) => ({
           ...initialGameState,
-          // チーム情報を引き継ぐ
+          // チーム情報を引き継ぐ。代打フラグは前試合の名残なので必ずクリア。
+          // (2026-05-21 顧客フィードバック: 新試合の冒頭で前試合の代打表記が残るのを防止)
           awayTeam: s.awayTeam,
           homeTeam: s.homeTeam,
-          awayLineup: s.awayLineup,
-          homeLineup: s.homeLineup,
-          awayDhMode: s.awayDhMode,
-          homeDhMode: s.homeDhMode,
+          awayLineup: s.awayLineup.map((p) => p.isPinchHit ? { ...p, isPinchHit: false } : p),
+          homeLineup: s.homeLineup.map((p) => p.isPinchHit ? { ...p, isPinchHit: false } : p),
+          dhMode: s.dhMode ?? s.awayDhMode ?? s.homeDhMode ?? 'dh',
           // 大会・表示設定も引き継ぐ
           tournament: s.tournament,
           overlayPositions: s.overlayPositions,
@@ -640,16 +721,17 @@ export const useGameStore = create<GameStore>()(
 
       setLineupDisplayMode: (mode) => set({ lineupDisplayMode: mode }),
 
-      setDhMode: (team, mode) =>
-        set((s) => {
-          const modeKey = team === 'away' ? 'awayDhMode' : 'homeDhMode'
-          const lineupKey = team === 'away' ? 'awayLineup' : 'homeLineup'
-          const lineup = [...s[lineupKey]]
-          // 'none' に切り替えた時、1-9番内に '投' が無ければ10番目の投手情報を失うため
-          // データ自体は残し、UI 側で10番目を非表示にする（モード切替で再表示できるように）
-          // 'dh' / 'twoWay' に戻したとき、1-9番に 'DH' が無ければユーザーが選び直す前提
-          return { [modeKey]: mode, [lineupKey]: lineup }
-        }),
+      setDhMode: (team, mode) => {
+        // DH制は試合単位で両チーム共通。team 引数は互換のため受け取るが無視し、
+        // 共通の dhMode と旧 away/home を全て同じ値で同期。
+        // （2026-05-25 一元化: 野球ルール上、片チームのみDHあり/なしはありえない）
+        void team
+        set(() => ({
+          dhMode: mode,
+          awayDhMode: mode,
+          homeDhMode: mode,
+        }))
+      },
 
       copyDhToPitcher: (team) =>
         set((s) => {
@@ -771,8 +853,10 @@ export const useGameStore = create<GameStore>()(
 
 // subscribe でstate変更時に自動ブロードキャスト（関数を含まないデータのみ送信）
 // オーバーレイ側では受信専用とし、ブロードキャストしない（状態ピンポン防止）
+// BroadcastChannel 受信由来の replaceState は再ブロードキャストしない（エコーループ防止）
 useGameStore.subscribe((state) => {
   if (_preventPersistWrites) return
+  if (_applyingFromBroadcast) return
   broadcastState(extractGameState(state))
 })
 
@@ -817,10 +901,12 @@ function applyWalk(s: GameState): Partial<GameState> {
 }
 
 function advanceInningPatch(s: GameState): Partial<GameState> {
+  // 回送り時に両チームの代打フラグを全クリア（代打は1打席限りなので回をまたいで残さない）
   const resetState: Partial<GameState> = {
     count: { balls: 0, strikes: 0, outs: 0 },
     runners: { first: false, second: false, third: false },
     batter: { ...initialPlayerInfo },
+    ...clearAllPinchHitsPatch(s),
   }
 
   if (s.autoChangeEffect) {
@@ -832,6 +918,24 @@ function advanceInningPatch(s: GameState): Partial<GameState> {
       _effectTimer = null
       useGameStore.setState({ activeEffect: null, effectTimestamp: 0 })
     }, EFFECT_DURATION_MS)
+  }
+
+  // 終了した半回のスコアが null のままなら 0 を確定書き込み。
+  // 表示側で `?? 0` するだけでなく state にも 0 を残すことで、
+  // 編集ダイアログ・再開・バックアップ復元時にも「0が入っている」状態を保てる。
+  // (2026-05-21 顧客フィードバック: 回を送ったら自動で 0 が入ってほしい)
+  const finalizeHalfToZero = (
+    list: { inning: number; top: number | null; bottom: number | null }[],
+    inningNum: number,
+    half: HalfInning,
+  ) => {
+    const idx = list.findIndex((inn) => inn.inning === inningNum)
+    if (idx === -1) return list
+    const inn = list[idx]!
+    if (inn[half] !== null && inn[half] !== undefined) return list
+    const updated = [...list]
+    updated[idx] = { ...inn, [half]: 0 }
+    return updated
   }
 
   if (s.currentHalf === 'top') {
@@ -851,14 +955,28 @@ function advanceInningPatch(s: GameState): Partial<GameState> {
     }
     const ap = s.awayPitcherHistory.find(p => p.isActive)
     if (ap) resetState.awayPitchCount = ap.pitchCount
+    // 表が終わった → 当該回 top を 0 確定（null時のみ）
+    const inningsAfter = finalizeHalfToZero(s.innings, s.currentInning, 'top')
+    if (inningsAfter !== s.innings) {
+      resetState.innings = inningsAfter
+      const totals = recalcTotals({ ...extractGameState(s), innings: inningsAfter })
+      resetState.awayTotal = totals.awayTotal
+      resetState.homeTotal = totals.homeTotal
+    }
     return { ...resetState, currentHalf: 'bottom' as const }
   }
 
   // 裏→次回表: 後攻が守備に入る → 後攻の active pitcher を表示
   const nextInning = s.currentInning + 1
-  const innings = [...s.innings]
+  // 裏が終わった → 当該回 bottom を 0 確定（null時のみ）
+  let innings = finalizeHalfToZero(s.innings, s.currentInning, 'bottom')
   if (!innings.find((inn) => inn.inning === nextInning)) {
-    innings.push({ inning: nextInning, top: null, bottom: null })
+    innings = [...innings, { inning: nextInning, top: null, bottom: null }]
+  }
+  if (innings !== s.innings) {
+    const totals = recalcTotals({ ...extractGameState(s), innings })
+    resetState.awayTotal = totals.awayTotal
+    resetState.homeTotal = totals.homeTotal
   }
 
   const homeActive = getActivePitcherInfo(s.homePitcherHistory)
