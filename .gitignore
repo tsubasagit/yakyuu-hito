@@ -25,3 +25,9 @@ npm-debug.log*
 
 # Debug recordings
 error/
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Claude Code local settings
+.claude/
