@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
 import SectionTitle from './shared/SectionTitle'
+import type { DhMode } from '../../types'
+import { getSamplePreset } from '../../lib/samplePresets'
 
 /** チームカラー プリセット（大学野球で使われやすい色を厳選） */
 const COLOR_PRESETS: { label: string; hex: string }[] = [
@@ -28,8 +30,46 @@ export default function GameControl() {
   const newGame = useGameStore((s) => s.newGame)
   const newGameKeepTeams = useGameStore((s) => s.newGameKeepTeams)
   const setTeamColor = useGameStore((s) => s.setTeamColor)
+  // 試合開始ウィザードで使用する store 操作
+  const currentDhMode = useGameStore((s) => s.dhMode ?? s.awayDhMode ?? s.homeDhMode ?? 'dh')
+  const setDhMode = useGameStore((s) => s.setDhMode)
+  const setLineup = useGameStore((s) => s.setLineup)
+  const awayLineup = useGameStore((s) => s.awayLineup)
+  const homeLineup = useGameStore((s) => s.homeLineup)
   const [colorEditorOpen, setColorEditorOpen] = useState(false)
   const [copiedKey, setCopiedKey] = useState<'away' | 'home' | null>(null)
+
+  // 試合開始ウィザード（モーダル）の状態。
+  // 学生オペレーターが DH 制を選び忘れた／投手を未登録のまま試合開始すると、
+  // ピッチャーテロップに何も表示できなくなる事故を防ぐためのフロー。
+  //（2026-05-28 顧客フィードバック対応）
+  const [startWizardOpen, setStartWizardOpen] = useState(false)
+  const [wizardDh, setWizardDh] = useState<DhMode>(currentDhMode)
+  const [wizardApplySample, setWizardApplySample] = useState(true)
+  const [wizardApplyAway, setWizardApplyAway] = useState(true)
+  const [wizardApplyHome, setWizardApplyHome] = useState(true)
+
+  /** 試合開始ウィザードを開く。現在の DH モードを初期値として読み込む */
+  const openStartWizard = () => {
+    setWizardDh(currentDhMode)
+    setWizardApplySample(true)
+    setWizardApplyAway(true)
+    setWizardApplyHome(true)
+    setStartWizardOpen(true)
+  }
+
+  /** 試合開始ウィザードの確定処理。DH モード設定 → サンプル投入 → 試合開始ロック */
+  const confirmStartWizard = () => {
+    // DH モードを両チーム共通で適用（setDhMode 内部で両チーム同期）
+    setDhMode('away', wizardDh)
+    // サンプル選手データを投入（チェックされたチームのみ）
+    if (wizardApplySample) {
+      if (wizardApplyAway) setLineup('away', getSamplePreset('away', wizardDh))
+      if (wizardApplyHome) setLineup('home', getSamplePreset('home', wizardDh))
+    }
+    setGameStarted(true)
+    setStartWizardOpen(false)
+  }
 
   const copyColor = async (team: 'away' | 'home', value: string) => {
     try {
@@ -125,15 +165,11 @@ export default function GameControl() {
             終了: setGameOver(true) を呼ぶと isGameOver=true & gameStarted=false（次試合準備のため編集可へ） */}
         {!gameStarted && !isGameOver && (
           <button
-            onClick={() => {
-              if (confirm('試合を開始しますか？\n\n● DH制（あり/なし/二刀流）の切替がロックされます\n● 打順並び替え・選手追加削除もロックされます\n● 名前・学年・コメント・守備位置・代打・投手交代は試合中も編集できます')) {
-                setGameStarted(true)
-              }
-            }}
+            onClick={openStartWizard}
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-sm font-bold"
-            title="オーダー（DH制・打順）を確定して試合を開始"
+            title="DH制を選択し、必要ならサンプル選手を投入してから試合を開始"
           >
-            ▶ 試合開始（オーダー確定）
+            ▶ 試合開始（DH選択 / オーダー確定）
           </button>
         )}
         {gameStarted && !isGameOver && (
@@ -256,6 +292,158 @@ export default function GameControl() {
             >
               ⟲ 完全リセットして新試合
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 試合開始ウィザード（モーダル）。
+          ① DH制（あり / なし / 二刀流）を必ず選択させる
+          ② 各DHモードに対応したサンプル選手を投入できる（投手込み）
+          ③ 確定で setDhMode + setLineup + setGameStarted を一括実行
+          学生オペレーターが投手未登録のまま試合開始する事故を防ぐ。 */}
+      {startWizardOpen && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setStartWizardOpen(false)}
+        >
+          <div
+            className="bg-gray-900 border-2 border-emerald-500/60 rounded-lg p-5 max-w-md w-full space-y-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-1">
+              <div className="text-emerald-400 text-xs font-bold tracking-[0.3em]">
+                STEP 1 OF 1
+              </div>
+              <div className="text-white text-lg font-bold">試合開始の準備</div>
+              <div className="text-gray-400 text-xs">
+                DH制を選択し、必要ならサンプル選手を投入してから試合を開始します
+              </div>
+            </div>
+
+            {/* DH制選択 */}
+            <div className="space-y-2">
+              <div className="text-gray-300 text-xs font-bold">
+                ① DH制を選択
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                {([
+                  {
+                    key: 'dh',
+                    label: 'DHあり（10名）',
+                    hint: '1〜9番=野手、10番目=投手専用枠',
+                  },
+                  {
+                    key: 'none',
+                    label: 'DHなし（9名）',
+                    hint: '投手も打順に入って打席に立つ',
+                  },
+                  {
+                    key: 'twoWay',
+                    label: '二刀流（10名・大谷ルール）',
+                    hint: 'DH打者と10番目投手が同一選手',
+                  },
+                ] as { key: DhMode; label: string; hint: string }[]).map((opt) => {
+                  const active = wizardDh === opt.key
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setWizardDh(opt.key)}
+                      className={`text-left px-3 py-2 rounded border-2 transition-colors ${
+                        active
+                          ? 'bg-emerald-600/30 border-emerald-400 text-white'
+                          : 'bg-gray-800 border-gray-700 hover:bg-gray-700 text-gray-300'
+                      }`}
+                    >
+                      <div className="text-sm font-bold flex items-center gap-2">
+                        <span
+                          className={`inline-block w-3 h-3 rounded-full ${
+                            active ? 'bg-emerald-400' : 'bg-gray-600'
+                          }`}
+                        />
+                        {opt.label}
+                      </div>
+                      <div className="text-[11px] text-gray-400 ml-5 leading-snug">
+                        {opt.hint}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* サンプル投入 */}
+            <div className="space-y-2 border-t border-gray-700 pt-3">
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={wizardApplySample}
+                  onChange={(e) => setWizardApplySample(e.target.checked)}
+                  className="mt-1 accent-emerald-500"
+                />
+                <div className="flex-1">
+                  <div className="text-white text-sm font-bold">
+                    ② サンプル選手データを投入する
+                  </div>
+                  <div className="text-gray-400 text-[11px] leading-snug">
+                    架空選手 9〜10名（投手を含む）を投入します。投手テロップ ON/OFF
+                    などの動作確認がすぐにできます。
+                    <span className="text-amber-400">既存の打順は上書きされます。</span>
+                  </div>
+                </div>
+              </label>
+              {wizardApplySample && (
+                <div className="ml-6 flex flex-col gap-1.5 bg-gray-800/60 rounded p-2 border border-gray-700">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={wizardApplyAway}
+                      onChange={(e) => setWizardApplyAway(e.target.checked)}
+                      className="accent-emerald-500"
+                    />
+                    <span className="text-gray-200 text-xs">
+                      先攻（{awayLineup.find((p) => p.name)?.name ? '上書き' : '空のため投入'}）
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={wizardApplyHome}
+                      onChange={(e) => setWizardApplyHome(e.target.checked)}
+                      className="accent-emerald-500"
+                    />
+                    <span className="text-gray-200 text-xs">
+                      後攻（{homeLineup.find((p) => p.name)?.name ? '上書き' : '空のため投入'}）
+                    </span>
+                  </label>
+                </div>
+              )}
+            </div>
+
+            {/* ロック説明 */}
+            <div className="bg-orange-900/30 border border-orange-500/40 rounded p-2 text-[11px] text-orange-200 leading-snug">
+              🔒 開始後は <strong>DH制・打順並び替え・選手追加削除・CSV読込</strong>{' '}
+              がロックされます。名前・学年・コメント・守備位置・代打フラグ・投手交代は試合中も編集できます。
+            </div>
+
+            {/* アクション */}
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setStartWizardOpen(false)}
+                className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2 rounded font-bold text-sm"
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={confirmStartWizard}
+                disabled={wizardApplySample && !wizardApplyAway && !wizardApplyHome}
+                className="flex-[2] bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white px-4 py-2 rounded font-bold text-sm"
+              >
+                ▶ この設定で試合開始
+              </button>
+            </div>
           </div>
         </div>
       )}
