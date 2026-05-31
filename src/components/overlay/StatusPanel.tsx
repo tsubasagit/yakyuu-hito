@@ -118,19 +118,18 @@ function Diamond({
   second: boolean
   third: boolean
 }) {
-  const baseCls = 'absolute w-[16px] h-[16px] rotate-45'
+  const baseCls = 'absolute w-[18px] h-[18px] rotate-45'
   const cls = (on: boolean) =>
     on
       ? 'bg-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.9)]'
       : 'bg-transparent border border-white/60'
-  // 4点のひし形（2塁=上 / 3塁=左 / 1塁=右 / 本塁=下は白枠の基準点）。
-  // ボックス全体に配置して上下の余白をなくし、ダイヤを大きく見せる（2026-05-31 顧客FB）。
+  // 3点のひし形（2塁=上 / 3塁=左下 / 1塁=右下）。本塁（4点目）は表示しない。
+  // 3点を縦に広げてボックス全体を埋め、下の余白をなくす（2026-05-31 顧客FB 再修正）。
   return (
-    <div className="relative" style={{ width: 60, height: 52 }}>
-      <div className={`${baseCls} ${cls(second)}`} style={{ left: 22, top: 0 }} />
-      <div className={`${baseCls} ${cls(third)}`} style={{ left: 2, top: 18 }} />
-      <div className={`${baseCls} ${cls(first)}`} style={{ right: 2, top: 18 }} />
-      <div className={`${baseCls} bg-transparent border border-white/35`} style={{ left: 22, top: 36 }} />
+    <div className="relative" style={{ width: 64, height: 40 }}>
+      <div className={`${baseCls} ${cls(second)}`} style={{ left: 23, top: 0 }} />
+      <div className={`${baseCls} ${cls(third)}`} style={{ left: 1, top: 22 }} />
+      <div className={`${baseCls} ${cls(first)}`} style={{ right: 1, top: 22 }} />
     </div>
   )
 }
