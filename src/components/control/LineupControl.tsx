@@ -145,23 +145,35 @@ function BatterRow({
 function PitcherRow({
   player,
   isCurrent,
+  isDefending,
   currentPitcherVisible,
   onSelect,
   onChange,
 }: {
   player: LineupPlayer
   isCurrent: boolean
+  /** このチームが守備中か。守備中の投手は実際にマウンドに立つため強調表示する */
+  isDefending: boolean
   currentPitcherVisible: boolean
   onSelect: () => void
   onChange: (p: LineupPlayer) => void
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5 text-sm rounded px-1.5 py-1 bg-red-900/20 border border-red-800/30">
-      <span className="text-red-400 w-4 text-center text-xs shrink-0 font-bold">
+    <div
+      className={`flex flex-wrap items-center gap-1.5 text-sm rounded px-1.5 py-1 transition-colors ${
+        isDefending
+          ? 'bg-red-700/40 border-2 border-red-500 ring-1 ring-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.25)]'
+          : 'bg-red-900/15 border border-red-800/20 opacity-70'
+      }`}
+    >
+      <span className="text-red-300 w-4 text-center text-xs shrink-0 font-bold">
         P
       </span>
-      <span className="text-red-400 text-xs w-24 shrink-0 text-center font-bold">
+      <span className="text-red-300 text-xs w-24 shrink-0 text-center font-bold flex items-center justify-center gap-1">
         ピッチャー
+        {isDefending && (
+          <span className="bg-red-500 text-white text-[9px] font-bold px-1 py-0.5 rounded-full animate-pulse shrink-0">登板中</span>
+        )}
       </span>
       <input
         className="bg-gray-700 text-white rounded px-2 py-1 text-xs flex-1 min-w-[100px]"
@@ -305,7 +317,7 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
     <div
       className={`rounded-lg p-3 space-y-2 ${
         isAttacking
-          ? 'bg-yellow-900/20 border-2 border-yellow-500/50'
+          ? 'bg-orange-500/15 border-2 border-orange-400/70 ring-1 ring-orange-400/30'
           : 'bg-gray-800 border border-gray-700'
       }`}
     >
@@ -316,10 +328,10 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
           <span className="text-white font-bold text-sm">{team.name}</span>
           <span className="text-gray-400 text-xs">（{label}）</span>
           {isAttacking && (
-            <span className="text-yellow-400 text-xs font-bold animate-pulse">攻撃中</span>
+            <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">⚾ 攻撃中</span>
           )}
           {!isAttacking && (
-            <span className="text-gray-500 text-xs">守備中</span>
+            <span className="bg-gray-700 text-gray-300 text-xs font-bold px-2 py-0.5 rounded-full">🛡 守備中</span>
           )}
         </div>
         {isAttacking && (
@@ -455,6 +467,7 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
           <PitcherRow
             player={lineup[9]}
             isCurrent={pitcherDisplayTeam === side}
+            isDefending={!isAttacking}
             currentPitcherVisible={currentPitcherVisible}
             onSelect={handlePitcherButton}
             onChange={(p) => setLineupPlayer(side, 9, p)}

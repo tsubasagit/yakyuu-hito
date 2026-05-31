@@ -743,6 +743,9 @@ export const useGameStore = create<GameStore>()(
             }
             const hp = s.homePitcherHistory.find(p => p.isActive)
             if (hp) base.homePitchCount = hp.pitchCount
+            // 裏→表に戻す → 先攻が攻撃・後攻が守備
+            base.batterDisplayTeam = 'away'
+            base.pitcherDisplayTeam = 'home'
             return { ...base, currentHalf: 'top' as const }
           }
           if (s.currentInning <= 1) return s
@@ -756,6 +759,9 @@ export const useGameStore = create<GameStore>()(
           }
           const ap = s.awayPitcherHistory.find(p => p.isActive)
           if (ap) base.awayPitchCount = ap.pitchCount
+          // 表→前回裏に戻す → 後攻が攻撃・先攻が守備
+          base.batterDisplayTeam = 'home'
+          base.pitcherDisplayTeam = 'away'
           return { ...base, currentInning: s.currentInning - 1, currentHalf: 'bottom' as const }
         }),
 
@@ -1055,7 +1061,14 @@ function advanceInningPatch(s: GameState): Partial<GameState> {
       resetState.awayTotal = totals.awayTotal
       resetState.homeTotal = totals.homeTotal
     }
-    return { ...resetState, currentHalf: 'bottom' as const }
+    // 攻守交代に合わせてテロップの表示元チームも自動追従（裏=後攻が攻撃／先攻が守備）。
+    // 同じ回の中では「打席」「登板」ボタンで手動上書き可能（2026-05-31 顧客FB: 攻守で切替わらない）。
+    return {
+      ...resetState,
+      currentHalf: 'bottom' as const,
+      batterDisplayTeam: 'home' as const,
+      pitcherDisplayTeam: 'away' as const,
+    }
   }
 
   // 裏→次回表: 後攻が守備に入る → 後攻の active pitcher を表示
@@ -1086,10 +1099,13 @@ function advanceInningPatch(s: GameState): Partial<GameState> {
   const hp = s.homePitcherHistory.find(p => p.isActive)
   if (hp) resetState.homePitchCount = hp.pitchCount
 
+  // 次回表に進む → 先攻が攻撃・後攻が守備。テロップ表示元を自動追従。
   return {
     ...resetState,
     currentInning: nextInning,
     currentHalf: 'top' as const,
     innings,
+    batterDisplayTeam: 'away' as const,
+    pitcherDisplayTeam: 'home' as const,
   }
 }
