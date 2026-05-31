@@ -187,32 +187,13 @@ export default function GameControl() {
         </div>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap items-center">
         <button
           onClick={applyTeams}
           className="bg-accent hover:bg-accent/80 text-white px-4 py-2 rounded text-sm font-bold"
         >
           チーム名を反映
         </button>
-        {/* 試合終了（試合中のみ） */}
-        {gameStarted && !isGameOver && (
-          <button
-            onClick={() => setGameOver(true)}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-bold"
-            title="試合終了。スコアボードに×が表示され、オーダー編集が再度可能になります"
-          >
-            試合終了
-          </button>
-        )}
-        {/* 試合再開（終了後のみ） */}
-        {isGameOver && (
-          <button
-            onClick={() => setGameOver(false)}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-bold"
-          >
-            試合再開
-          </button>
-        )}
         <button
           onClick={() => setColorEditorOpen((v) => !v)}
           className="bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2 rounded text-sm font-bold border border-gray-600 flex items-center gap-1"
@@ -220,6 +201,25 @@ export default function GameControl() {
           <span>{colorEditorOpen ? '▼' : '▶'}</span>
           チームカラーを変更
         </button>
+        {/* 試合終了 / 再開 は「試合を終える/戻す」操作で意図が異なるため、
+            準備系ボタンの右側に少し余白を空けて配置する（2026-05-31 顧客FB）。 */}
+        {gameStarted && !isGameOver && (
+          <button
+            onClick={() => setGameOver(true)}
+            className="ml-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-bold"
+            title="試合終了。スコアボードに×が表示され、オーダー編集が再度可能になります"
+          >
+            試合終了
+          </button>
+        )}
+        {isGameOver && (
+          <button
+            onClick={() => setGameOver(false)}
+            className="ml-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-bold"
+          >
+            試合再開
+          </button>
+        )}
       </div>
 
       {colorEditorOpen && (
