@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { DhMode, EffectType, GameState, HalfInning, LineupDisplayMode, LineupPlayer, MascotMode, OverlayPosition, PinchHitter, PitcherAppearance, PlayerInfo, Runners, Tournament, Visibility } from '../types'
-import { initialGameState, initialPlayerInfo, DEFAULT_OVERLAY_POSITIONS } from '../types'
+import type { DhMode, ElementId, EffectType, GameState, HalfInning, LineupDisplayMode, LineupPlayer, MascotMode, OverlayPosition, PinchHitter, PitcherAppearance, PlayerInfo, Runners, Tournament, Visibility } from '../types'
+import { initialGameState, initialPlayerInfo, DEFAULT_OVERLAY_POSITIONS, DEFAULT_ELEMENT_POSITIONS } from '../types'
 import { broadcastState } from '../lib/sync'
 import { backupToIDB, restoreFromIDB } from '../lib/idbBackup'
 
@@ -785,12 +785,22 @@ export const useGameStore = create<GameStore>()(
       setShowWaitingScreen: (show) => set({ showWaitingScreen: show }),
 
       setOverlayPosition: (id, pos) =>
-        set((s) => ({
-          overlayPositions: {
-            ...s.overlayPositions,
-            [id]: { ...(s.overlayPositions?.[id] ?? { x: 0, y: 0 }), ...pos },
-          },
-        })),
+        set((s) => {
+          // 既存の保存値があればそれを土台に、無ければ「既定座標」を土台にする。
+          // 旧実装は未設定時に {x:0,y:0} を土台にしていたため、サイズ(scale)だけを
+          // 調整した瞬間に X/Y が 0 にリセットされる不具合があった（2026-05-31 顧客FB⑪）。
+          const base =
+            s.overlayPositions?.[id] ??
+            DEFAULT_ELEMENT_POSITIONS[id as ElementId] ??
+            DEFAULT_OVERLAY_POSITIONS[id] ??
+            { x: 0, y: 0 }
+          return {
+            overlayPositions: {
+              ...s.overlayPositions,
+              [id]: { ...base, ...pos },
+            },
+          }
+        }),
 
       resetOverlayPositions: () =>
         set({ overlayPositions: { ...DEFAULT_OVERLAY_POSITIONS } }),
