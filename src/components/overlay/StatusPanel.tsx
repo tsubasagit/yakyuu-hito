@@ -126,9 +126,10 @@ function Diamond({
   // 3点のひし形（2塁=上 / 3塁=左下 / 1塁=右下）。本塁（4点目）は表示しない。
   // 回転(45°)でドットの角が約3px外側へ出るため、上下に余白を確保して
   // 枠線（上枠・仕切り線）にかぶらないよう内側へ収める（2026-05-31 顧客FB）。
+  // 左右に広げて 1塁・3塁を外側へ（2塁=中央）。横の間隔を確保（2026-05-31 顧客FB）。
   return (
-    <div className="relative" style={{ width: 60, height: 34 }}>
-      <div className={`${baseCls} ${cls(second)}`} style={{ left: 22, top: 1 }} />
+    <div className="relative" style={{ width: 76, height: 34 }}>
+      <div className={`${baseCls} ${cls(second)}`} style={{ left: 30, top: 1 }} />
       <div className={`${baseCls} ${cls(third)}`} style={{ left: 2, top: 17 }} />
       <div className={`${baseCls} ${cls(first)}`} style={{ right: 2, top: 17 }} />
     </div>
