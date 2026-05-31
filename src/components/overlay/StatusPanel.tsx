@@ -20,13 +20,13 @@ export default function StatusPanel() {
       className="select-none font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.5)] border-2 border-black bg-[#0b1220]/95 backdrop-blur-sm inline-flex flex-col rounded-[3px] overflow-hidden"
     >
       {/* 上段: イニング + ダイヤ。
-          「1回表」セルを大きめにしてダイヤ側 flex-1 領域を縮め、
-          ダイヤ周辺の左右余白を圧縮する（2026-05-24 顧客FB対応）。 */}
+          上段（イニング表示＋ダイヤ）を縦・横ともに詰めてコンパクト化する。
+          （2026-05-31 顧客FB④: 「ここのもう少しつめたい」→ パディング/ダイヤを縮小） */}
       <div className="flex items-stretch border-b-2 border-black">
-        <div className="flex items-center text-white text-base font-bold tracking-wider px-5 py-1 border-r-2 border-black whitespace-nowrap">
+        <div className="flex items-center text-white text-sm font-bold tracking-wider px-3 py-0.5 border-r-2 border-black whitespace-nowrap">
           {currentInning}回{halfLabel}
         </div>
-        <div className="flex items-center justify-center px-2 py-1 flex-1">
+        <div className="flex items-center justify-center px-2 py-0.5 flex-1">
           <Diamond first={runners.first} second={runners.second} third={runners.third} />
         </div>
       </div>
@@ -119,15 +119,14 @@ function Diamond({
   third: boolean
 }) {
   const cls = (on: boolean) =>
-    `w-[18px] h-[18px] rotate-45 ${
+    `w-[13px] h-[13px] rotate-45 ${
       on
         ? 'bg-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.9)]'
         : 'bg-transparent border border-white/60'
     }`
-  // ダイヤモンドの幅は 80px に固定（旧 60px から拡大）。
-  // 1塁・3塁の左右余白を減らしつつ、菱形のバランスは保つ（2026-05-24 顧客FB対応）。
+  // ダイヤモンドを 64x44 に縮小して上段を詰める（2026-05-31 顧客FB④）。
   return (
-    <div className="relative" style={{ width: 80, height: 60 }}>
+    <div className="relative" style={{ width: 64, height: 44 }}>
       <div className={`absolute top-0 left-1/2 -translate-x-1/2 ${cls(second)}`} />
       <div className={`absolute top-1/2 left-0 -translate-y-1/2 ${cls(third)}`} />
       <div className={`absolute top-1/2 right-0 -translate-y-1/2 ${cls(first)}`} />

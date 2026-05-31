@@ -234,7 +234,9 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
   const nextBatter = useGameStore((s) => s.nextBatter)
   const prevBatter = useGameStore((s) => s.prevBatter)
   const setLineupDisplayTeam = useGameStore((s) => s.setLineupDisplayTeam)
-  const lineupDisplayTeam = useGameStore((s) => s.lineupDisplayTeam ?? 'away')
+  // 打者/投手テロップの表示元チーム（完全手動・攻守独立）。「打席」「登板」ボタンで切替。
+  const batterDisplayTeam = useGameStore((s) => s.batterDisplayTeam ?? 'away')
+  const pitcherDisplayTeam = useGameStore((s) => s.pitcherDisplayTeam ?? 'home')
   const currentBatterVisible = useGameStore((s) => s.visibility?.currentBatter ?? false)
   const currentPitcherVisible = useGameStore((s) => s.visibility?.currentPitcher ?? false)
   const toggleVisibility = useGameStore((s) => s.toggleVisibility)
@@ -253,7 +255,7 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
   // 打者OFFに切り替わるタイミングで、その打者の代打フラグも一緒に解除する
   //（代打→打席ON→OFFで代打表示が残るのを防ぐ／2026-05-21 顧客フィードバック）
   const handleBatterButton = (idx: number) => {
-    const isAlreadyCurrent = idx === batterIdx && lineupDisplayTeam === side
+    const isAlreadyCurrent = idx === batterIdx && batterDisplayTeam === side
     if (isAlreadyCurrent) {
       const willBeOff = currentBatterVisible
       toggleVisibility('currentBatter')
@@ -272,7 +274,7 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
   // 登板ボタン: 攻守問わず動作。同じ投手（同チーム）なら currentPitcher パネルを ON/OFF 切替、
   // 別チームの投手なら選択 + パネルを ON。
   const handlePitcherButton = () => {
-    const isAlreadyCurrent = lineupDisplayTeam === side
+    const isAlreadyCurrent = pitcherDisplayTeam === side
     if (isAlreadyCurrent) {
       toggleVisibility('currentPitcher')
     } else {
@@ -425,7 +427,7 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
           <BatterRow
             key={player.order}
             player={player}
-            isCurrent={idx === batterIdx && lineupDisplayTeam === side}
+            isCurrent={idx === batterIdx && batterDisplayTeam === side}
             dhMode={dhMode}
             currentBatterVisible={currentBatterVisible}
             onSelect={() => handleBatterButton(idx)}
@@ -452,7 +454,7 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
           </div>
           <PitcherRow
             player={lineup[9]}
-            isCurrent={lineupDisplayTeam === side}
+            isCurrent={pitcherDisplayTeam === side}
             currentPitcherVisible={currentPitcherVisible}
             onSelect={handlePitcherButton}
             onChange={(p) => setLineupPlayer(side, 9, p)}

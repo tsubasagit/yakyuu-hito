@@ -1,13 +1,13 @@
 import { useGameStore } from '../../store/useGameStore'
 
 /**
- * 現在の打者: スタメン表示モードと攻守の組み合わせで表示元チームを決定する。
- *  - 'attacking': 攻撃中チーム（表=先攻 / 裏=後攻）に自動追従
- *  - 'away' / 'home': 指定チーム固定
- *  - 'both': 直近に選択した側（lineupDisplayTeam）
- * スタッツの代わりに 1行コメント（高校名等）を表示する（2026-05-12 改修）。
- * （2026-05-25 修正: 旧来は lineupDisplayTeam 固定で、攻守入れ替え時に
- *  バッターチームが切り替わらないバグを解消）
+ * 現在の打者テロップ。表示元チームは「打席」ボタンで選んだ batterDisplayTeam を
+ * そのまま使う（完全手動・攻守と独立）。
+ *  - 攻撃中でも守備中でも、操作者が選んだチームの打者を表示できる
+ *  - 投手テロップ（pitcherDisplayTeam）とは独立して別チームを出せる
+ * スタッツの代わりに 1行コメント（高校名等）を表示する。
+ * （2026-05-31 顧客フィードバック①: 攻守問わず打者テロップを出せるように。
+ *  旧来は表示モード'attacking'で currentHalf に強制追従し、手動選択を無視していた）
  */
 export default function CurrentBatter() {
   const awayLineup = useGameStore((s) => s.awayLineup)
@@ -16,20 +16,7 @@ export default function CurrentBatter() {
   const homeBatterIndex = useGameStore((s) => s.homeBatterIndex)
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
-  const currentHalf = useGameStore((s) => s.currentHalf)
-  const lineupDisplayMode = useGameStore((s) => s.lineupDisplayMode ?? 'attacking')
-  const lineupDisplayTeam = useGameStore((s) => s.lineupDisplayTeam ?? 'away')
-
-  // 表示元チームを決定（CurrentPitcher と同じ判定ロジック）。
-  let displayTeam: 'away' | 'home'
-  if (lineupDisplayMode === 'away' || lineupDisplayMode === 'home') {
-    displayTeam = lineupDisplayMode
-  } else if (lineupDisplayMode === 'both') {
-    displayTeam = lineupDisplayTeam
-  } else {
-    // attacking: 表=先攻が攻撃 / 裏=後攻が攻撃
-    displayTeam = currentHalf === 'top' ? 'away' : 'home'
-  }
+  const displayTeam = useGameStore((s) => s.batterDisplayTeam ?? 'away')
 
   const team = displayTeam === 'away' ? awayTeam : homeTeam
   const lineup = displayTeam === 'away' ? awayLineup : homeLineup

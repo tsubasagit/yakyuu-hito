@@ -45,14 +45,16 @@ export default function GameControl() {
   //（2026-05-28 顧客フィードバック対応）
   const [startWizardOpen, setStartWizardOpen] = useState(false)
   const [wizardDh, setWizardDh] = useState<DhMode>(currentDhMode)
-  const [wizardApplySample, setWizardApplySample] = useState(true)
+  // サンプル投入は既定オフ（本番運用で誤投入を防ぐ）。
+  // （2026-05-31 顧客フィードバック②: default でチェックを外す）
+  const [wizardApplySample, setWizardApplySample] = useState(false)
   const [wizardApplyAway, setWizardApplyAway] = useState(true)
   const [wizardApplyHome, setWizardApplyHome] = useState(true)
 
   /** 試合開始ウィザードを開く。現在の DH モードを初期値として読み込む */
   const openStartWizard = () => {
     setWizardDh(currentDhMode)
-    setWizardApplySample(true)
+    setWizardApplySample(false)
     setWizardApplyAway(true)
     setWizardApplyHome(true)
     setStartWizardOpen(true)
@@ -121,7 +123,7 @@ export default function GameControl() {
   }
 
   const handleNewGameFullReset = () => {
-    if (confirm('完全リセットして新しい試合を開始しますか？\n\nチーム情報・打順・カラー設定もすべて初期状態に戻ります。\nこの操作は取り消せません。')) {
+    if (confirm('完全リセットして新しい試合を開始しますか？\n\nチーム情報・打順・カラー設定もすべて初期状態に戻ります。\n（テロップの位置・サイズ設定は保持されます）\nこの操作は取り消せません。')) {
       newGame()
     }
   }

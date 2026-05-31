@@ -18,6 +18,11 @@ export interface ToggleMeta {
   scrollTarget: string
   /** 帯の色（Tailwind ユーティリティで指定） */
   stripe: string
+  /** ON/OFF トグルをこのカードに出すか。
+   *  false の場合は表示切替を別UI（打順表の「打席」「登板」ボタン）に委ね、
+   *  このカードでは位置・サイズ調整のみ表示する（2026-05-31 顧客フィードバック⑨）。
+   *  省略時は true 扱い。 */
+  controllable?: boolean
 }
 
 /** 対応関係マスタ（VisibilityControl と ControlPage 両方で参照）。
@@ -25,15 +30,18 @@ export interface ToggleMeta {
  *  学生がパネルをONにした後に「中身どこで直す？」と迷わないよう、
  *  影響を受けるセクションを実情に合わせて列挙する。
  *  （2026-05-28 顧客フィードバック対応: 表示と各セクションのテキスト名整合） */
+// バッター・ピッチャーは一番上に配置（2026-05-31 顧客フィードバック⑩）。
+// この2枠は ON/OFF を打順表の「打席」「登板」ボタンで操作するため、
+// ここではトグルを出さず位置・サイズ調整のみ表示する（同⑨ / controllable:false）。
 export const TOGGLE_META: ToggleMeta[] = [
+  { id: 'currentBatter',    label: 'バッター',    sources: ['打順・選手'],                                scrollTarget: 'section-lineup',     stripe: 'bg-amber-500',  controllable: false },
+  { id: 'currentPitcher',   label: 'ピッチャー',  sources: ['打順・選手'],                                scrollTarget: 'section-lineup',     stripe: 'bg-red-500',    controllable: false },
   { id: 'miniScore',        label: 'ミニスコア',  sources: ['試合管理', 'イニング', '得点'],            scrollTarget: 'section-score',      stripe: 'bg-sky-500'     },
   { id: 'lineup',           label: 'スタメン',    sources: ['打順・選手'],                                scrollTarget: 'section-lineup',     stripe: 'bg-orange-500'  },
   { id: 'tournamentHeader', label: '大会名',      sources: ['大会名'],                                    scrollTarget: 'section-tournament', stripe: 'bg-violet-500'  },
   { id: 'bigScore',         label: '大型スコア',  sources: ['試合管理', 'イニング', '得点'],            scrollTarget: 'section-score',      stripe: 'bg-rose-500'    },
   { id: 'inningScoreboard', label: 'スコアボード', sources: ['試合管理', 'イニング', '得点'],            scrollTarget: 'section-score',      stripe: 'bg-emerald-500' },
   { id: 'statusPanel',      label: 'BSOパネル',   sources: ['試合管理', 'イニング', 'BSO・走者', '得点'], scrollTarget: 'section-count',      stripe: 'bg-cyan-500'    },
-  { id: 'currentBatter',    label: 'バッター',    sources: ['打順・選手'],                                scrollTarget: 'section-lineup',     stripe: 'bg-amber-500'   },
-  { id: 'currentPitcher',   label: 'ピッチャー',  sources: ['打順・選手'],                                scrollTarget: 'section-lineup',     stripe: 'bg-red-500'     },
   // 速報テロップだけは特殊扱い: 文字入力と一体運用したいので TickerControl 内に ON/OFF・位置を統合
 ]
 
@@ -41,6 +49,28 @@ export const TOGGLE_META: ToggleMeta[] = [
 export function stripeForSection(sectionId: string): string | null {
   const found = TOGGLE_META.find((t) => t.scrollTarget === sectionId)
   return found ? found.stripe : null
+}
+
+/** 表示パネルのラベル（例: 'BSOパネル'）→ toggle id のマップ。 */
+const LABEL_TO_TOGGLE_ID: Record<string, string> = Object.fromEntries(
+  TOGGLE_META.map((t) => [t.label, t.id as string]),
+)
+
+/**
+ * SectionTitle の「→ パネル名」リンクから、対応する「配信画面に出すパネル」カードへ
+ * スクロール＆一時ハイライトする。各コントロールセクションと表示パネルを双方向に結ぶ。
+ * （2026-05-31 顧客フィードバック⑧: 各ブロックのリンクを設定）
+ */
+export function scrollToPanelCard(label: string) {
+  const id = LABEL_TO_TOGGLE_ID[label]
+  if (!id) return
+  const el = document.getElementById(`vispanel-${id}`)
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  el.classList.add('ring-2', 'ring-accent', 'ring-offset-2', 'ring-offset-gray-900')
+  setTimeout(() => {
+    el.classList.remove('ring-2', 'ring-accent', 'ring-offset-2', 'ring-offset-gray-900')
+  }, 1200)
 }
 
 /** セクション名 → ControlPage 上の section アンカー id。
@@ -234,10 +264,16 @@ function PanelCard({
   const x = position?.x ?? defaultPos?.x ?? 0
   const y = position?.y ?? defaultPos?.y ?? 0
   const sc = position?.scale ?? 1
+  // controllable=false（バッター/ピッチャー）はこのカードに ON/OFF を出さない。
+  // 表示切替は打順表の「打席」「登板」ボタンで行い、ここでは位置・サイズのみ調整する。
+  const controllable = meta.controllable !== false
+  // 位置・サイズの入力可否。トグル付きカードは ON 中のみ、トグル無しカードは常時可。
+  const editable = controllable ? on : true
 
   return (
     <div
-      className={`relative overflow-hidden rounded-lg border-2 transition-colors ${
+      id={`vispanel-${meta.id}`}
+      className={`relative overflow-hidden rounded-lg border-2 transition-colors scroll-mt-4 ${
         on
           ? 'bg-accent/15 border-accent'
           : 'bg-gray-700/60 border-gray-600'
@@ -246,25 +282,39 @@ function PanelCard({
       {/* 左帯（対応する編集セクションの色） */}
       <span className={`absolute left-0 top-0 bottom-0 w-1.5 ${meta.stripe}`} />
 
-      {/* 上半分: トグル本体（クリックで ON/OFF） */}
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full text-left pl-3 pr-2 py-2 hover:bg-white/5 transition-colors"
-      >
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-white text-base font-bold leading-tight">
-            {meta.label}
-          </span>
-          <span
-            className={`shrink-0 text-[11px] font-bold px-2 py-0.5 rounded ${
-              on ? 'bg-accent text-white' : 'bg-gray-600 text-gray-300'
-            }`}
-          >
-            {on ? 'ON' : 'OFF'}
-          </span>
+      {/* 上半分: トグル本体（クリックで ON/OFF）。
+          バッター/ピッチャー（controllable=false）はトグルを出さず、ラベルのみ静的表示。 */}
+      {controllable ? (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="w-full text-left pl-3 pr-2 py-2 hover:bg-white/5 transition-colors"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-white text-base font-bold leading-tight">
+              {meta.label}
+            </span>
+            <span
+              className={`shrink-0 text-[11px] font-bold px-2 py-0.5 rounded ${
+                on ? 'bg-accent text-white' : 'bg-gray-600 text-gray-300'
+              }`}
+            >
+              {on ? 'ON' : 'OFF'}
+            </span>
+          </div>
+        </button>
+      ) : (
+        <div className="pl-3 pr-2 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-white text-base font-bold leading-tight">
+              {meta.label}
+            </span>
+            <span className="shrink-0 text-[10px] text-gray-300 px-2 py-0.5 rounded bg-gray-600/70">
+              表示は打順表で
+            </span>
+          </div>
         </div>
-      </button>
+      )}
       {/* 編集セクションへのジャンプリンク。
           学生が「このパネルの中身どこで直す？」と迷ったら、ここから1クリックで該当セクションへ。
           トグルボタンの中に入れると onClick がバブリングしてしまうので外出し。
@@ -299,8 +349,8 @@ function PanelCard({
             value={sc}
             onChange={(e) => updateField(elementId, 'scale', parseFloat(e.target.value) || 1)}
             className="flex-1 accent-accent min-w-0"
-            disabled={!on}
-            title={on ? `${meta.label} の倍率` : '表示ONにすると調整できます'}
+            disabled={!editable}
+            title={editable ? `${meta.label} の倍率` : '表示ONにすると調整できます'}
           />
           <span className="text-white text-[11px] font-mono w-10 text-right shrink-0">
             {sc.toFixed(1)}x
@@ -314,7 +364,7 @@ function PanelCard({
             value={x}
             onChange={(e) => updateField(elementId, 'x', parseInt(e.target.value) || 0)}
             className="w-14 bg-gray-700 text-white rounded px-1 py-0.5 text-[11px] font-mono text-right disabled:opacity-40"
-            disabled={!on}
+            disabled={!editable}
           />
           <label className="text-gray-500 text-[10px] font-bold">Y</label>
           <input
@@ -322,7 +372,7 @@ function PanelCard({
             value={y}
             onChange={(e) => updateField(elementId, 'y', parseInt(e.target.value) || 0)}
             className="w-14 bg-gray-700 text-white rounded px-1 py-0.5 text-[11px] font-mono text-right disabled:opacity-40"
-            disabled={!on}
+            disabled={!editable}
           />
         </div>
       </div>

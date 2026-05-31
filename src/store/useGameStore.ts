@@ -59,7 +59,7 @@ const DATA_KEYS: (keyof GameState)[] = [
   'gameStartTime', 'ticker', 'activeEffect', 'effectTimestamp',
   'showMascot', 'mascotMode', 'mascotImages', 'autoChangeEffect', 'showWaitingScreen',
   'overlayPositions', 'overlayScale', 'lineupDisplayTeam', 'showBothLineups',
-  'lineupDisplayMode',
+  'lineupDisplayMode', 'batterDisplayTeam', 'pitcherDisplayTeam',
   'dhMode', 'awayDhMode', 'homeDhMode',
   'gameStarted',
   // yakyuu-hito 拡張
@@ -235,6 +235,8 @@ interface GameActions {
   resetOverlayPositions: () => void
   setOverlayScale: (scale: number) => void
   setLineupDisplayTeam: (team: 'away' | 'home') => void
+  setBatterDisplayTeam: (team: 'away' | 'home') => void
+  setPitcherDisplayTeam: (team: 'away' | 'home') => void
   setShowBothLineups: (show: boolean) => void
   setLineupDisplayMode: (mode: LineupDisplayMode) => void
   setDhMode: (team: 'away' | 'home', mode: DhMode) => void
@@ -295,8 +297,10 @@ export const useGameStore = create<GameStore>()(
         }),
 
       resetCount: () =>
-        set((s) => ({
-          count: { ...s.count, balls: 0, strikes: 0 },
+        set(() => ({
+          // B/S・アウト・走者をすべてゼロに戻す
+          // （2026-05-31 顧客フィードバック⑥: アウトもリセット対象に含める）
+          count: { balls: 0, strikes: 0, outs: 0 },
           runners: { first: false, second: false, third: false },
         })),
 
@@ -446,8 +450,10 @@ export const useGameStore = create<GameStore>()(
               (team === 'away' && s.currentHalf === 'bottom')
 
             if (activeIdx >= 0 && history[activeIdx]!.name === player.name && history[activeIdx]!.number === player.number) {
-              // 同じ投手 → 守備中の場合のみ表示を更新
-              return isDefending ? { pitcher: pitcherInfo } : {}
+              // 同じ投手 → 投手テロップの表示元チームは手動選択を尊重して更新
+              return isDefending
+                ? { pitcher: pitcherInfo, pitcherDisplayTeam: team }
+                : { pitcherDisplayTeam: team }
             }
 
             // 現在のアクティブ投手をアーカイブ
@@ -483,6 +489,8 @@ export const useGameStore = create<GameStore>()(
               [pitchCountKey]: 0,
               pitcher: pitcherInfo,
               lineupDisplayTeam: team,
+              // 投手テロップは完全手動: 「登板」で選んだチームを表示元に固定（攻守独立）
+              pitcherDisplayTeam: team,
             }
             if (isDefending) {
               result.pitcher = pitcherInfo
@@ -502,6 +510,8 @@ export const useGameStore = create<GameStore>()(
             },
             // 選択したチームを lineupDisplayTeam にも反映（攻守問わず CurrentBatter のチーム色決定に使用）
             lineupDisplayTeam: team,
+            // 打者テロップは完全手動: 「打席」で選んだチームを表示元に固定（攻守独立）
+            batterDisplayTeam: team,
           }
         }),
 
@@ -525,6 +535,8 @@ export const useGameStore = create<GameStore>()(
               stat: '',
               statLabel: '',
             },
+            // 次の打者へ進めたら、打者テロップの表示元も攻撃側へ追従
+            batterDisplayTeam: isAway ? 'away' as const : 'home' as const,
             count: { ...s.count, balls: 0, strikes: 0 },
           }
         }),
@@ -549,6 +561,8 @@ export const useGameStore = create<GameStore>()(
               stat: '',
               statLabel: '',
             },
+            // 前の打者へ戻したら、打者テロップの表示元も攻撃側へ追従
+            batterDisplayTeam: isAway ? 'away' as const : 'home' as const,
             count: { ...s.count, balls: 0, strikes: 0 },
           }
         }),
@@ -575,16 +589,26 @@ export const useGameStore = create<GameStore>()(
           return { homeTeam: { ...s.homeTeam, name, shortName } }
         }),
 
-      setGameOver: (over) => set((s) => ({
+      setGameOver: (over) => set(() => ({
         isGameOver: over,
-        // 試合終了時はオーダー編集を再度許可（次試合準備のため gameStarted=false）。
-        // 終了押下→再開した場合はそのまま試合中扱いで再ロックする運用。
-        gameStarted: over ? false : s.gameStarted,
+        // 終了時: オーダー編集を再度許可（次試合準備のため gameStarted=false）。
+        // 再開時: 試合中扱いに戻し gameStarted=true。これにより「試合終了」ボタンが
+        //   再表示され、再度「試合開始」を押さなくても戻せる。
+        // （2026-05-31 顧客フィードバック⑤: 誤って試合終了→再開で元に戻せない問題）
+        gameStarted: over ? false : true,
       })),
 
       setGameStarted: (started) => set({ gameStarted: started }),
 
-      newGame: () => set({ ...initialGameState }),
+      // 完全リセット。チーム・打順・カラー・大会情報まで初期化するが、
+      // テロップ等の配置（位置・サイズ）と全体スケールは保持する。
+      // （2026-05-31 顧客フィードバック⑦: 試合リセットでもテロップのXY/サイズは保持）
+      newGame: () =>
+        set((s) => ({
+          ...initialGameState,
+          overlayPositions: s.overlayPositions,
+          overlayScale: s.overlayScale,
+        })),
 
       newGameKeepTeams: () =>
         set((s) => ({
@@ -769,6 +793,10 @@ export const useGameStore = create<GameStore>()(
         set({ overlayScale: Math.max(0.5, Math.min(3, scale)) }),
 
       setLineupDisplayTeam: (team) => set({ lineupDisplayTeam: team }),
+
+      setBatterDisplayTeam: (team) => set({ batterDisplayTeam: team }),
+
+      setPitcherDisplayTeam: (team) => set({ pitcherDisplayTeam: team }),
 
       setShowBothLineups: (show) => set({ showBothLineups: show }),
 

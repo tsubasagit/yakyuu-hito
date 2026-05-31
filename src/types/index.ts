@@ -207,6 +207,12 @@ export interface GameState {
   overlayScale: number
   /** コントロールパネルで選択中のチーム。オーバーレイの打順表示に連動する */
   lineupDisplayTeam: 'away' | 'home'
+  /** 打者テロップに出すチーム（完全手動）。「打席」ボタンで切替。攻守と独立。
+   *  （2026-05-31 顧客フィードバック①: 攻守問わず打者テロップを出せるように） */
+  batterDisplayTeam: 'away' | 'home'
+  /** 投手テロップに出すチーム（完全手動）。「登板」ボタンで切替。攻守と独立。
+   *  （2026-05-31 顧客フィードバック①: 攻守問わず投手テロップを出せるように） */
+  pitcherDisplayTeam: 'away' | 'home'
   /** 両チームの打順を同時にオーバーレイに表示するか（旧フィールド・lineupDisplayMode が優先） */
   showBothLineups: boolean
   /** スタメンオーバーレイの表示モード（先攻/後攻/両方/自動） */
@@ -328,6 +334,8 @@ export const initialGameState: GameState = {
   overlayPositions: { ...DEFAULT_OVERLAY_POSITIONS },
   overlayScale: 1,
   lineupDisplayTeam: 'away',
+  batterDisplayTeam: 'away',
+  pitcherDisplayTeam: 'home',
   showBothLineups: false,
   lineupDisplayMode: 'attacking',
   dhMode: 'dh',

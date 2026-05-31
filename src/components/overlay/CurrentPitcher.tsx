@@ -1,8 +1,11 @@
 import { useGameStore } from '../../store/useGameStore'
 
 /**
- * 現在の投手: lineupDisplayTeam で選択中チームの投手を表示。
+ * 現在の投手テロップ。表示元チームは「登板」ボタンで選んだ pitcherDisplayTeam を
+ * そのまま使う（完全手動・攻守と独立）。打者テロップとは別チームを同時に出せる。
  * 投球数・登板中バッジは表示しない（学生運用簡素化）。
+ * （2026-05-31 顧客フィードバック①: 攻守問わず投手テロップを出せるように。
+ *  旧来は表示モード'attacking'で守備側に強制追従し、手動選択を無視していた）
  */
 export default function CurrentPitcher() {
   const awayLineup = useGameStore((s) => s.awayLineup)
@@ -11,24 +14,7 @@ export default function CurrentPitcher() {
   const homeTeam = useGameStore((s) => s.homeTeam)
   // DH制は両チーム共通。旧データ互換のため away/home フィールドも fallback として参照。
   const dhMode = useGameStore((s) => s.dhMode ?? s.awayDhMode ?? s.homeDhMode ?? 'dh')
-  const currentHalf = useGameStore((s) => s.currentHalf)
-  const lineupDisplayMode = useGameStore((s) => s.lineupDisplayMode ?? 'attacking')
-  const lineupDisplayTeam = useGameStore((s) => s.lineupDisplayTeam ?? 'away')
-
-  // 投手の表示元チームを決定。
-  //  - attacking（自動・既定）: 守備側のピッチャーを表示（標準運用）
-  //  - away / home 明示指定 :   指定チームのピッチャーを表示
-  //  - both（VS表示）        :   lineupDisplayTeam に追従（直近にハイライトされた側）
-  // DH/二刀流の試合で「攻撃中チームの投手名を出したい」ケースは、表示モードを
-  // away/home に切り替えるか、both の状態で対象チーム側のカードを選択する運用で対応する。
-  let pitcherSide: 'away' | 'home'
-  if (lineupDisplayMode === 'away' || lineupDisplayMode === 'home') {
-    pitcherSide = lineupDisplayMode
-  } else if (lineupDisplayMode === 'both') {
-    pitcherSide = lineupDisplayTeam
-  } else {
-    pitcherSide = currentHalf === 'top' ? 'home' : 'away'
-  }
+  const pitcherSide = useGameStore((s) => s.pitcherDisplayTeam ?? 'home')
   const team = pitcherSide === 'away' ? awayTeam : homeTeam
   const lineup = pitcherSide === 'away' ? awayLineup : homeLineup
 

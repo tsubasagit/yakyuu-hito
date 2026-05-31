@@ -137,16 +137,20 @@ function ScoreRow({
         {letter}
       </td>
       {innings.map((inn) => {
-        const played =
-          half === 'top'
-            ? inn.inning <= currentInning
-            : inn.inning < currentInning ||
-              (inn.inning === currentInning && currentHalf === 'bottom')
         const value = half === 'top' ? inn.top : inn.bottom
+        // その半回が「すでに終了した（チェンジ済み）回」かどうか。
+        //  - 終了した回のみ 0 を表示する。進行中の回は得点が入るまで空欄。
+        //  （2026-05-31 顧客フィードバック③: 1回表開始時点で0が入る→チェンジ後に0が入るように）
+        const isPast =
+          half === 'top'
+            ? inn.inning < currentInning ||
+              (inn.inning === currentInning && currentHalf === 'bottom')
+            : inn.inning < currentInning
+        const hasValue = value !== null && value !== undefined
         const isLastBottomCell = half === 'bottom' && gameEnded && inn.inning === lastPlayedInning
         let display: React.ReactNode
         if (isLastBottomCell) {
-          if (value === null || value === undefined) {
+          if (!hasValue) {
             display = <span className="text-amber-300">×</span>
           } else {
             display = (
@@ -157,7 +161,8 @@ function ScoreRow({
             )
           }
         } else {
-          display = played ? value ?? 0 : ''
+          // 値があれば表示、無ければ終了済みの回のみ 0、進行中・未到達は空欄
+          display = hasValue ? value : isPast ? 0 : ''
         }
         return (
           <td

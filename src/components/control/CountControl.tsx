@@ -131,9 +131,9 @@ export default function CountControl() {
         <button
           onClick={resetCount}
           className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-xs font-bold"
-          title="ボール・ストライク・走者をすべてリセット"
+          title="ボール・ストライク・アウト・走者をすべてリセット"
         >
-          カウントリセット（走者含む）
+          カウントリセット（B/S/アウト/走者）
         </button>
       </div>
     </div>
