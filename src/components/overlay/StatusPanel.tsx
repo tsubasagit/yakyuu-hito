@@ -26,7 +26,7 @@ export default function StatusPanel() {
         <div className="flex items-center text-white text-sm font-bold tracking-wider px-3 py-0.5 border-r-2 border-black whitespace-nowrap">
           {currentInning}回{halfLabel}
         </div>
-        <div className="flex items-center justify-center px-2 py-0 flex-1">
+        <div className="flex items-center justify-center px-2 py-2 flex-1">
           <Diamond first={runners.first} second={runners.second} third={runners.third} />
         </div>
       </div>
@@ -118,18 +118,19 @@ function Diamond({
   second: boolean
   third: boolean
 }) {
-  const baseCls = 'absolute w-[18px] h-[18px] rotate-45'
+  const baseCls = 'absolute w-[16px] h-[16px] rotate-45'
   const cls = (on: boolean) =>
     on
       ? 'bg-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.9)]'
       : 'bg-transparent border border-white/60'
   // 3点のひし形（2塁=上 / 3塁=左下 / 1塁=右下）。本塁（4点目）は表示しない。
-  // 3点を縦に広げてボックス全体を埋め、下の余白をなくす（2026-05-31 顧客FB 再修正）。
+  // 回転(45°)でドットの角が約3px外側へ出るため、上下に余白を確保して
+  // 枠線（上枠・仕切り線）にかぶらないよう内側へ収める（2026-05-31 顧客FB）。
   return (
-    <div className="relative" style={{ width: 64, height: 40 }}>
-      <div className={`${baseCls} ${cls(second)}`} style={{ left: 23, top: 0 }} />
-      <div className={`${baseCls} ${cls(third)}`} style={{ left: 1, top: 22 }} />
-      <div className={`${baseCls} ${cls(first)}`} style={{ right: 1, top: 22 }} />
+    <div className="relative" style={{ width: 60, height: 34 }}>
+      <div className={`${baseCls} ${cls(second)}`} style={{ left: 22, top: 1 }} />
+      <div className={`${baseCls} ${cls(third)}`} style={{ left: 2, top: 17 }} />
+      <div className={`${baseCls} ${cls(first)}`} style={{ right: 2, top: 17 }} />
     </div>
   )
 }
