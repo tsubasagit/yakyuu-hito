@@ -2,22 +2,15 @@ import { useRef, useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
 import type { DhMode, LineupPlayer, Position } from '../../types'
 import { TEITO_LINEUP, SORYO_LINEUP } from '../../types'
-import { parseLineupCsv, LINEUP_CSV_SAMPLE } from '../../lib/csvImport'
+import { parseLineupCsv } from '../../lib/csvImport'
 import { positionLabel, POSITIONS_WITH_DH, POSITIONS_NO_DH } from '../../lib/positionLabel'
 import SectionTitle from './shared/SectionTitle'
 
-function downloadCsvSample() {
-  // BOM付きでExcelの文字化け回避
-  const blob = new Blob(['﻿' + LINEUP_CSV_SAMPLE], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'lineup_sample.csv'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-}
+/** サンプルCSVは静的ファイル（public/lineup_sample.csv）として配信し、リンクで開く。
+ *  Blob + a.click() 方式は OBS のカスタムブラウザドック（CEF）でダウンロードが
+ *  ブロックされるため。リンク(target=_blank)はOBSが既定ブラウザで開くので確実に取得できる。
+ *  （2026-05-31 顧客FB⑫: サンプルCSVがダウンロードできない） */
+const SAMPLE_CSV_URL = `${import.meta.env.BASE_URL}lineup_sample.csv`
 
 /** 学年候補。通常学部1-4年＋6年制学部の5・6年＋大学院。常時フルリスト表示のため select で固定 */
 const GRADE_OPTIONS = ['1年', '2年', '3年', '4年', '5年', '6年', '院1', '院2', '院3'] as const
@@ -378,13 +371,16 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
           >
             CSV読込
           </button>
-          <button
-            onClick={downloadCsvSample}
-            className="bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold"
-            title="入力例つきのサンプルCSVをダウンロード"
+          <a
+            href={SAMPLE_CSV_URL}
+            download="lineup_sample.csv"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold inline-flex items-center"
+            title="入力例つきのサンプルCSVを開く（OBSドックでは既定ブラウザで開きます）"
           >
             ⬇ サンプルCSV
-          </button>
+          </a>
           <button
             onClick={() => setLineup(side, [...TEITO_LINEUP])}
             disabled={gameStarted}
