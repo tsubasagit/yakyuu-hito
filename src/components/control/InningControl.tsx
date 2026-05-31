@@ -1,16 +1,20 @@
 import { useGameStore } from '../../store/useGameStore'
 import SectionTitle from './shared/SectionTitle'
+import SectionLock from './shared/SectionLock'
 
 export default function InningControl() {
   const currentInning = useGameStore((s) => s.currentInning)
   const currentHalf = useGameStore((s) => s.currentHalf)
   const advanceInning = useGameStore((s) => s.advanceInning)
   const rewindInning = useGameStore((s) => s.rewindInning)
+  // 試合前（準備中）はイニング操作をロック（試合開始後 or 終了後は操作可）
+  const preGameLocked = useGameStore((s) => !(s.gameStarted ?? false) && !s.isGameOver)
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
       <SectionTitle title="イニング" controls={['BSOパネル', 'スコアボード', 'ミニスコア', '大型スコア']} />
 
+      <SectionLock locked={preGameLocked}>
       <div className="flex items-center gap-4">
         <button
           onClick={rewindInning}
@@ -29,6 +33,7 @@ export default function InningControl() {
           次へ →
         </button>
       </div>
+      </SectionLock>
     </div>
   )
 }

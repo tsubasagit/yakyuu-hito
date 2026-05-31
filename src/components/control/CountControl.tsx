@@ -1,5 +1,6 @@
 import { useGameStore } from '../../store/useGameStore'
 import SectionTitle from './shared/SectionTitle'
+import SectionLock from './shared/SectionLock'
 
 /**
  * BSO管理パネル（旧カウント＋走者を統合）。
@@ -18,6 +19,8 @@ export default function CountControl() {
   const subtractOut = useGameStore((s) => s.subtractOut)
   const runners = useGameStore((s) => s.runners)
   const setRunner = useGameStore((s) => s.setRunner)
+  // 試合前（準備中）はBSO・走者操作をロック
+  const preGameLocked = useGameStore((s) => !(s.gameStarted ?? false) && !s.isGameOver)
 
   const bases = [
     { key: 'first' as const, label: '一塁' },
@@ -29,6 +32,7 @@ export default function CountControl() {
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
       <SectionTitle title="BSO・走者" controls={['BSOパネル']} />
 
+      <SectionLock locked={preGameLocked}>
       <div className="grid grid-cols-3 gap-3">
         {/* ボール */}
         <div className="space-y-2">
@@ -136,6 +140,7 @@ export default function CountControl() {
           カウントリセット（B/S/アウト/走者）
         </button>
       </div>
+      </SectionLock>
     </div>
   )
 }

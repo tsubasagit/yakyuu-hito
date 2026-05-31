@@ -1,6 +1,7 @@
 import { useGameStore } from '../../store/useGameStore'
 import type { HalfInning } from '../../types'
 import SectionTitle from './shared/SectionTitle'
+import SectionLock from './shared/SectionLock'
 
 export default function ScoreControl() {
   const innings = useGameStore((s) => s.innings)
@@ -13,6 +14,8 @@ export default function ScoreControl() {
   const addRun = useGameStore((s) => s.addRun)
   const subtractRun = useGameStore((s) => s.subtractRun)
   const setInningScore = useGameStore((s) => s.setInningScore)
+  // 試合前（準備中）は得点操作をロック
+  const preGameLocked = useGameStore((s) => !(s.gameStarted ?? false) && !s.isGameOver)
 
   const handleScoreClick = (inning: number, half: HalfInning) => {
     const inn = innings.find((i) => i.inning === inning)
@@ -40,6 +43,7 @@ export default function ScoreControl() {
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
       <SectionTitle title="得点" controls={['ミニスコア', 'スコアボード', '大型スコア', 'BSOパネル']} />
 
+      <SectionLock locked={preGameLocked}>
       {/* クイック操作ボタン — アウェイ */}
       <div className="flex flex-wrap gap-1.5">
         <button
@@ -135,6 +139,7 @@ export default function ScoreControl() {
         </table>
       </div>
       <p className="text-gray-500 text-xs">※ セルをクリックで数値を直接修正</p>
+      </SectionLock>
     </div>
   )
 }
