@@ -26,7 +26,7 @@ export default function StatusPanel() {
         <div className="flex items-center text-white text-sm font-bold tracking-wider px-3 py-0.5 border-r-2 border-black whitespace-nowrap">
           {currentInning}回{halfLabel}
         </div>
-        <div className="flex items-center justify-center px-2 py-0.5 flex-1">
+        <div className="flex items-center justify-center px-2 py-0 flex-1">
           <Diamond first={runners.first} second={runners.second} third={runners.third} />
         </div>
       </div>
@@ -118,18 +118,19 @@ function Diamond({
   second: boolean
   third: boolean
 }) {
+  const baseCls = 'absolute w-[16px] h-[16px] rotate-45'
   const cls = (on: boolean) =>
-    `w-[13px] h-[13px] rotate-45 ${
-      on
-        ? 'bg-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.9)]'
-        : 'bg-transparent border border-white/60'
-    }`
-  // ダイヤモンドを 64x44 に縮小して上段を詰める（2026-05-31 顧客FB④）。
+    on
+      ? 'bg-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.9)]'
+      : 'bg-transparent border border-white/60'
+  // 4点のひし形（2塁=上 / 3塁=左 / 1塁=右 / 本塁=下は白枠の基準点）。
+  // ボックス全体に配置して上下の余白をなくし、ダイヤを大きく見せる（2026-05-31 顧客FB）。
   return (
-    <div className="relative" style={{ width: 64, height: 44 }}>
-      <div className={`absolute top-0 left-1/2 -translate-x-1/2 ${cls(second)}`} />
-      <div className={`absolute top-1/2 left-0 -translate-y-1/2 ${cls(third)}`} />
-      <div className={`absolute top-1/2 right-0 -translate-y-1/2 ${cls(first)}`} />
+    <div className="relative" style={{ width: 60, height: 52 }}>
+      <div className={`${baseCls} ${cls(second)}`} style={{ left: 22, top: 0 }} />
+      <div className={`${baseCls} ${cls(third)}`} style={{ left: 2, top: 18 }} />
+      <div className={`${baseCls} ${cls(first)}`} style={{ right: 2, top: 18 }} />
+      <div className={`${baseCls} bg-transparent border border-white/35`} style={{ left: 22, top: 36 }} />
     </div>
   )
 }
