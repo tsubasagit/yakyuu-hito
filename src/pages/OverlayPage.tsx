@@ -125,8 +125,10 @@ export default function OverlayPage() {
         <CurrentPitcher />
       </OverlayPanel>
 
-      {/* [10] 速報テロップ — 画面下部 */}
-      <OverlayPanel id="ticker" defaultPos={DEFAULT_ELEMENT_POSITIONS.ticker} scale={overlayScale}>
+      {/* [10] 速報テロップ — 画面下部（中央バナー。拡大時も水平中心を維持するため top center 基点）。
+          サイズはテロップ本体側（高さ・文字）で2倍相当に固定。スライダー1.0=実寸1.0で
+          画面内に収まる（顧客フィードバック④ / 2026-06-09 QA #4: 全幅はみ出しの解消）。 */}
+      <OverlayPanel id="ticker" defaultPos={DEFAULT_ELEMENT_POSITIONS.ticker} scale={overlayScale} transformOrigin="top center">
         <Ticker />
       </OverlayPanel>
     </div>

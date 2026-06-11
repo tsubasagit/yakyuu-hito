@@ -8,6 +8,13 @@ interface OverlayPanelProps {
   defaultPos: OverlayPosition
   children: React.ReactNode
   scale?: number
+  /**
+   * 拡大の基点。既定は 'top left'（左上固定で右下へ伸びる）。
+   * 速報テロップのような「画面中央に置く横長バナー」は 'top center' を指定すると、
+   * サイズを上げても水平方向の中心が動かない（左右に均等に伸びる）。
+   * （2026-06-02 顧客フィードバック②: テロップ拡大で中央位置がずれる）
+   */
+  transformOrigin?: string
 }
 
 /**
@@ -16,7 +23,7 @@ interface OverlayPanelProps {
  * - overlayPositions[id] が未設定なら defaultPos にフォールバック
  * - ドラッグ中はローカル state で即時描画し、mouseUp で store に書き戻す
  */
-export default function OverlayPanel({ id, defaultPos, children, scale: globalScale = 1 }: OverlayPanelProps) {
+export default function OverlayPanel({ id, defaultPos, children, scale: globalScale = 1, transformOrigin = 'top left' }: OverlayPanelProps) {
   const visible = useGameStore((s) => s.visibility?.[id] ?? true)
 
   const storeX = useGameStore((s) => s.overlayPositions?.[id]?.x)
@@ -80,7 +87,7 @@ export default function OverlayPanel({ id, defaultPos, children, scale: globalSc
         left: localPos.x,
         top: localPos.y,
         transform: panelScale !== 1 ? `scale(${panelScale})` : undefined,
-        transformOrigin: 'top left',
+        transformOrigin,
       }}
       onMouseDown={onMouseDown}
     >

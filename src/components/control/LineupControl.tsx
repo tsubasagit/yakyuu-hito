@@ -6,11 +6,11 @@ import { parseLineupCsv } from '../../lib/csvImport'
 import { positionLabel, POSITIONS_WITH_DH, POSITIONS_NO_DH } from '../../lib/positionLabel'
 import SectionTitle from './shared/SectionTitle'
 
-/** サンプルCSVは静的ファイル（public/lineup_sample.csv）として配信し、リンクで開く。
- *  Blob + a.click() 方式は OBS のカスタムブラウザドック（CEF）でダウンロードが
- *  ブロックされるため。リンク(target=_blank)はOBSが既定ブラウザで開くので確実に取得できる。
- *  （2026-05-31 顧客FB⑫: サンプルCSVがダウンロードできない） */
-const SAMPLE_CSV_URL = `${import.meta.env.BASE_URL}lineup_sample.csv`
+/** 案内サイト（トップページ）URL。サンプルCSVのダウンロードはここに一本化した。
+ *  OBS のカスタムブラウザドック（CEF）はファイルDLがブロックされるため、ドック内に
+ *  DLボタンを置いても取得できない。案内サイト（既定ブラウザで開く）からDLしてもらう。
+ *  （2026-06-02 顧客FB④: OBS内のサンプルCSVボタンを撤去し案内サイトに集約） */
+const GUIDE_SITE_URL = `${import.meta.env.BASE_URL}#/`
 
 /** 学年候補。通常学部1-4年＋6年制学部の5・6年＋大学院。常時フルリスト表示のため select で固定 */
 const GRADE_OPTIONS = ['1年', '2年', '3年', '4年', '5年', '6年', '院1', '院2', '院3'] as const
@@ -372,14 +372,13 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
             CSV読込
           </button>
           <a
-            href={SAMPLE_CSV_URL}
-            download="lineup_sample.csv"
+            href={GUIDE_SITE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold inline-flex items-center"
-            title="入力例つきのサンプルCSVを開く（OBSドックでは既定ブラウザで開きます）"
+            className="text-emerald-400 hover:text-emerald-300 underline px-1 py-1 text-xs font-bold inline-flex items-center"
+            title="サンプルCSVは案内サイト（トップページ）からダウンロードできます"
           >
-            ⬇ サンプルCSV
+            サンプルCSVは案内サイトから ↗
           </a>
           <button
             onClick={() => setLineup(side, [...TEITO_LINEUP])}

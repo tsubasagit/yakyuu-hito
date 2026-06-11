@@ -4,9 +4,15 @@ import { pickTeamLabel } from '../../lib/teamLabel'
 /**
  * イニング別スコアボード（画像準拠デザイン・2026-05-16 リファイン）。
  * 白セル + 黒太ボーダーのテレビ中継風スコアボード。
- * 1-12 + R 列、A/X 各行。延長は currentInning に応じて自動拡張。
+ * 1-15 + R 列、A/X 各行。延長は currentInning に応じて自動拡張。
+ * （2026-06-09 顧客フィードバック⑤: タイブレーク13回の実績ありのため上限を12→15回へ）
  */
-export default function InningScoreboard() {
+/**
+ * @param preview 指定時はプレビュー描画。store の isGameOver/scoreboardCross を無視し、
+ *   preview.cross に従って最終回裏に「×」を出す。
+ *   試合終了ウィザードで「確定前の完成形」を見せるために使う（2026-06-09 顧客フィードバック⑥）。
+ */
+export default function InningScoreboard({ preview }: { preview?: { cross: boolean } } = {}) {
   const innings = useGameStore((s) => s.innings)
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
@@ -15,9 +21,17 @@ export default function InningScoreboard() {
   const currentInning = useGameStore((s) => s.currentInning)
   const currentHalf = useGameStore((s) => s.currentHalf)
   const isGameOver = useGameStore((s) => s.isGameOver)
+  const scoreboardCross = useGameStore((s) => s.scoreboardCross ?? true)
+
+  // 「×」表示の駆動は scoreboardCross（人が試合終了ウィザードで確認・確定した値）のみ。
+  //  勝敗の自動判定は render では一切使わない（＝放送に出るのは人が確認した内容だけ）。
+  //  後攻勝ち推定は「ウィザードのデフォルト値・説明文」用であり、表示の真偽は人が握る。
+  //  preview 指定時はウィザードの仮トグル（preview.cross）でそのまま描画する（WYSIWYG）。
+  //  （2026-06-09 顧客フィードバック⑥: 誤情報ゼロ優先 → 自動判定を下書きに降格）
+  const showCross = preview ? preview.cross : (isGameOver && scoreboardCross)
 
   const baseInnings = Math.max(9, currentInning)
-  const MAX_INNINGS = Math.min(12, baseInnings)
+  const MAX_INNINGS = Math.min(15, baseInnings)
   const displayInnings = Array.from({ length: MAX_INNINGS }, (_, i) => {
     const num = i + 1
     const existing = innings.find((inn) => inn.inning === num)
@@ -64,7 +78,7 @@ export default function InningScoreboard() {
             currentInning={currentInning}
             currentHalf={currentHalf}
             total={awayTotal}
-            isGameOver={isGameOver}
+            showCross={showCross}
             letterColWidth={letterColWidth}
           />
           <ScoreRow
@@ -75,7 +89,7 @@ export default function InningScoreboard() {
             currentInning={currentInning}
             currentHalf={currentHalf}
             total={homeTotal}
-            isGameOver={isGameOver}
+            showCross={showCross}
             letterColWidth={letterColWidth}
           />
         </tbody>
@@ -92,7 +106,7 @@ function ScoreRow({
   currentInning,
   currentHalf,
   total,
-  isGameOver,
+  showCross,
   letterColWidth,
 }: {
   letter: string
@@ -102,22 +116,21 @@ function ScoreRow({
   currentInning: number
   currentHalf: 'top' | 'bottom'
   total: number
-  isGameOver: boolean
+  showCross: boolean
   letterColWidth: number
 }) {
   // 文字数に応じてフォントを自動縮小（最大4文字想定）
   const len = Array.from(letter).length
   const letterFontSize = len <= 1 ? 18 : len === 2 ? 15 : len === 3 ? 13 : 11
-  // 試合終了時、最終回の裏セルに × を出す（home勝ち / away勝ち / 引き分け 共通）。
-  //  - 裏を未プレイ（home コールド勝ち等）: "×" のみ
-  //  - 裏を得点 or 0で打ち切り: "{得点}×"
-  // 2026-05-24 仕様変更: 旧来は「homeリード時のみ」だったが、
-  // 「試合終了マーカーとして×を出したい」という顧客要望（原田氏）に合わせて全パターン共通化。
-  // 2026-05-25 修正: 裏まで打ち切って次回表に遷移済みの状態（先攻勝ち等）で
-  // currentInning が +1 されている場合、isLastBottomCell の判定がズレて × が出ない問題を修正。
-  //   - currentHalf === 'bottom' : 裏進行中 or 裏終了直後 → 最終プレイ回 = currentInning
-  //   - currentHalf === 'top'    : 次回表に進んだ後 → 最終プレイ回 = currentInning - 1
-  const gameEnded = isGameOver
+  // 最終回の裏セルに × を出す（showCross=true のときのみ＝試合終了×ON×後攻勝ち）。
+  //  - 裏セルが空欄 or 0（後攻が裏を攻撃しなかった: リード継続でゲーム終了）: "×" のみ
+  //  - 裏セルに得点 1以上（逆転サヨナラ等）: "{得点}×"
+  // 最終プレイ回の特定:
+  //   - currentHalf === 'bottom' : 裏進行中 or 裏終了直後 → 最終回 = currentInning
+  //   - currentHalf === 'top'    : 誤って次回表まで進めた後 → 最終回 = currentInning - 1
+  //  ※ 後攻が裏を攻撃せず勝った場合、表終了で自動的に「同回の裏」に遷移するため
+  //    通常運用では currentHalf==='bottom' で着地する（top 分岐は進め過ぎの保険）。
+  const gameEnded = showCross
   const lastPlayedInning = currentHalf === 'bottom'
     ? currentInning
     : Math.max(1, currentInning - 1)
@@ -150,15 +163,18 @@ function ScoreRow({
         const isLastBottomCell = half === 'bottom' && gameEnded && inn.inning === lastPlayedInning
         let display: React.ReactNode
         if (isLastBottomCell) {
-          if (!hasValue) {
-            display = <span className="text-amber-300">×</span>
-          } else {
+          // 得点 0 または空欄 → 「×」のみ。1以上 → 「{得点}×」。
+          // （2026-06-09 顧客指定: 得点0は×のみ、1以上は併記）
+          const runs = value ?? 0
+          if (runs >= 1) {
             display = (
               <span>
-                {value}
+                {runs}
                 <span className="text-amber-300 ml-0.5">×</span>
               </span>
             )
+          } else {
+            display = <span className="text-amber-300">×</span>
           }
         } else {
           // 値があれば表示、無ければ終了済みの回のみ 0、進行中・未到達は空欄

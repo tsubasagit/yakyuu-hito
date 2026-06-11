@@ -4,6 +4,7 @@ import {
   BarChart3,
   CircleDot,
   Database,
+  Download,
   ExternalLink,
   FileSpreadsheet,
   Github,
@@ -11,6 +12,7 @@ import {
   MailQuestion,
   Maximize2,
   Megaphone,
+  MonitorCheck,
   Move,
   MousePointerClick,
   Settings2,
@@ -21,10 +23,19 @@ import {
   User,
   WifiOff,
 } from 'lucide-react'
+import { LINEUP_CSV_SAMPLE } from '../lib/csvImport'
 
 const HITO_LOGO = 'https://hito-inc.jp/wp-content/uploads/2023/10/header_title_20231020x.png'
 const HITO_SITE = 'https://hito-inc.jp/'
 const REPO_URL = 'https://github.com/tsubasagit/yakyuu-hito'
+
+/** ダウンロード用サンプルCSVの静的ファイルURL（コントロール画面と共通） */
+const SAMPLE_CSV_URL = `${import.meta.env.BASE_URL}lineup_sample.csv`
+
+/** LINEUP_CSV_SAMPLE（ヘッダー＋10行）を表テーブル描画用にパースする。末尾の空行は除外。 */
+const SAMPLE_CSV_ROWS = LINEUP_CSV_SAMPLE.split('\n')
+  .filter((line) => line.trim().length > 0)
+  .map((line) => line.split(','))
 
 /**
  * 株式会社ひと 大学野球配信向けトップページ。
@@ -177,7 +188,7 @@ export default function HomePage() {
             <Reason
               icon={<FileSpreadsheet />}
               title="CSVで一括登録"
-              desc="順番・名前・守備の3列だけのシンプルCSV。Excelで編集して読込ですぐスタメン完成。"
+              desc="順番・名前・守備＋学年・コメントのシンプルCSV。Excelで編集して読込ですぐスタメン完成。"
             />
             <Reason
               icon={<Move />}
@@ -185,6 +196,79 @@ export default function HomePage() {
               desc="表示位置はドラッグで微調整、チームカラーはHEXコード入力＋コピペ対応。"
             />
           </div>
+        </div>
+
+        {/* サンプルCSV（そのまま掲載） */}
+        <div className="mb-16">
+          <SectionHeader
+            label="CSV SAMPLE"
+            title="スタメン登録用サンプルCSV"
+            subtitle="この内容をそのまま Excel に貼り付け・編集して読み込めばスタメン完成です。"
+            accent="primary"
+          />
+
+          <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-white">
+            {/* 見出しバー＋ダウンロード */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 border-b border-slate-200 px-4 py-3">
+              <div className="flex items-center gap-2 text-slate-700">
+                <FileSpreadsheet className="w-5 h-5 text-[#538bb0]" />
+                <code className="text-sm font-mono text-slate-800">lineup_sample.csv</code>
+              </div>
+              <a
+                href={SAMPLE_CSV_URL}
+                download="lineup_sample.csv"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 bg-[#538bb0] hover:bg-[#3d6f94] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                ダウンロード
+              </a>
+            </div>
+
+            {/* CSVをそのままテーブル表示 */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="bg-[#538bb0]/10 text-[#538bb0]">
+                    {SAMPLE_CSV_ROWS[0]!.map((cell, i) => (
+                      <th
+                        key={i}
+                        className="text-left font-bold px-3 py-2 border-b border-slate-200 whitespace-nowrap"
+                      >
+                        {cell}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {SAMPLE_CSV_ROWS.slice(1).map((row, r) => (
+                    <tr key={r} className="odd:bg-white even:bg-slate-50">
+                      {SAMPLE_CSV_ROWS[0]!.map((_, c) => (
+                        <td
+                          key={c}
+                          className="px-3 py-1.5 border-b border-slate-100 text-slate-700 whitespace-nowrap"
+                        >
+                          {row[c] ?? ''}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 原文（テキストそのまま） */}
+            <pre className="bg-slate-900 text-slate-100 text-xs md:text-sm font-mono leading-relaxed px-4 py-3 overflow-x-auto border-t border-slate-200">
+{LINEUP_CSV_SAMPLE.trimEnd()}
+            </pre>
+          </div>
+
+          <ul className="mt-4 space-y-1.5 text-slate-600 text-sm">
+            <li>・1〜9行目が野手、10行目が投手です（DH制あり／なし／二刀流に対応）。</li>
+            <li>・<strong className="text-slate-800">守備</strong>は <code className="bg-slate-100 px-1 rounded">投・捕・一・二・三・遊・左・中・右・DH</code> から指定。</li>
+            <li>・<strong className="text-slate-800">学年・コメント</strong>は任意（空欄可）。コメントは打者テロップに表示されます。</li>
+          </ul>
         </div>
 
         {/* 表示できる要素 */}
@@ -212,7 +296,7 @@ export default function HomePage() {
             <FeatureCard icon={<ListOrdered />} title="スタメン一覧" desc="DH制（あり/なし/二刀流）対応。両チーム並列表示も可能。" />
             <FeatureCard icon={<Trophy />} title="大会名" desc="大会名・副題・対戦カード・会場・日付。試合前のオープニング向け。" />
             <FeatureCard icon={<Maximize2 />} title="大型スコア" desc="中継切替時の大判スコア。チーム色フルバンド + 大きな数字。" />
-            <FeatureCard icon={<BarChart3 />} title="イニング別スコア" desc="9回基本＋延長12回まで自動拡張。R列強調。" />
+            <FeatureCard icon={<BarChart3 />} title="イニング別スコア" desc="9回基本＋延長15回まで自動拡張。R列強調。" />
             <FeatureCard icon={<CircleDot />} title="BSOパネル" desc="イニング表記＋スコア＋走者ダイヤ＋BSO（緑のグラウンド地）を1セットで。" />
             <FeatureCard icon={<Megaphone />} title="代打 / 速報テロップ" desc="代打選手の発表表示と、自由テロップ。" />
           </div>
@@ -226,6 +310,17 @@ export default function HomePage() {
             subtitle="2ステップで完了します。"
             accent="primary"
           />
+
+          {/* 推奨環境（2026-06-09 顧客フィードバック①: Win・Mac 検証結果を表記） */}
+          <div className="mb-6 flex items-start gap-3 bg-[#538bb0]/5 border border-[#538bb0]/30 rounded-lg p-4">
+            <MonitorCheck className="w-5 h-5 text-[#538bb0] shrink-0 mt-0.5" />
+            <div className="text-slate-700 text-sm leading-relaxed">
+              <span className="font-bold text-slate-900">推奨環境：OBS Studio ver31 以上</span>
+              <span className="block text-slate-600 mt-0.5">
+                Windows・Mac の両方で動作確認済みです。ver31 未満では正しく表示されない場合があります。
+              </span>
+            </div>
+          </div>
 
           {/* 全体ワークフロー図 */}
           <div className="mb-6 rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm">

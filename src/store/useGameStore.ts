@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { DhMode, ElementId, EffectType, GameState, HalfInning, LineupDisplayMode, LineupPlayer, MascotMode, OverlayPosition, PinchHitter, PitcherAppearance, PlayerInfo, Runners, Tournament, Visibility } from '../types'
-import { initialGameState, initialPlayerInfo, DEFAULT_OVERLAY_POSITIONS, DEFAULT_ELEMENT_POSITIONS } from '../types'
+import { initialGameState, initialPlayerInfo, DEFAULT_OVERLAY_POSITIONS, DEFAULT_ELEMENT_POSITIONS, emptyLineup } from '../types'
 import { broadcastState } from '../lib/sync'
 import { backupToIDB, restoreFromIDB } from '../lib/idbBackup'
 
@@ -63,7 +63,7 @@ const DATA_KEYS: (keyof GameState)[] = [
   'dhMode', 'awayDhMode', 'homeDhMode',
   'gameStarted',
   // yakyuu-hito 拡張
-  'tournament', 'pinchHitter', 'visibility',
+  'tournament', 'pinchHitter', 'visibility', 'scoreboardCross',
 ]
 
 export function extractGameState(store: GameState): GameState {
@@ -169,6 +169,26 @@ function syncTwoWayPitcher(lineup: LineupPlayer[]): LineupPlayer[] | null {
   return updated
 }
 
+/**
+ * 指定した半回のスコアが「自動入力された 0」の場合のみ null（空欄）に戻した innings を返す。
+ * 回を戻したときに、誤って送って付いた 0 を消すために使う。
+ * 実際に得点が入っている（>0）半回は触らない（データ保全）。
+ * （2026-06-02 顧客フィードバック③: 回を戻したらスコアの 0 を消す）
+ */
+function clearHalfScoreIfZero(
+  innings: { inning: number; top: number | null; bottom: number | null }[],
+  inningNum: number,
+  half: HalfInning,
+): { inning: number; top: number | null; bottom: number | null }[] {
+  const idx = innings.findIndex((inn) => inn.inning === inningNum)
+  if (idx === -1) return innings
+  const inn = innings[idx]!
+  if (inn[half] !== 0) return innings // null や得点ありはそのまま
+  const updated = [...innings]
+  updated[idx] = { ...inn, [half]: null }
+  return updated
+}
+
 /** 両チームの全打者の代打フラグを解除した patch を返す（回送り時に使用） */
 function clearAllPinchHitsPatch(s: GameState): Partial<GameState> {
   const patch: Partial<GameState> = {}
@@ -186,12 +206,14 @@ interface GameActions {
   addStrike: () => void
   addOut: () => void
   resetCount: () => void
+  /** 打者カウントリセット: B/S のみ 0 に戻す（アウト・走者は維持） */
+  resetBallStrike: () => void
   applyStrikeout: () => void
   applyWalkPreset: () => void
   advanceInning: () => void
   setRunner: (base: keyof Runners, on: boolean) => void
   addRun: (team: 'away' | 'home') => void
-  setInningScore: (inning: number, half: HalfInning, score: number) => void
+  setInningScore: (inning: number, half: HalfInning, score: number | null) => void
   setBatter: (info: PlayerInfo) => void
   setPitcher: (info: PlayerInfo) => void
   addHit: (team: 'away' | 'home') => void
@@ -246,6 +268,7 @@ interface GameActions {
   setVisibility: (id: keyof Visibility, value: boolean) => void
   setTournament: (partial: Partial<Tournament>) => void
   setPinchHitter: (value: PinchHitter | null) => void
+  setScoreboardCross: (value: boolean) => void
 }
 
 type GameStore = GameState & GameActions
@@ -302,6 +325,14 @@ export const useGameStore = create<GameStore>()(
           // （2026-05-31 顧客フィードバック⑥: アウトもリセット対象に含める）
           count: { balls: 0, strikes: 0, outs: 0 },
           runners: { first: false, second: false, third: false },
+        })),
+
+      // 打者カウントリセット: B/S のみゼロに戻す（アウト・走者はそのまま）。
+      // 打者が代わった等で B/S だけ仕切り直したいケース向け。
+      // （2026-06-02 顧客フィードバック①: 打者カウントリセットを追加）
+      resetBallStrike: () =>
+        set((s) => ({
+          count: { ...s.count, balls: 0, strikes: 0 },
         })),
 
       /** 三振プリセット: 1回の set() でアウト加算+投球数+チェンジ判定まで完結 */
@@ -603,9 +634,20 @@ export const useGameStore = create<GameStore>()(
       // 完全リセット。チーム・打順・カラー・大会情報まで初期化するが、
       // テロップ等の配置（位置・サイズ）と全体スケールは保持する。
       // （2026-05-31 顧客フィードバック⑦: 試合リセットでもテロップのXY/サイズは保持）
+      //
+      // 大学名・打者・選手情報は「デモデータ（帝都大学/早凌大学）」ではなく必ず空欄にする。
+      // initialGameState はデモ用に帝都/早凌＋スタメンを保持しているため、完全リセット時は
+      // それらを上書きクリアし、前試合や架空チームのまま配信公開される事故を防ぐ。
+      // （2026-06-09 顧客フィードバック②: 完全リセットで大学名・選手情報をクリア）
       newGame: () =>
         set((s) => ({
           ...initialGameState,
+          awayTeam: { name: '', shortName: '', color: initialGameState.awayTeam.color },
+          homeTeam: { name: '', shortName: '', color: initialGameState.homeTeam.color },
+          awayLineup: emptyLineup(),
+          homeLineup: emptyLineup(),
+          batter: { ...initialPlayerInfo },
+          pitcher: { ...initialPlayerInfo },
           overlayPositions: s.overlayPositions,
           overlayScale: s.overlayScale,
         })),
@@ -661,9 +703,13 @@ export const useGameStore = create<GameStore>()(
 
           const inn = { ...innings[currentIdx]! }
           const half = team === 'away' ? 'top' as const : 'bottom' as const
-          const current = inn[half] ?? 0
-          if (current <= 0) return s
-          inn[half] = current - 1
+          const raw = inn[half]
+          // すでに空欄（未記入）なら何もしない
+          if (raw === null || raw === undefined) return s
+          // 0 のときにもう一度「-1点」を押すと空欄（未記入）に戻す。
+          // それ以外は 1 ずつ減算。一度入れた 0 をマイナスで消せるようにするため。
+          // （2026-06-03 顧客フィードバック: 一度0を入れるとマイナスで消せない問題）
+          inn[half] = raw <= 0 ? null : raw - 1
           innings[currentIdx] = inn
 
           return recalcTotals({ ...extractGameState(s), innings })
@@ -746,6 +792,14 @@ export const useGameStore = create<GameStore>()(
             // 裏→表に戻す → 先攻が攻撃・後攻が守備
             base.batterDisplayTeam = 'away'
             base.pitcherDisplayTeam = 'home'
+            // 戻る先（この回の表）に自動入力された 0 が残っていれば空欄に戻す
+            const innings = clearHalfScoreIfZero(s.innings, s.currentInning, 'top')
+            if (innings !== s.innings) {
+              const totals = recalcTotals({ ...extractGameState(s), innings })
+              base.innings = innings
+              base.awayTotal = totals.awayTotal
+              base.homeTotal = totals.homeTotal
+            }
             return { ...base, currentHalf: 'top' as const }
           }
           if (s.currentInning <= 1) return s
@@ -762,7 +816,16 @@ export const useGameStore = create<GameStore>()(
           // 表→前回裏に戻す → 後攻が攻撃・先攻が守備
           base.batterDisplayTeam = 'home'
           base.pitcherDisplayTeam = 'away'
-          return { ...base, currentInning: s.currentInning - 1, currentHalf: 'bottom' as const }
+          // 戻る先（前回の裏）に自動入力された 0 が残っていれば空欄に戻す
+          const prevInning = s.currentInning - 1
+          const innings = clearHalfScoreIfZero(s.innings, prevInning, 'bottom')
+          if (innings !== s.innings) {
+            const totals = recalcTotals({ ...extractGameState(s), innings })
+            base.innings = innings
+            base.awayTotal = totals.awayTotal
+            base.homeTotal = totals.homeTotal
+          }
+          return { ...base, currentInning: prevInning, currentHalf: 'bottom' as const }
         }),
 
       setShowMascot: (show) => set({ showMascot: show }),
@@ -802,8 +865,11 @@ export const useGameStore = create<GameStore>()(
           }
         }),
 
+      // 位置リセットは現行の要素IDマップ（DEFAULT_ELEMENT_POSITIONS）へ戻す。
+      // 旧 DEFAULT_OVERLAY_POSITIONS は別キー体系（lineup が右上等）で、
+      // これに戻すとスタメンが意図しない位置へ飛ぶバグがあった（2026-06-09 QA #1 修正）。
       resetOverlayPositions: () =>
-        set({ overlayPositions: { ...DEFAULT_OVERLAY_POSITIONS } }),
+        set({ overlayPositions: { ...DEFAULT_ELEMENT_POSITIONS } }),
 
       setOverlayScale: (scale) =>
         set({ overlayScale: Math.max(0.5, Math.min(3, scale)) }),
@@ -884,6 +950,8 @@ export const useGameStore = create<GameStore>()(
         })),
 
       setPinchHitter: (value) => set({ pinchHitter: value }),
+
+      setScoreboardCross: (value) => set({ scoreboardCross: value }),
     }),
     {
       name: 'yakyuu-game-state-v2',

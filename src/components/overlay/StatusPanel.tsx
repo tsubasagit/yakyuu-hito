@@ -26,7 +26,7 @@ export default function StatusPanel() {
         <div className="flex items-center text-white text-sm font-bold tracking-wider px-3 py-0.5 border-r-2 border-black whitespace-nowrap">
           {currentInning}回{halfLabel}
         </div>
-        <div className="flex items-center justify-center px-2 py-2 flex-1">
+        <div className="flex items-center justify-center px-2 py-1.5 flex-1">
           <Diamond first={runners.first} second={runners.second} third={runners.third} />
         </div>
       </div>
@@ -36,12 +36,14 @@ export default function StatusPanel() {
         <div className="flex flex-col">
           <ScoreRow
             label={awayLabel}
+            color={awayTeam.color}
             score={awayTotal}
             attacking={currentHalf === 'top'}
             bottomBorder
           />
           <ScoreRow
             label={homeLabel}
+            color={homeTeam.color}
             score={homeTotal}
             attacking={currentHalf === 'bottom'}
           />
@@ -73,11 +75,13 @@ export default function StatusPanel() {
 
 function ScoreRow({
   label,
+  color,
   score,
   attacking,
   bottomBorder,
 }: {
   label: string
+  color: string
   score: number
   attacking: boolean
   bottomBorder?: boolean
@@ -93,9 +97,15 @@ function ScoreRow({
           backgroundColor: attacking ? '#ef4444' : 'transparent',
         }}
       />
+      {/* 攻撃バーとチーム名セルの間の余白（3px・パネル地の濃紺）。
+          大学カラーが赤系のとき攻撃バー（赤）と同化して境目が見えづらいため分離する。
+          2026-06-09 顧客フィードバック */}
+      <div style={{ width: 3 }} />
+      {/* チームレターセルに大学カラーを反映（イニング別スコアボードと統一）。
+          色未設定時は従来の濃紺にフォールバック。2026-06-09 顧客フィードバック③ */}
       <div
-        className="flex items-center justify-center font-black border-r-2 border-black bg-[#0b1220] text-white tracking-tight"
-        style={{ minWidth: 64, paddingInline: 6, height: 36, fontSize, lineHeight: 1 }}
+        className="flex items-center justify-center font-black border-r-2 border-black text-white tracking-tight"
+        style={{ minWidth: 64, paddingInline: 6, height: 36, fontSize, lineHeight: 1, backgroundColor: color || '#0b1220' }}
       >
         {label}
       </div>
@@ -118,21 +128,56 @@ function Diamond({
   second: boolean
   third: boolean
 }) {
-  const baseCls = 'absolute w-[16px] h-[16px] rotate-45'
-  const cls = (on: boolean) =>
-    on
-      ? 'bg-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.9)]'
-      : 'bg-transparent border border-white/60'
-  // 3点のひし形（2塁=上 / 3塁=左下 / 1塁=右下）。本塁（4点目）は表示しない。
-  // 回転(45°)でドットの角が約3px外側へ出るため、上下に余白を確保して
-  // 枠線（上枠・仕切り線）にかぶらないよう内側へ収める（2026-05-31 顧客FB）。
-  // 左右に広げて 1塁・3塁を外側へ（2塁=中央）。横の間隔を確保（2026-05-31 顧客FB）。
+  // 横長の内野ダイヤ（マルーンの塗り）に、大きな塁マーカー3つ（2塁=上 /
+  // 3塁=左 / 1塁=右）を載せる。本塁マーカーは無し（画像準拠）。
+  // 占有塁=明るい赤で点灯、空塁=暗い赤のソケット。
+  // （2026-06-12 顧客フィードバック: 画像のダイヤに寄せる。塁は3つ・大きく）
+  const pts = {
+    second: { x: 64, y: 14 }, // 上
+    third: { x: 16, y: 30 }, // 左（外側へ）
+    first: { x: 112, y: 30 }, // 右（外側へ）
+  }
+  const S = 26 // 塁マーカーの一辺（大きめ）
+  const Base = ({ p, on }: { p: { x: number; y: number }; on: boolean }) => (
+    <rect
+      x={p.x - S / 2}
+      y={p.y - S / 2}
+      width={S}
+      height={S}
+      rx={3}
+      transform={`rotate(45 ${p.x} ${p.y})`}
+      fill={on ? '#f23b35' : '#3a0d0d'}
+      stroke={on ? '#ff9a93' : 'rgba(255,255,255,0.25)'}
+      strokeWidth={1.5}
+      style={on ? { filter: 'drop-shadow(0 0 5px rgba(242,59,53,0.95))' } : undefined}
+    />
+  )
+  // 大枠（パネル高さ）は SVG のレイアウト高さ=58 で固定し、伸ばさない。
+  // 本塁=下の頂点だけを枠外(y=68)に描き、overflow を見せて「少し下にかかる」。
+  // はみ出し部分は手前に出さず、後から描画される下段（スコア/BSO）の“裏”へ
+  // 潜り込ませる（position/z-index を付けず自然な重ね順に任せる）。
+  // （2026-06-12 顧客フィードバック: 大枠は変えず、ダイヤだけ下に少しはみ出す／重なりは奥）
   return (
-    <div className="relative" style={{ width: 76, height: 34 }}>
-      <div className={`${baseCls} ${cls(second)}`} style={{ left: 30, top: 1 }} />
-      <div className={`${baseCls} ${cls(third)}`} style={{ left: 2, top: 17 }} />
-      <div className={`${baseCls} ${cls(first)}`} style={{ right: 2, top: 17 }} />
-    </div>
+    <svg
+      viewBox="0 0 128 58"
+      width={128}
+      height={58}
+      className="block overflow-visible"
+    >
+      {/* 横長の内野ダイヤ。下の頂点(本塁)のみ枠外へ少しはみ出す。塁マーカーは無し。
+          線で囲んだ内野エリアの塗りは薄い灰色（赤系は目立ちすぎるため）。
+          （2026-06-12 顧客フィードバック: 内野エリアを赤→薄い灰色へ） */}
+      <polygon
+        points="64,3 124,30 64,68 4,30"
+        fill="rgba(205,211,219,0.16)"
+        stroke="rgba(255,255,255,0.28)"
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+      />
+      <Base p={pts.third} on={third} />
+      <Base p={pts.first} on={first} />
+      <Base p={pts.second} on={second} />
+    </svg>
   )
 }
 

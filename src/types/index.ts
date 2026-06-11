@@ -165,7 +165,9 @@ export const DEFAULT_ELEMENT_POSITIONS: Record<ElementId, OverlayPosition> = {
   statusPanel:      { x: 1600, y: 830  },
   currentBatter:    { x: 700,  y: 920  },
   currentPitcher:   { x: 700,  y: 800  },
-  ticker:           { x: 40,   y: 1020 },
+  // テロップは baseScale=2 で高さ約2倍になったため、下端が画面外(>1080)に隠れないよう
+  // デフォルトYを上げる（下端が約1060pxに収まる）。2026-06-09 顧客フィードバック
+  ticker:           { x: 40,   y: 980  },
 }
 
 export interface GameState {
@@ -238,6 +240,11 @@ export interface GameState {
   pinchHitter: PinchHitter | null
   /** 7要素の表示フラグ */
   visibility: Visibility
+  /** スコアボードの試合終了「×」表記を使うか（ON/OFF）。デフォルト ON。
+   *  ON でも「×」を実際に出すのは後攻勝ち（後攻合計＞先攻合計）のときのみ＝自動判定。
+   *  連盟により×表記を使わない場合は OFF にできる。
+   *  （2026-06-09 顧客フィードバック⑥） */
+  scoreboardCross: boolean
 }
 
 export const initialPlayerInfo: PlayerInfo = {
@@ -362,6 +369,7 @@ export const initialGameState: GameState = {
     statusPanel_quickScore: true,
     ticker: false,
   },
+  scoreboardCross: true,
 }
 
 export { emptyLineup }

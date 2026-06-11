@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
 import SectionTitle from './shared/SectionTitle'
 import { scrollToPanelCard } from './VisibilityControl'
 import type { DhMode } from '../../types'
 import { getSamplePreset } from '../../lib/samplePresets'
 import { validateTeamLineup } from '../../lib/lineupValidation'
+import { ConfirmModal } from './shared/Modal'
+import InningScoreboard from '../overlay/InningScoreboard'
 
 /** チームカラー プリセット（大学野球で使われやすい色を厳選） */
 const COLOR_PRESETS: { label: string; hex: string }[] = [
@@ -42,6 +44,12 @@ function scrollToId(id: string) {
 export default function GameControl() {
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
+  const awayTotal = useGameStore((s) => s.awayTotal)
+  const homeTotal = useGameStore((s) => s.homeTotal)
+  const scoreboardCross = useGameStore((s) => s.scoreboardCross ?? true)
+  const setScoreboardCross = useGameStore((s) => s.setScoreboardCross)
+  const currentInning = useGameStore((s) => s.currentInning)
+  const currentHalf = useGameStore((s) => s.currentHalf)
   const isGameOver = useGameStore((s) => s.isGameOver)
   const gameStarted = useGameStore((s) => s.gameStarted ?? false)
   const setGameStarted = useGameStore((s) => s.setGameStarted)
@@ -58,11 +66,56 @@ export default function GameControl() {
   const homeLineup = useGameStore((s) => s.homeLineup)
   const [colorEditorOpen, setColorEditorOpen] = useState(false)
   const [copiedKey, setCopiedKey] = useState<'away' | 'home' | null>(null)
+  // 新試合・完全リセットの確認モーダル（confirm の置換。OBSドックでも確実に動く）
+  const [pendingReset, setPendingReset] = useState<null | 'keep' | 'full'>(null)
+  // サンプル選手投入の確認モーダル（誤クリックで既存打順を上書きしないよう1クッション）
+  // 2026-06-09 顧客フィードバック⑦
+  const [pendingSample, setPendingSample] = useState(false)
+  // 試合終了ウィザード（プレビュー → ×トグル → 確定）。2026-06-09 顧客フィードバック⑥
+  // 「試合終了」を押すといきなり確定せず、完成形をプレビューさせて確認してから確定する。
+  const [endWizardOpen, setEndWizardOpen] = useState(false)
+  const [tentativeCross, setTentativeCross] = useState(false)
+  // この試合で「試合終了」を確定したときの×設定を覚えておく（再終了時の初期値に使う）。
+  // null=まだ一度も確定していない（初回は自動判定をデフォルトにする）。新試合でnullに戻す。
+  const lastConfirmedCross = useRef<boolean | null>(null)
+
+  // 勝敗の自動判定（ウィザードの「下書き」用。放送表示の真偽は人の確定が握る）
+  const homeWon = homeTotal > awayTotal
+  const awayWon = awayTotal > homeTotal
+  // 最終回（後攻が裏を攻撃せず勝つと表終了で同回裏へ自動遷移するため通常 bottom 着地。
+  //  進め過ぎた場合は -1 で前の回に補正）
+  const finalInning = currentHalf === 'bottom' ? currentInning : Math.max(1, currentInning - 1)
+  const endHomeName = homeTeam.name || '後攻'
+  const endAwayName = awayTeam.name || '先攻'
+
+  /** 「試合終了」押下 → ×の初期値を下書きし、ウィザードを開く（まだ確定しない）。
+   *  初回はこの試合の自動判定（後攻勝ち）、2回目以降は前回確定した値を初期値にする
+   *  （連盟方針で×OFFにした等の手動判断を再終了時に取りこぼさない。2026-06-09 QA #3） */
+  const openEndWizard = () => {
+    setTentativeCross(lastConfirmedCross.current ?? homeWon)
+    setEndWizardOpen(true)
+  }
+
+  /** ウィザードで「この内容で終了」 → 確認した×設定を反映し、試合終了を確定 */
+  const confirmEnd = () => {
+    setScoreboardCross(tentativeCross)
+    lastConfirmedCross.current = tentativeCross
+    setGameOver(true)
+    setEndWizardOpen(false)
+  }
+
+  /** 両チームに架空のサンプル選手を投入（既存打順は上書き） */
+  const injectSample = () => {
+    setLineup('away', getSamplePreset('away', currentDhMode))
+    setLineup('home', getSamplePreset('home', currentDhMode))
+  }
 
   // 試合前の打順・選手 完成度チェック（選択中の DH 制で判定）
   const awayCheck = validateTeamLineup(awayLineup, currentDhMode)
   const homeCheck = validateTeamLineup(homeLineup, currentDhMode)
   const canStart = awayCheck.complete && homeCheck.complete
+  // 両チームの打順が空（完全リセット直後など）。誘導文の出し分けに使う。2026-06-09 QA #2
+  const bothLineupsEmpty = awayCheck.filledBatters === 0 && homeCheck.filledBatters === 0
 
   /** 打順が揃っていれば試合開始（オーダー確定・ロック） */
   const startGame = () => {
@@ -113,17 +166,8 @@ export default function GameControl() {
     return () => clearTimeout(timer)
   }, [awayName, homeName, setTeamName])
 
-  const handleNewGameKeepTeams = () => {
-    if (confirm('新しい試合を開始しますか？\n\n● 同じチーム情報・打順・カラー・大会情報は引き継ぎます\n● スコア・カウント・走者・打席・投手履歴・プレーログはリセットされます')) {
-      newGameKeepTeams()
-    }
-  }
-
-  const handleNewGameFullReset = () => {
-    if (confirm('完全リセットして新しい試合を開始しますか？\n\nチーム情報・打順・カラー設定もすべて初期状態に戻ります。\n（テロップの位置・サイズ設定は保持されます）\nこの操作は取り消せません。')) {
-      newGame()
-    }
-  }
+  const handleNewGameKeepTeams = () => setPendingReset('keep')
+  const handleNewGameFullReset = () => setPendingReset('full')
 
   // 試合概要バナー用ラベル。DH 制 + 試合状態 を1行で把握。
   const dhLabel =
@@ -205,9 +249,9 @@ export default function GameControl() {
             準備系ボタンの右側に少し余白を空けて配置する（2026-05-31 顧客FB）。 */}
         {gameStarted && !isGameOver && (
           <button
-            onClick={() => setGameOver(true)}
+            onClick={openEndWizard}
             className="ml-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-bold"
-            title="試合終了。スコアボードに×が表示され、オーダー編集が再度可能になります"
+            title="試合終了。最終スコアをプレビュー確認してから確定します"
           >
             試合終了
           </button>
@@ -292,6 +336,17 @@ export default function GameControl() {
             </span>
           </div>
 
+          {/* 打順が空のときの誘導（完全リセット直後など）。DHを選んでも②が未完成な理由を明示。
+              2026-06-09 QA #2 */}
+          {bothLineupsEmpty && (
+            <div className="bg-amber-900/25 border border-amber-500/40 rounded-lg p-2.5 text-[11px] text-amber-100 leading-relaxed">
+              <span className="font-bold">打順がまだ空です。</span>
+              ① でDH制を選んでから、② で選手を入力してください。
+              すぐ埋めたいときは ② の <span className="font-bold">「サンプル選手を両チーム投入」</span> が便利です
+              （DH制を選んでから投入してください）。
+            </div>
+          )}
+
           {/* ① DH制 */}
           <div className="space-y-1.5">
             <div className="text-gray-300 text-xs font-bold">① DH制を選択</div>
@@ -365,10 +420,7 @@ export default function GameControl() {
               <span className="text-[10px] text-gray-500">素早く埋める（任意）:</span>
               <button
                 type="button"
-                onClick={() => {
-                  setLineup('away', getSamplePreset('away', currentDhMode))
-                  setLineup('home', getSamplePreset('home', currentDhMode))
-                }}
+                onClick={() => setPendingSample(true)}
                 className="text-[10px] bg-gray-700 hover:bg-gray-600 text-gray-200 px-2 py-1 rounded border border-gray-600"
                 title="架空のサンプル選手を両チームに投入（既存の打順は上書き）"
               >
@@ -425,6 +477,31 @@ export default function GameControl() {
             </div>
           </div>
 
+          {/* スコアボード「×」表記の後付け調整（試合終了ウィザードで確定した値をここでも付け外し可）。
+              2026-06-09 顧客フィードバック⑥ */}
+          <div className="bg-black/30 border border-red-500/30 rounded-lg p-3 space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={scoreboardCross}
+                onChange={(e) => setScoreboardCross(e.target.checked)}
+                className="w-4 h-4 accent-red-500"
+              />
+              <span className="text-white text-sm font-bold">スコアボードに「×」を表示する</span>
+            </label>
+            <p className="text-gray-300 text-[11px] leading-snug">
+              最終回（{finalInning}回裏）に「×」（得点1以上は「2×」）を表示します。
+              試合終了時に確認した内容です。違っていればここで付け外しできます。
+            </p>
+            <div className="text-[11px] text-gray-400">
+              参考（自動判定）：{homeWon
+                ? `後攻（${endHomeName}）の勝ち → ×を付けるのが一般的`
+                : awayWon
+                  ? `先攻（${endAwayName}）の勝ち → ×なしが一般的`
+                  : '引き分け → ×なしが一般的'}
+            </div>
+          </div>
+
           <div className="flex flex-col gap-2">
             <button
               onClick={() => setGameOver(false)}
@@ -447,6 +524,122 @@ export default function GameControl() {
             >
               ⟲ 完全リセットして新試合
             </button>
+          </div>
+        </div>
+      )}
+
+      <ConfirmModal
+        open={pendingReset !== null}
+        title={pendingReset === 'full' ? '完全リセットして新しい試合を作成' : '新しい試合を作成（同じチームで）'}
+        message={
+          pendingReset === 'full'
+            ? 'チーム名・打順・選手情報がすべて空欄になります。\n（テロップの位置・サイズ設定は保持されます）\nこの操作は取り消せません。'
+            : '● 同じチーム情報・打順・カラー・大会情報は引き継ぎます\n● スコア・カウント・走者・打席・投手履歴・プレーログはリセットされます'
+        }
+        confirmLabel={pendingReset === 'full' ? '完全リセットする' : '新試合を開始'}
+        cancelLabel="やめる"
+        tone="danger"
+        onConfirm={() => {
+          if (pendingReset === 'keep') newGameKeepTeams()
+          else if (pendingReset === 'full') newGame()
+          lastConfirmedCross.current = null // 新試合は×判断をリセット（次の終了は自動判定が初期値）
+          setPendingReset(null)
+        }}
+        onCancel={() => setPendingReset(null)}
+      />
+
+      <ConfirmModal
+        open={pendingSample}
+        title="サンプル選手を投入しますか？"
+        message={'両チームの打順に架空のサンプル選手を入れます。\n現在入力されている打順は上書きされます。'}
+        confirmLabel="はい、投入する"
+        cancelLabel="いいえ"
+        tone="danger"
+        onConfirm={() => {
+          injectSample()
+          setPendingSample(false)
+        }}
+        onCancel={() => setPendingSample(false)}
+      />
+
+      {/* 試合終了ウィザード: 完成形プレビュー → ×トグル → 確定。
+          人がプレビューで確認するまで放送（isGameOver）に確定しない。
+          2026-06-09 顧客フィードバック⑥ */}
+      {endWizardOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setEndWizardOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg bg-gray-800 border border-gray-600 rounded-lg shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div>
+              <h3 className="text-white text-base font-bold leading-snug">試合を終了します</h3>
+              <p className="text-gray-300 text-xs mt-1 leading-relaxed">
+                下のスコアボードが配信に出ます。<strong className="text-white">球場の最終結果と見比べて</strong>、
+                問題なければ「この内容で終了」を押してください。
+              </p>
+            </div>
+
+            {/* 完成形プレビュー（実際の見た目そのまま。芝を模した背景に重ねる） */}
+            <div className="rounded-lg bg-gradient-to-b from-emerald-900/50 to-gray-900 border border-gray-700 p-4 flex justify-center overflow-x-auto">
+              <InningScoreboard preview={{ cross: tentativeCross }} />
+            </div>
+
+            {/* 平易な一言（現在のトグル状態を反映） */}
+            <div className="text-sm leading-relaxed">
+              {tentativeCross ? (
+                <span className="text-amber-200">
+                  最終回（<strong>{finalInning}回裏</strong>）に「<strong>×</strong>」を付けています。
+                  {homeWon ? `（後攻 ${endHomeName} の勝ち）` : ''}
+                </span>
+              ) : (
+                <span className="text-gray-200">「×」は付けていません（通常終了）。</span>
+              )}
+            </div>
+
+            {/* 参考: 自動判定（拘束力なし・人の確認が優先） */}
+            <div className="text-[11px] text-gray-400">
+              参考（自動判定）：{homeWon
+                ? `後攻（${endHomeName}）の勝ち → ×を付けるのが一般的`
+                : awayWon
+                  ? `先攻（${endAwayName}）の勝ち → ×なしが一般的`
+                  : '引き分け → ×なしが一般的'}
+            </div>
+
+            {/* ×トグル（1ボタン。現在状態＋タップで反転） */}
+            <button
+              type="button"
+              onClick={() => setTentativeCross((v) => !v)}
+              className={`w-full px-4 py-3 rounded font-bold text-sm border-2 transition-colors ${
+                tentativeCross
+                  ? 'bg-amber-500/20 border-amber-400 text-amber-200 hover:bg-amber-500/30'
+                  : 'bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600'
+              }`}
+            >
+              {tentativeCross ? '「×」を表示中 — タップで外す' : '「×」なし — タップで付ける'}
+            </button>
+
+            {/* 確定 / キャンセル */}
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => setEndWizardOpen(false)}
+                className="bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2 rounded text-sm font-bold"
+              >
+                やめる（試合に戻る）
+              </button>
+              <button
+                type="button"
+                onClick={confirmEnd}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-bold"
+              >
+                この内容で終了
+              </button>
+            </div>
           </div>
         </div>
       )}

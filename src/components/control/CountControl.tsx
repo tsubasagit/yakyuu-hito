@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
 import SectionTitle from './shared/SectionTitle'
 import SectionLock from './shared/SectionLock'
+import { ConfirmModal } from './shared/Modal'
 
 /**
  * BSO管理パネル（旧カウント＋走者を統合）。
@@ -14,6 +16,7 @@ export default function CountControl() {
   const addStrike = useGameStore((s) => s.addStrike)
   const addOut = useGameStore((s) => s.addOut)
   const resetCount = useGameStore((s) => s.resetCount)
+  const resetBallStrike = useGameStore((s) => s.resetBallStrike)
   const subtractBall = useGameStore((s) => s.subtractBall)
   const subtractStrike = useGameStore((s) => s.subtractStrike)
   const subtractOut = useGameStore((s) => s.subtractOut)
@@ -21,6 +24,17 @@ export default function CountControl() {
   const setRunner = useGameStore((s) => s.setRunner)
   // 試合前（準備中）はBSO・走者操作をロック
   const preGameLocked = useGameStore((s) => !(s.gameStarted ?? false) && !s.isGameOver)
+
+  // ファウル対策: 2ストライク2アウトで S+1 を押すと「3アウト・攻守交代」が起きる。
+  // その瞬間だけ確認を挟む（ファウルを誤ってストライクに数えてチェンジする事故を防ぐ）。
+  // それ以外のS+1（チェンジを伴わない三振）は確認なしでそのまま加算（操作を妨げない）。
+  // （2026-06-02 顧客フィードバック①: 影響の大きいチェンジ時のみガード）
+  const [confirmChange, setConfirmChange] = useState(false)
+  const willChangeOnStrike = count.strikes === 2 && count.outs === 2
+  const handleAddStrike = () => {
+    if (willChangeOnStrike) setConfirmChange(true)
+    else addStrike()
+  }
 
   const bases = [
     { key: 'first' as const, label: '一塁' },
@@ -76,7 +90,7 @@ export default function CountControl() {
               -1
             </button>
             <button
-              onClick={addStrike}
+              onClick={handleAddStrike}
               className="flex-1 bg-yellow-700 hover:bg-yellow-600 text-white px-2 py-2 rounded text-sm font-bold"
             >
               +1
@@ -130,8 +144,15 @@ export default function CountControl() {
         </div>
       </div>
 
-      {/* リセット（カウント＋走者を同時リセット） */}
-      <div className="flex gap-2 pt-2 border-t border-gray-700">
+      {/* リセット（2種類: 打者カウントのみ / すべて） */}
+      <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-700">
+        <button
+          onClick={resetBallStrike}
+          className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-xs font-bold"
+          title="ボール・ストライクのみリセット（アウト・走者は維持）"
+        >
+          打者カウントリセット（B/S）
+        </button>
         <button
           onClick={resetCount}
           className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-xs font-bold"
@@ -141,6 +162,20 @@ export default function CountControl() {
         </button>
       </div>
       </SectionLock>
+
+      <ConfirmModal
+        open={confirmChange}
+        title="3アウト・攻守交代になります"
+        message={'このストライクで3アウト目となり、攻守交代します。\nファウルではありませんか？（2ストライク後のファウルはストライクに数えません）'}
+        confirmLabel="三振でチェンジする"
+        cancelLabel="やめる（ファウル等）"
+        tone="danger"
+        onConfirm={() => {
+          addStrike()
+          setConfirmChange(false)
+        }}
+        onCancel={() => setConfirmChange(false)}
+      />
     </div>
   )
 }
