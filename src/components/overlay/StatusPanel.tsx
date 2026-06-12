@@ -48,7 +48,9 @@ export default function StatusPanel() {
             attacking={currentHalf === 'bottom'}
           />
         </div>
-        <div className="flex flex-col justify-center gap-1.5 px-3 py-2 border-l-2 border-black">
+        {/* BSO枠を不透明＋上位レイヤーにして、ダイヤ下角のはみ出しをこの枠の下へ隠す。
+            （2026-06-12 顧客フィードバック: はみ出した角が手前に見える→BSO枠を上に） */}
+        <div className="relative z-10 flex flex-col justify-center gap-1.5 px-3 py-2 border-l-2 border-black bg-[#0b1220]">
           <BSORow
             label="B"
             count={count.balls}
