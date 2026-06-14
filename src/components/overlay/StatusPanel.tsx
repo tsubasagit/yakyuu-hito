@@ -153,9 +153,9 @@ function Diamond({
   // 空塁=ほぼ黒の暗いソケットにしてコントラストを最大化する。
   // 2塁(上)と1塁・3塁(下)の上下差を大きめに取り、立体的に見やすくする。
   const pts = {
-    second: { x: 66, y: 13 }, // 上
-    third: { x: 14, y: 25 }, // 左（下げて上下差を強調）
-    first: { x: 118, y: 25 }, // 右（下げて上下差を強調）
+    second: { x: 75, y: 13 }, // 上
+    third: { x: 13, y: 25 }, // 左（左右に広げて横長のひし形に）
+    first: { x: 137, y: 25 }, // 右（左右に広げて横長のひし形に）
   }
   const S = 16 // 塁マーカーの一辺（大きめ・視認性優先）
   const Base = ({ p, on }: { p: { x: number; y: number }; on: boolean }) => (
@@ -174,8 +174,8 @@ function Diamond({
   )
   return (
     <svg
-      viewBox="0 0 132 46"
-      width={104}
+      viewBox="0 0 150 46"
+      width={117}
       height={36}
       className="block"
     >
