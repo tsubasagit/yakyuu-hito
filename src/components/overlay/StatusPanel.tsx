@@ -13,7 +13,7 @@ export default function StatusPanel() {
 
   const awayLabel = pickTeamLabel(awayTeam, 'A')
   const homeLabel = pickTeamLabel(homeTeam, 'X')
-  const halfLabel = currentHalf === 'top' ? '表' : '裏'
+  const halfLabel = currentHalf === 'top' ? 'オモテ' : 'ウラ'
 
   return (
     <div
@@ -23,10 +23,23 @@ export default function StatusPanel() {
           上段（イニング表示＋ダイヤ）を縦・横ともに詰めてコンパクト化する。
           （2026-05-31 顧客FB④: 「ここのもう少しつめたい」→ パディング/ダイヤを縮小） */}
       <div className="flex items-stretch border-b-2 border-black">
-        <div className="flex items-center text-white text-sm font-bold tracking-wider px-3 py-0.5 border-r-2 border-black whitespace-nowrap">
-          {currentInning}回{halfLabel}
+        {/* イニング表示: 添付に合わせた右肩斜めカットのタブ。
+            数字を大きく・表裏（オモテ/ウラ）を小さく添える。
+            斜めカットは clip-path で作り、後ろのパネル地が三角に覗くタブ風にする。
+            （2026-06-14 顧客フィードバック: 添付デザインに合わせる） */}
+        <div
+          className="relative flex items-center justify-center gap-1 text-white pl-5 pr-6 py-0 whitespace-nowrap"
+          style={{
+            background: 'linear-gradient(180deg, #39414f 0%, #1a202b 55%, #11161e 100%)',
+            clipPath: 'polygon(0 0, 100% 0, calc(100% - 13px) 100%, 0 100%)',
+          }}
+        >
+          <span className="text-lg font-black leading-none tracking-tight tabular-nums">
+            {currentInning}
+          </span>
+          <span className="text-[10px] font-bold leading-none tracking-wide">{halfLabel}</span>
         </div>
-        <div className="flex items-center justify-center px-2 py-1.5 flex-1">
+        <div className="flex items-center justify-center px-2 py-0 flex-1">
           <Diamond first={runners.first} second={runners.second} third={runners.third} />
         </div>
       </div>
@@ -130,49 +143,45 @@ function Diamond({
   second: boolean
   third: boolean
 }) {
-  // 横長の内野ダイヤ（マルーンの塗り）に、大きな塁マーカー3つ（2塁=上 /
-  // 3塁=左 / 1塁=右）を載せる。本塁マーカーは無し（画像準拠）。
-  // 占有塁=明るい赤で点灯、空塁=暗い赤のソケット。
-  // （2026-06-12 顧客フィードバック: 画像のダイヤに寄せる。塁は3つ・大きく）
+  // 横に広く・縦に低い「平たいひし形」の内野ダイヤ。3塁マーカー（2塁=上 /
+  // 3塁=左 / 1塁=右）を左右対称に配置し、占有塁=明るい赤で点灯、空塁=暗い赤の
+  // ソケット。高さをイニング文字とほぼ同じに抑えるため、横長の扁平ひし形にする。
+  // （2026-06-14 顧客フィードバック: もっと横に広く・縦をイニング文字くらい低く）
+  // 横に広い扁平ダイヤ。塁マーカーを各頂点（2塁=上 / 1塁=右 / 3塁=左）に大きく載せ、
+  // 内野枠線が塁マーカーの中心を通る（枠と塁が一致）。下の頂点=本塁はマーカー無し。
   const pts = {
-    second: { x: 64, y: 14 }, // 上
-    third: { x: 16, y: 30 }, // 左（外側へ）
-    first: { x: 112, y: 30 }, // 右（外側へ）
+    second: { x: 65, y: 11 }, // 上
+    third: { x: 13, y: 17 }, // 左
+    first: { x: 117, y: 17 }, // 右
   }
-  const S = 26 // 塁マーカーの一辺（大きめ）
+  const S = 13 // 塁マーカーの一辺（大きめ）
   const Base = ({ p, on }: { p: { x: number; y: number }; on: boolean }) => (
     <rect
       x={p.x - S / 2}
       y={p.y - S / 2}
       width={S}
       height={S}
-      rx={3}
+      rx={2.5}
       transform={`rotate(45 ${p.x} ${p.y})`}
       fill={on ? '#f23b35' : '#3a0d0d'}
-      stroke={on ? '#ff9a93' : 'rgba(255,255,255,0.25)'}
+      stroke={on ? '#ff9a93' : 'rgba(255,255,255,0.32)'}
       strokeWidth={1.5}
-      style={on ? { filter: 'drop-shadow(0 0 5px rgba(242,59,53,0.95))' } : undefined}
+      style={on ? { filter: 'drop-shadow(0 0 2.5px rgba(242,59,53,0.95))' } : undefined}
     />
   )
-  // 大枠（パネル高さ）は SVG のレイアウト高さ=58 で固定し、伸ばさない。
-  // 本塁=下の頂点だけを枠外(y=68)に描き、overflow を見せて「少し下にかかる」。
-  // はみ出し部分は手前に出さず、後から描画される下段（スコア/BSO）の“裏”へ
-  // 潜り込ませる（position/z-index を付けず自然な重ね順に任せる）。
-  // （2026-06-12 顧客フィードバック: 大枠は変えず、ダイヤだけ下に少しはみ出す／重なりは奥）
   return (
     <svg
-      viewBox="0 0 128 58"
-      width={128}
-      height={58}
-      className="block overflow-visible"
+      viewBox="0 0 130 34"
+      width={100}
+      height={26}
+      className="block"
     >
-      {/* 横長の内野ダイヤ。下の頂点(本塁)のみ枠外へ少しはみ出す。塁マーカーは無し。
-          線で囲んだ内野エリアの塗りは薄い灰色（赤系は目立ちすぎるため）。
-          （2026-06-12 顧客フィードバック: 内野エリアを赤→薄い灰色へ） */}
+      {/* 内野ダイヤの薄い枠（上=2塁 / 右=1塁 / 下=本塁 / 左=3塁の4頂点）。
+          塗りは薄い灰色（赤系は目立ちすぎるため）。 */}
       <polygon
-        points="64,3 124,30 64,68 4,30"
-        fill="rgba(205,211,219,0.16)"
-        stroke="rgba(255,255,255,0.28)"
+        points="65,11 117,17 65,23 13,17"
+        fill="rgba(205,211,219,0.18)"
+        stroke="rgba(255,255,255,0.32)"
         strokeWidth={1.5}
         strokeLinejoin="round"
       />
