@@ -34,10 +34,10 @@ export default function StatusPanel() {
             clipPath: 'polygon(0 0, 100% 0, calc(100% - 13px) 100%, 0 100%)',
           }}
         >
-          <span className="text-lg font-black leading-none tracking-tight tabular-nums">
+          <span className="text-xl font-black leading-none tracking-tight tabular-nums">
             {currentInning}
           </span>
-          <span className="text-[10px] font-bold leading-none tracking-wide">{halfLabel}</span>
+          <span className="text-[11px] font-bold leading-none tracking-wide">{halfLabel}</span>
         </div>
         <div className="flex items-center justify-center px-2 py-0 flex-1">
           <Diamond first={runners.first} second={runners.second} third={runners.third} />
@@ -149,12 +149,14 @@ function Diamond({
   // （2026-06-14 顧客フィードバック: もっと横に広く・縦をイニング文字くらい低く）
   // 横に広い扁平ダイヤ。塁マーカーを各頂点（2塁=上 / 1塁=右 / 3塁=左）に大きく載せ、
   // 内野枠線が塁マーカーの中心を通る（枠と塁が一致）。下の頂点=本塁はマーカー無し。
+  // ランナーの有無を一目で読めるよう、占有塁=ベタ塗りの鮮やかな赤、
+  // 空塁=ほぼ黒の暗いソケットにしてコントラストを最大化する。
   const pts = {
-    second: { x: 65, y: 11 }, // 上
-    third: { x: 13, y: 17 }, // 左
-    first: { x: 117, y: 17 }, // 右
+    second: { x: 66, y: 13 }, // 上
+    third: { x: 14, y: 20 }, // 左
+    first: { x: 118, y: 20 }, // 右
   }
-  const S = 13 // 塁マーカーの一辺（大きめ）
+  const S = 16 // 塁マーカーの一辺（大きめ・視認性優先）
   const Base = ({ p, on }: { p: { x: number; y: number }; on: boolean }) => (
     <rect
       x={p.x - S / 2}
@@ -163,25 +165,25 @@ function Diamond({
       height={S}
       rx={2.5}
       transform={`rotate(45 ${p.x} ${p.y})`}
-      fill={on ? '#f23b35' : '#3a0d0d'}
-      stroke={on ? '#ff9a93' : 'rgba(255,255,255,0.32)'}
-      strokeWidth={1.5}
-      style={on ? { filter: 'drop-shadow(0 0 2.5px rgba(242,59,53,0.95))' } : undefined}
+      fill={on ? '#f5251d' : '#14181d'}
+      stroke={on ? 'rgba(255,150,143,0.9)' : 'rgba(255,255,255,0.22)'}
+      strokeWidth={on ? 1 : 1.25}
+      style={on ? { filter: 'drop-shadow(0 0 1.5px rgba(245,37,29,0.85))' } : undefined}
     />
   )
   return (
     <svg
-      viewBox="0 0 130 34"
-      width={100}
-      height={26}
+      viewBox="0 0 132 40"
+      width={104}
+      height={31}
       className="block"
     >
       {/* 内野ダイヤの薄い枠（上=2塁 / 右=1塁 / 下=本塁 / 左=3塁の4頂点）。
           塗りは薄い灰色（赤系は目立ちすぎるため）。 */}
       <polygon
-        points="65,11 117,17 65,23 13,17"
-        fill="rgba(205,211,219,0.18)"
-        stroke="rgba(255,255,255,0.32)"
+        points="66,13 118,20 66,27 14,20"
+        fill="rgba(205,211,219,0.16)"
+        stroke="rgba(255,255,255,0.28)"
         strokeWidth={1.5}
         strokeLinejoin="round"
       />
