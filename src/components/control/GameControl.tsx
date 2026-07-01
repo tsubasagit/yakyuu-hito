@@ -113,7 +113,13 @@ export default function GameControl() {
   // 試合前の打順・選手 完成度チェック（選択中の DH 制で判定）
   const awayCheck = validateTeamLineup(awayLineup, currentDhMode)
   const homeCheck = validateTeamLineup(homeLineup, currentDhMode)
-  const canStart = awayCheck.complete && homeCheck.complete
+  // フルネームのチーム名は両チーム必須。空欄では試合開始できない。
+  // 省略名は任意（未入力ならフルネーム頭4文字を自動採用＝pickTeamLabel）。
+  // 2026-07-01 顧客FB: チーム名空欄でも開始できてしまう問題
+  const awayNameOk = awayTeam.name.trim().length > 0
+  const homeNameOk = homeTeam.name.trim().length > 0
+  const teamNamesOk = awayNameOk && homeNameOk
+  const canStart = teamNamesOk && awayCheck.complete && homeCheck.complete
   // 両チームの打順が空（完全リセット直後など）。誘導文の出し分けに使う。2026-06-09 QA #2
   const bothLineupsEmpty = awayCheck.filledBatters === 0 && homeCheck.filledBatters === 0
 
@@ -230,18 +236,25 @@ export default function GameControl() {
           const shortValue = isAway ? awayShort : homeShort
           const setName = isAway ? setAwayName : setHomeName
           const setShort = isAway ? setAwayShort : setHomeShort
+          // フルネーム未入力なら赤枠で必須を明示（試合開始の必須項目）
+          const nameEmpty = nameValue.trim().length === 0
           return (
             <div key={team} className="space-y-1.5">
-              <label className="text-gray-400 text-xs">{label}</label>
+              <label className="text-gray-400 text-xs flex items-center gap-1.5">
+                {label}
+                <span className="text-red-400 font-bold">必須</span>
+              </label>
               <input
-                className="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm"
+                className={`w-full bg-gray-700 text-white rounded px-3 py-2 text-sm border ${
+                  nameEmpty ? 'border-red-500/70' : 'border-transparent'
+                }`}
                 placeholder="チーム名（フルネーム）"
                 value={nameValue}
                 onChange={(e) => setName(e.target.value)}
                 onBlur={handleBlur}
               />
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-[10px] whitespace-nowrap shrink-0">省略名（4文字以内）</span>
+                <span className="text-gray-500 text-[10px] whitespace-nowrap shrink-0">省略名（任意・4文字以内）</span>
                 <input
                   className="flex-1 min-w-0 bg-gray-700 text-white rounded px-3 py-1.5 text-sm"
                   placeholder={Array.from(nameValue).slice(0, 4).join('') || '例: 帝都'}
@@ -251,6 +264,9 @@ export default function GameControl() {
                   onBlur={handleBlur}
                 />
               </div>
+              {nameEmpty && (
+                <p className="text-[10px] text-red-400/90">フルネームを入力してください（未入力だと試合開始できません）</p>
+              )}
             </div>
           )
         })}
@@ -473,13 +489,33 @@ export default function GameControl() {
               onClick={startGame}
               disabled={!canStart}
               className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded font-bold text-sm"
-              title={canStart ? 'オーダーを確定して試合開始' : '打順・選手の必須項目をすべて埋めてください'}
+              title={
+                canStart
+                  ? 'オーダーを確定して試合開始'
+                  : !teamNamesOk
+                    ? 'チーム名（フルネーム）を両チーム入力してください'
+                    : '打順・選手の必須項目をすべて埋めてください'
+              }
             >
-              {canStart ? '▶ 試合開始（オーダー確定・ロック）' : '▶ 打順・選手を埋めると開始できます'}
+              {canStart
+                ? '▶ 試合開始（オーダー確定・ロック）'
+                : !teamNamesOk
+                  ? '▶ チーム名を入力すると開始できます'
+                  : '▶ 打順・選手を埋めると開始できます'}
             </button>
             {!canStart && (
               <div className="text-[11px] text-amber-300/90 text-center">
-                未入力の項目があります（上の②を確認してください）
+                {!teamNamesOk ? (
+                  <>
+                    チーム名（フルネーム）が未入力です：
+                    {!awayNameOk && '先攻'}
+                    {!awayNameOk && !homeNameOk && '・'}
+                    {!homeNameOk && '後攻'}
+                    （上の「チーム名」欄）
+                  </>
+                ) : (
+                  '未入力の項目があります（上の②を確認してください）'
+                )}
               </div>
             )}
             <div className="bg-orange-900/20 border border-orange-500/30 rounded p-2 text-[10px] text-orange-200/90 leading-snug">
