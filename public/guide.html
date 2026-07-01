@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>yakyuu OBS設定ガイド — 野球配信スコアボードの始め方【図解5ステップ】</title>
-  <meta name="description" content="OBS Studioで野球ライブ配信にスコアボードを重ねて表示する方法を、スクリーンショットと操作動画付きで解説。カスタムドック＋ブラウザソースの設定を5ステップで完了。初心者でも5分で設定できます。" />
-  <meta name="keywords" content="OBS,野球,スコアボード,オーバーレイ,設定,ブラウザソース,カスタムドック,ライブ配信,YouTube,配信,草野球" />
-  <meta name="author" content="AppTalentHub Inc." />
-  <link rel="canonical" href="https://tsubasagit.github.io/yakyuu-hito/guide.html" />
-  <meta property="og:title" content="yakyuu OBS設定ガイド — 野球配信スコアボードの始め方【図解5ステップ】" />
-  <meta property="og:description" content="OBSで野球配信にスコアボードを表示する方法をスクショ・動画付きで解説。初心者でも5分で完了。" />
+  <title>大学野球テロップ OBS設定ガイド — 大学野球配信スコアボードの始め方【図解5ステップ】</title>
+  <meta name="description" content="OBS Studioで大学野球のライブ配信にスコアボードを重ねて表示する方法を、スクリーンショットと操作動画付きで解説。カスタムドック＋ブラウザソースの設定を5ステップで完了。初心者でも5分で設定できます。" />
+  <meta name="keywords" content="OBS,大学野球,スコアボード,オーバーレイ,設定,ブラウザソース,カスタムドック,ライブ配信,YouTube,配信" />
+  <meta name="author" content="株式会社ひと" />
+  <link rel="canonical" href="https://hito-inc.jp/univ-bso/guide.html" />
+  <meta property="og:title" content="大学野球テロップ OBS設定ガイド — 大学野球配信スコアボードの始め方【図解5ステップ】" />
+  <meta property="og:description" content="OBSで大学野球配信にスコアボードを表示する方法をスクショ・動画付きで解説。初心者でも5分で完了。" />
   <meta property="og:type" content="article" />
-  <meta property="og:url" content="https://tsubasagit.github.io/yakyuu-hito/guide.html" />
-  <meta property="og:site_name" content="yakyuu" />
+  <meta property="og:url" content="https://hito-inc.jp/univ-bso/guide.html" />
+  <meta property="og:site_name" content="大学野球テロップ" />
   <meta property="og:locale" content="ja_JP" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="yakyuu OBS設定ガイド — 野球配信スコアボードの始め方" />
-  <meta name="twitter:description" content="OBSで野球配信にスコアボードを表示する方法をスクショ・動画付きで解説。初心者でも5分。" />
+  <meta name="twitter:title" content="大学野球テロップ OBS設定ガイド — 大学野球配信スコアボードの始め方" />
+  <meta name="twitter:description" content="OBSで大学野球配信にスコアボードを表示する方法をスクショ・動画付きで解説。初心者でも5分。" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -221,7 +221,7 @@
 </head>
 <body>
   <div class="container">
-    <a href="./" class="back-link">&larr; yakyuu トップへ戻る</a>
+    <a href="./" class="back-link">&larr; 大学野球テロップ トップへ戻る</a>
 
     <h1>OBS セットアップガイド</h1>
     <p class="subtitle">
@@ -231,8 +231,8 @@
       <span class="badge" style="background:#a855f7;">約5分で完了</span>
     </p>
     <p style="color:#94a3b8; font-size:0.95rem; margin-bottom:2rem;">
-      OBS Studio で野球のライブ配信にテレビ中継風のスコアボードを重ねて表示するための設定手順です。<br>
-      <strong style="color:#e2e8f0;">YouTube や Twitch で野球配信をしている方</strong>なら、このガイド通りに進めるだけで設定完了します。
+      OBS Studio で大学野球のライブ配信にテレビ中継風のスコアボードを重ねて表示するための設定手順です。<br>
+      <strong style="color:#e2e8f0;">大学野球のオンライン配信を担当する方</strong>なら、このガイド通りに進めるだけで設定完了します。
     </p>
 
     <!-- デモ動画 -->
@@ -265,9 +265,9 @@
     <div class="step">
       <div class="step-header">
         <div class="step-number" style="background:#64748b;">i</div>
-        <h2>yakyuu の構成</h2>
+        <h2>大学野球テロップ の構成</h2>
       </div>
-      <p>yakyuu は2つの画面で構成されています。</p>
+      <p>大学野球テロップ は2つの画面で構成されています。</p>
       <table>
         <tr>
           <th>画面</th>
@@ -302,8 +302,8 @@
       </ol>
       <table>
         <tr><th>項目</th><th>値</th></tr>
-        <tr><td>ドック名</td><td><code>yakyuu</code></td></tr>
-        <tr><td>URL</td><td style="word-break:break-all;"><code>https://tsubasagit.github.io/yakyuu-hito/#/control</code></td></tr>
+        <tr><td>ドック名</td><td><code>大学野球テロップ</code></td></tr>
+        <tr><td>URL</td><td style="word-break:break-all;"><code>https://hito-inc.jp/univ-bso/#/control</code></td></tr>
       </table>
       <figure class="screenshot">
         <img src="images/step1_custom_dock.png" alt="カスタムブラウザドック設定画面" />
@@ -325,12 +325,12 @@
       <ol>
         <li>画面下部の <strong>「ソース」</strong> の <strong>「+」</strong> ボタンをクリック</li>
         <li><strong>「ブラウザ」</strong> を選択</li>
-        <li>名前を入力（例: <code>yakyuu overlay</code>）して「OK」</li>
+        <li>名前を入力（例: <code>大学野球テロップ overlay</code>）して「OK」</li>
         <li>プロパティ画面で以下を設定</li>
       </ol>
       <table>
         <tr><th>項目</th><th>値</th></tr>
-        <tr><td>URL</td><td style="word-break:break-all;"><code>https://tsubasagit.github.io/yakyuu-hito/#/overlay</code></td></tr>
+        <tr><td>URL</td><td style="word-break:break-all;"><code>https://hito-inc.jp/univ-bso/#/overlay</code></td></tr>
         <tr><td>幅</td><td><code>1920</code></td></tr>
         <tr><td>高さ</td><td><code>1080</code></td></tr>
         <tr><td>カスタムCSS</td><td><strong>中身を全て削除して空欄にする</strong></td></tr>
@@ -388,24 +388,30 @@
         <div class="step-number">5</div>
         <h2>パネルの位置・サイズを調整</h2>
       </div>
-      <p>OBS のブラウザソース内ではパネルをドラッグできないため、コントロールパネルから数値で調整します。</p>
+      <p>OBS のブラウザソース内ではパネルをドラッグできないため、コントロールパネル上部の <strong>「🎬 配信画面に出すパネルを選ぶ」</strong> から、パネル毎に ON/OFF・サイズ・位置（X/Y）を数値で調整します。</p>
       <ol>
-        <li>カスタムドックのコントロール画面を下にスクロール</li>
-        <li><strong>「パネルサイズ調整」</strong> セクションを探す</li>
-        <li><strong>「全体」</strong> スライダーで全パネルの拡大率を変更</li>
-        <li><strong>「個別パネル設定」</strong> を展開して、各パネルの X/Y 座標と倍率を調整</li>
+        <li><strong>「全体スケール」</strong> スライダーで全パネルの拡大率をまとめて変更（基準は <code>1.0x</code>）</li>
+        <li>各パネルカードの <strong>「サイズ」</strong> スライダーで個別の倍率を調整</li>
+        <li>各パネルカードの <strong>「位置」</strong> の <strong>X / Y</strong> 欄に数値を入力して配置（1920×1080 基準の座標）</li>
+        <li>バッター・ピッチャーは打順表の <strong>「打席」「登板」</strong> ボタンで表示を切り替えます（カード自体に ON/OFF はありません）</li>
       </ol>
+      <p style="margin-top:1rem;"><strong style="color:#f8fafc;">おすすめ配置（テロップごとの推奨 X/Y・サイズ）</strong></p>
       <table>
-        <tr><th>パネル</th><th>デフォルト位置</th><th>説明</th></tr>
-        <tr><td>スコアボード</td><td>X:24 Y:24</td><td>BSO・走者・球数</td></tr>
-        <tr><td>タイマー</td><td>X:24 Y:160</td><td>試合経過時間</td></tr>
-        <tr><td>打順カード</td><td>X:1420 Y:24</td><td>両チーム打順</td></tr>
-        <tr><td>選手情報</td><td>X:24 Y:1020</td><td>打者・投手情報</td></tr>
-        <tr><td>経過ログ</td><td>X:1560 Y:800</td><td>プレーバイプレー</td></tr>
-        <tr><td>マスコット</td><td>X:1740 Y:900</td><td>チームマスコット</td></tr>
+        <tr><th>パネル</th><th>おすすめ表示</th><th>サイズ</th><th>X</th><th>Y</th></tr>
+        <tr><td>ミニスコア</td><td>ON</td><td>1.6x</td><td>40</td><td>40</td></tr>
+        <tr><td>スタメン</td><td>ON</td><td>1.6x</td><td>40</td><td>200</td></tr>
+        <tr><td>スコアボード</td><td>ON</td><td>2.3x</td><td>500</td><td>800</td></tr>
+        <tr><td>BSOパネル</td><td>ON</td><td>1.6x</td><td>1500</td><td>830</td></tr>
+        <tr><td>バッター</td><td>打順表で表示</td><td>1.5x</td><td>600</td><td>850</td></tr>
+        <tr><td>ピッチャー</td><td>打順表で表示</td><td>1.5x</td><td>600</td><td>850</td></tr>
+        <tr><td>大会名</td><td>必要時のみ ON</td><td>1.5x</td><td>550</td><td>350</td></tr>
+        <tr><td>大型スコア</td><td>必要時のみ ON</td><td>0.9x</td><td>550</td><td>800</td></tr>
       </table>
       <div class="tip">
-        「全リセット」ボタンで全パネルをデフォルト位置に戻せます。
+        スタメンの表示は <strong>「スタメン表示モード」</strong> で切替できます。通常は <strong>「自動（攻撃中）」</strong> がおすすめです。
+      </div>
+      <div class="tip">
+        全体スケール横の <strong>「位置リセット」</strong> ボタンで、全パネルの位置・サイズを既定値に戻せます。
       </div>
     </div>
 
@@ -435,7 +441,7 @@
         </tr>
         <tr>
           <td>パネルの位置を変えたい</td>
-          <td>コントロールパネル下部の「パネルサイズ調整」→「個別パネル設定」から X/Y/倍率を変更</td>
+          <td>コントロールパネル上部の「🎬 配信画面に出すパネルを選ぶ」で、各パネルの X/Y・サイズを変更</td>
         </tr>
       </table>
     </div>
@@ -443,36 +449,28 @@
     <!-- 問い合わせ CTA -->
     <div class="step" style="border-color:#538bb0; background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
       <div class="step-header">
-        <h2 style="color:#538bb0;">カスタマイズ・導入サポート</h2>
+        <h2 style="color:#538bb0;">お問い合わせ</h2>
       </div>
-      <p style="margin-bottom:0.8rem;">
-        「自チームのロゴを入れたい」「スコア入力を自動化したい」「配信画面全体をデザインしてほしい」など、
-        カスタマイズや導入のご相談はお気軽にどうぞ。
+      <p style="margin-bottom:1rem;">
+        設定がうまくいかないときや、操作で分からないことがあれば、下記からお問い合わせください。
       </p>
-      <ul style="margin-bottom:1rem; padding-left:1.2rem;">
-        <li>チームロゴ・カラーのカスタマイズ</li>
-        <li>配信画面デザインの一括制作</li>
-        <li>OBS セットアップの代行サポート</li>
-        <li>スコア入力の自動化（API連携）</li>
-      </ul>
-      <a href="https://share-na2.hsforms.com/2T1pQ6j2sQzajdd3AIDeWqgcy93d?utm_source=https://tsubasagit.github.io/yakyuu-hito/guide.html"
+      <a href="https://hito-inc.jp/contact"
          target="_blank" rel="noopener noreferrer"
          style="display:inline-block; background:#538bb0; color:#fff; font-weight:bold; padding:0.75rem 2rem; border-radius:8px; text-decoration:none; font-size:0.95rem; transition:background 0.2s;"
          onmouseover="this.style.background='#3d6f94'" onmouseout="this.style.background='#538bb0'">
         お問い合わせはこちら
       </a>
-      <p style="color:#64748b; font-size:0.75rem; margin-top:0.5rem;">AppTalentHub Inc. が開発・サポートしています</p>
+      <p style="color:#64748b; font-size:0.75rem; margin-top:0.5rem;">株式会社ひと</p>
     </div>
 
     <footer>
-      <p>yakyuu — 野球中継スコアボードオーバーレイ</p>
+      <p>大学野球オンライン配信オーバーレイ</p>
       <p>
-        <a href="https://github.com/tsubasagit/yakyuu">GitHub</a> |
         <a href="./#/control">コントロール</a> |
         <a href="./#/overlay">オーバーレイ</a> |
-        <a href="https://apptalenthub.co.jp" target="_blank" rel="noopener noreferrer">AppTalentHub</a>
+        <a href="https://hito-inc.jp/" target="_blank" rel="noopener noreferrer">株式会社ひと</a>
       </p>
-      <p>&copy; AppTalentHub Inc.</p>
+      <p>&copy; 株式会社ひと</p>
     </footer>
   </div>
 </body>

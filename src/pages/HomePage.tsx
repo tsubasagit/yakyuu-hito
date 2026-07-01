@@ -7,7 +7,6 @@ import {
   Download,
   ExternalLink,
   FileSpreadsheet,
-  Github,
   ListOrdered,
   MailQuestion,
   Maximize2,
@@ -27,7 +26,6 @@ import { LINEUP_CSV_SAMPLE } from '../lib/csvImport'
 
 const HITO_LOGO = 'https://hito-inc.jp/wp-content/uploads/2023/10/header_title_20231020x.png'
 const HITO_SITE = 'https://hito-inc.jp/'
-const REPO_URL = 'https://github.com/tsubasagit/yakyuu-hito'
 
 /** ダウンロード用サンプルCSVの静的ファイルURL（コントロール画面と共通） */
 const SAMPLE_CSV_URL = `${import.meta.env.BASE_URL}lineup_sample.csv`
@@ -364,7 +362,7 @@ export default function HomePage() {
                 </>
               }
               items={[
-                { label: 'ドック名', value: 'yakyuu-hito' },
+                { label: 'ドック名', value: '大学野球テロップ' },
                 { label: 'URL', value: `${baseUrl}#/control` },
               ]}
             />
@@ -448,17 +446,7 @@ export default function HomePage() {
           </p>
           <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
             <a
-              href={REPO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-[#538bb0] transition-colors"
-            >
-              <Github className="w-3.5 h-3.5" />
-              GitHub
-            </a>
-            <span className="text-slate-300">|</span>
-            <a
-              href={`${REPO_URL}/issues/new`}
+              href="https://hito-inc.jp/contact"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[#538bb0] transition-colors"
