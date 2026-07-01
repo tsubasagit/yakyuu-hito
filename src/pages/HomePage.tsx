@@ -59,7 +59,7 @@ export default function HomePage() {
             <img src={HITO_LOGO} alt="株式会社ひと" className="h-7 w-auto" />
           </a>
           <span className="text-slate-500 text-xs tracking-widest">
-            v0.1
+            v1.0
           </span>
         </div>
 
