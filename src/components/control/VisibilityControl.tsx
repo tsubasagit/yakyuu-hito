@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useGameStore } from '../../store/useGameStore'
 import type { LineupDisplayMode, Visibility, OverlayPosition, ElementId } from '../../types'
 import { DEFAULT_ELEMENT_POSITIONS } from '../../types'
@@ -134,6 +134,11 @@ export default function VisibilityControl() {
   const resetOverlayPositions = useGameStore((s) => s.resetOverlayPositions)
   const lineupOn = visibility?.lineup ?? false
 
+  // 各パネルの「サイズ・位置」欄の開閉。初回セットアップ以降はほぼ触らないため、
+  // 既定は閉じてカードをコンパクトにし、必要なときだけまとめて開く。
+  // （2026-07-01 顧客フィードバック⑦: サイズ・位置はトグルで開閉できるように）
+  const [sizeEditOpen, setSizeEditOpen] = useState(false)
+
   const updatePanelField = useCallback(
     (id: string, field: keyof OverlayPosition, value: number) => {
       setOverlayPosition(id, { [field]: value })
@@ -147,8 +152,23 @@ export default function VisibilityControl() {
         <div className="text-sm text-white font-bold tracking-tight">
           🎬 配信画面に出すパネルを選ぶ
         </div>
-        <div className="text-[10px] text-gray-400">
-          ON/OFF・サイズ・位置をパネル毎に操作 ／ ⓘ「編集: ○○」をクリックすると編集場所へ移動
+        <div className="flex items-center gap-2">
+          <div className="text-[10px] text-gray-400">
+            ON/OFF をパネル毎に操作 ／ ⓘ「編集: ○○」をクリックすると編集場所へ移動
+          </div>
+          <button
+            type="button"
+            onClick={() => setSizeEditOpen((v) => !v)}
+            className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold border transition-colors ${
+              sizeEditOpen
+                ? 'bg-accent/20 border-accent text-white'
+                : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+            }`}
+            title="各パネルのサイズ・位置の入力欄をまとめて開閉します（初期設定のときだけ開けばOK）"
+          >
+            <span>{sizeEditOpen ? '▼' : '▶'}</span>
+            サイズ・位置を{sizeEditOpen ? '隠す' : '調整'}
+          </button>
         </div>
       </div>
 
@@ -193,6 +213,7 @@ export default function VisibilityControl() {
             position={overlayPositions?.[ELEMENT_TO_TOGGLE_REVERSE[meta.id] ?? (meta.id as ElementId)]}
             defaultPos={DEFAULT_ELEMENT_POSITIONS[meta.id as ElementId]}
             updateField={updatePanelField}
+            sizeEditOpen={sizeEditOpen}
           />
         ))}
       </div>
@@ -252,6 +273,7 @@ function PanelCard({
   position,
   defaultPos,
   updateField,
+  sizeEditOpen,
 }: {
   meta: ToggleMeta
   on: boolean
@@ -259,6 +281,7 @@ function PanelCard({
   position: OverlayPosition | undefined
   defaultPos: OverlayPosition | undefined
   updateField: (id: string, field: keyof OverlayPosition, value: number) => void
+  sizeEditOpen: boolean
 }) {
   const elementId = ELEMENT_TO_TOGGLE_REVERSE[meta.id] ?? (meta.id as ElementId)
   const x = position?.x ?? defaultPos?.x ?? 0
@@ -337,7 +360,9 @@ function PanelCard({
         ))}
       </div>
 
-      {/* 下半分: サイズ + 位置（常時表示・コンパクト） */}
+      {/* 下半分: サイズ + 位置。初期設定以降は触らないため、
+          「サイズ・位置を調整」トグルが ON のときだけ表示する（顧客フィードバック⑦）。 */}
+      {sizeEditOpen && (
       <div className="border-t border-gray-700/70 px-3 py-2 space-y-1.5 bg-gray-900/30">
         <div className="flex items-center gap-1.5">
           <span className="text-gray-400 text-[10px] font-bold w-10 shrink-0">サイズ</span>
@@ -376,6 +401,7 @@ function PanelCard({
           />
         </div>
       </div>
+      )}
     </div>
   )
 }

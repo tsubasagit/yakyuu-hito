@@ -133,22 +133,32 @@ export default function GameControl() {
     }
   }
 
-  // ローカル state（スムーズな入力用）
+  // ローカル state（スムーズな入力用）。
+  // 2026-07-01 顧客フィードバック⑤: チーム名は「フルネーム」と「省略名（4文字以内）」を分離。
+  //   - フルネーム（name）: 大会名ヘッダー・打順パネルに表示
+  //   - 省略名（shortName）: ミニスコア/BSOパネル/イニングスコアボード/大型スコア等の狭い枠に表示
   const [awayName, setAwayName] = useState(awayTeam.name)
   const [homeName, setHomeName] = useState(homeTeam.name)
+  const [awayShort, setAwayShort] = useState(awayTeam.shortName)
+  const [homeShort, setHomeShort] = useState(homeTeam.shortName)
   const [awayColor, setAwayColor] = useState(awayTeam.color)
   const [homeColor, setHomeColor] = useState(homeTeam.color)
 
   // ストア側が変わったらローカル state を追従（IDB復元・newGame 等）
   useEffect(() => { setAwayName(awayTeam.name) }, [awayTeam.name])
   useEffect(() => { setHomeName(homeTeam.name) }, [homeTeam.name])
+  useEffect(() => { setAwayShort(awayTeam.shortName) }, [awayTeam.shortName])
+  useEffect(() => { setHomeShort(homeTeam.shortName) }, [homeTeam.shortName])
   useEffect(() => { setAwayColor(awayTeam.color) }, [awayTeam.color])
   useEffect(() => { setHomeColor(homeTeam.color) }, [homeTeam.color])
 
-  /** ローカル state → ストアに反映（name を shortName にも使用） */
+  /** 省略名は最大4文字に丸める（全角/絵文字はサロゲート単位で1文字扱い） */
+  const clampShort = (v: string) => Array.from(v).slice(0, 4).join('')
+
+  /** ローカル state → ストアに反映（フルネーム + 省略名を別々に保存） */
   const applyTeams = () => {
-    setTeamName('away', awayName, awayName)
-    setTeamName('home', homeName, homeName)
+    setTeamName('away', awayName, clampShort(awayShort))
+    setTeamName('home', homeName, clampShort(homeShort))
     setTeamColor('away', awayColor)
     setTeamColor('home', homeColor)
   }
@@ -160,11 +170,11 @@ export default function GameControl() {
   // 入力変更 500ms 後にストアへ自動反映する
   useEffect(() => {
     const timer = setTimeout(() => {
-      setTeamName('away', awayName, awayName)
-      setTeamName('home', homeName, homeName)
+      setTeamName('away', awayName, clampShort(awayShort))
+      setTeamName('home', homeName, clampShort(homeShort))
     }, 500)
     return () => clearTimeout(timer)
-  }, [awayName, homeName, setTeamName])
+  }, [awayName, homeName, awayShort, homeShort, setTeamName])
 
   const handleNewGameKeepTeams = () => setPendingReset('keep')
   const handleNewGameFullReset = () => setPendingReset('full')
@@ -208,27 +218,42 @@ export default function GameControl() {
         )}
       </div>
 
+      {/* チーム名: フルネーム + 省略名（4文字以内）を分けて入力。
+          フルネーム=大会名/打順表示、省略名=ミニスコア等の狭い枠表示。
+          省略名が空のときはフルネームを4文字に丸めた表示に自動フォールバックする。
+          2026-07-01 顧客フィードバック⑤⑥ */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-gray-400 text-xs">アウェイ（先攻）</label>
-          <input
-            className="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm"
-            placeholder="チーム名"
-            value={awayName}
-            onChange={(e) => setAwayName(e.target.value)}
-            onBlur={handleBlur}
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-gray-400 text-xs">ホーム（後攻）</label>
-          <input
-            className="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm"
-            placeholder="チーム名"
-            value={homeName}
-            onChange={(e) => setHomeName(e.target.value)}
-            onBlur={handleBlur}
-          />
-        </div>
+        {(['away', 'home'] as const).map((team) => {
+          const isAway = team === 'away'
+          const label = isAway ? 'アウェイ（先攻）' : 'ホーム（後攻）'
+          const nameValue = isAway ? awayName : homeName
+          const shortValue = isAway ? awayShort : homeShort
+          const setName = isAway ? setAwayName : setHomeName
+          const setShort = isAway ? setAwayShort : setHomeShort
+          return (
+            <div key={team} className="space-y-1.5">
+              <label className="text-gray-400 text-xs">{label}</label>
+              <input
+                className="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm"
+                placeholder="チーム名（フルネーム）"
+                value={nameValue}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={handleBlur}
+              />
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500 text-[10px] whitespace-nowrap shrink-0">省略名（4文字以内）</span>
+                <input
+                  className="flex-1 min-w-0 bg-gray-700 text-white rounded px-3 py-1.5 text-sm"
+                  placeholder={Array.from(nameValue).slice(0, 4).join('') || '例: 帝都'}
+                  maxLength={8}
+                  value={shortValue}
+                  onChange={(e) => setShort(clampShort(e.target.value))}
+                  onBlur={handleBlur}
+                />
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       <div className="flex gap-2 flex-wrap items-center">
@@ -533,7 +558,7 @@ export default function GameControl() {
         title={pendingReset === 'full' ? '完全リセットして新しい試合を作成' : '新しい試合を作成（同じチームで）'}
         message={
           pendingReset === 'full'
-            ? 'チーム名・打順・選手情報がすべて空欄になります。\n（テロップの位置・サイズ設定は保持されます）\nこの操作は取り消せません。'
+            ? 'チーム名・打順・選手情報がすべて空欄になります。\n（大会情報＝大会名・副題・会場・日付、テロップの位置・サイズ設定は保持されます）\nこの操作は取り消せません。'
             : '● 同じチーム情報・打順・カラー・大会情報は引き継ぎます\n● スコア・カウント・走者・打席・投手履歴・プレーログはリセットされます'
         }
         confirmLabel={pendingReset === 'full' ? '完全リセットする' : '新試合を開始'}

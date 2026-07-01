@@ -650,6 +650,10 @@ export const useGameStore = create<GameStore>()(
           pitcher: { ...initialPlayerInfo },
           overlayPositions: s.overlayPositions,
           overlayScale: s.overlayScale,
+          // 大会情報（大会名・副題・会場・日付）は一日を通して変わらないため、
+          // 完全リセットでも引き継ぐ。次試合で毎回打ち直す手間を省く。
+          // （2026-07-01 顧客フィードバック③: リセットしても大会名等はそのまま残す）
+          tournament: s.tournament,
         })),
 
       newGameKeepTeams: () =>

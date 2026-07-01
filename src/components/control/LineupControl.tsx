@@ -236,9 +236,6 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
   const setLineupPlayer = useGameStore((s) => s.setLineupPlayer)
   const setLineup = useGameStore((s) => s.setLineup)
   const selectBatter = useGameStore((s) => s.selectBatter)
-  const nextBatter = useGameStore((s) => s.nextBatter)
-  const prevBatter = useGameStore((s) => s.prevBatter)
-  const setLineupDisplayTeam = useGameStore((s) => s.setLineupDisplayTeam)
   // 打者/投手テロップの表示元チーム（完全手動・攻守独立）。「打席」「登板」ボタンで切替。
   const batterDisplayTeam = useGameStore((s) => s.batterDisplayTeam ?? 'away')
   const pitcherDisplayTeam = useGameStore((s) => s.pitcherDisplayTeam ?? 'home')
@@ -327,22 +324,8 @@ function TeamLineupPanel({ side }: { side: 'away' | 'home' }) {
             <span className="bg-gray-700 text-gray-300 text-xs font-bold px-2 py-0.5 rounded-full">🛡 守備中</span>
           )}
         </div>
-        {isAttacking && (
-          <div className="flex gap-1">
-            <button
-              onClick={() => { setLineupDisplayTeam(side); prevBatter() }}
-              className="bg-gray-600 hover:bg-gray-500 text-white px-2 py-1.5 rounded text-xs font-bold"
-            >
-              ← 前の打者
-            </button>
-            <button
-              onClick={() => { setLineupDisplayTeam(side); nextBatter() }}
-              className="bg-accent hover:bg-accent/80 text-white px-3 py-1.5 rounded text-xs font-bold"
-            >
-              次の打者 →
-            </button>
-          </div>
-        )}
+        {/* 「← 前の打者 / 次の打者 →」ボタンは廃止。打者は各打順行の「打席」ボタンで
+            直接選んで表示する運用に一本化する（2026-07-01 顧客フィードバック④）。 */}
       </div>
 
       {/* 試合中ロック中のお知らせバナー */}

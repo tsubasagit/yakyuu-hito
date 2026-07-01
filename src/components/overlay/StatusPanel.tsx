@@ -161,31 +161,47 @@ function Diamond({
   //   ひし形を全部枠の中に収める）
   // 各塁の間隔を気持ち広げる（中心間で約2単位≒実機約1.8px）。枠内余白は
   // 上下左右とも約1.4を確保（2026-06-15 顧客フィードバック: 赤ベース間を1〜2px開ける）
-  const pts = {
-    second: { x: 40, y: 17 }, // 上中央
-    third: { x: 17, y: 33 }, // 左
-    first: { x: 63, y: 33 }, // 右
-  }
   const S = 22 // 塁マーカーの一辺（大きめの正方形＝きれいなひし形）
+  // 各塁は45°回転の正方形なので辺の傾きは常に±1。隣り合う塁の中心を「45°線上」
+  // （横の差＝縦の差＝中心間隔 k）に置くと、辺が同じ角度のまま揃う。
+  //   k = d（半対角）→ 辺どうしが接して一本線／k = d + gap/√2 → 同じ45°線上のまま
+  //   各塁の頂点間に gap ぶんの均等な余白が空く（中心はずらさない）。
+  // （2026-07-01 顧客FB: 直線に揃えたうえで各四角に少し余白を → 中心を45°線上に保ち外へ広げる）
+  const d = (S / 2) * Math.SQRT2 // 半対角 ≈ 15.56
+  const gap = 4 // 塁どうしの余白（頂点間・viewBox単位）。0で接する。大きいほど広い
+  const k = d + gap / Math.SQRT2 // 中心間隔（横=縦）。45°線上を保ったまま外側へ広げる
+  const cx = 40 // 横中央
+  const y2 = 17.8 // 2塁（上中央）の中心Y。上下端に均等な余白が残る高さ
+  const pts = {
+    second: { x: cx, y: y2 }, // 上中央
+    third: { x: cx - k, y: y2 + k }, // 左下（2塁から45°）
+    first: { x: cx + k, y: y2 + k }, // 右下（2塁から45°）
+  }
+  // 白い外枠を全塁で共通（色・太さ）にして「白い線」を揃える。
+  // 空塁でもはっきり太い白枠でひし形が読めるので、走者ゼロでも1塁/3塁が判別できる。
+  // （2026-07-01 顧客フィードバック①②: 白線を揃える・枠線を太く・空塁の視認性向上）
+  const STROKE = 'rgba(255,255,255,0.92)'
+  const STROKE_W = 2.2
   const Base = ({ p, on }: { p: { x: number; y: number }; on: boolean }) => (
     <rect
       x={p.x - S / 2}
       y={p.y - S / 2}
       width={S}
       height={S}
-      rx={2.5}
+      rx={2}
       transform={`rotate(45 ${p.x} ${p.y})`}
-      fill={on ? '#f5251d' : '#14181d'}
-      stroke={on ? 'rgba(255,150,143,0.9)' : 'rgba(255,255,255,0.22)'}
-      strokeWidth={on ? 1 : 1.25}
+      fill={on ? '#f5251d' : '#12161c'}
+      stroke={STROKE}
+      strokeWidth={STROKE_W}
+      strokeLinejoin="round"
       style={on ? { filter: 'drop-shadow(0 0 1.5px rgba(245,37,29,0.85))' } : undefined}
     />
   )
   return (
     <svg
-      viewBox="0 0 80 50"
+      viewBox="0 0 80 54"
       width={72}
-      height={45}
+      height={49}
       className="block"
     >
       <Base p={pts.third} on={third} />
