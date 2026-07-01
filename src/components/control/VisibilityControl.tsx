@@ -152,23 +152,8 @@ export default function VisibilityControl() {
         <div className="text-sm text-white font-bold tracking-tight">
           🎬 配信画面に出すパネルを選ぶ
         </div>
-        <div className="flex items-center gap-2">
-          <div className="text-[10px] text-gray-400">
-            ON/OFF をパネル毎に操作 ／ ⓘ「編集: ○○」をクリックすると編集場所へ移動
-          </div>
-          <button
-            type="button"
-            onClick={() => setSizeEditOpen((v) => !v)}
-            className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold border transition-colors ${
-              sizeEditOpen
-                ? 'bg-accent/20 border-accent text-white'
-                : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
-            }`}
-            title="各パネルのサイズ・位置の入力欄をまとめて開閉します（初期設定のときだけ開けばOK）"
-          >
-            <span>{sizeEditOpen ? '▼' : '▶'}</span>
-            サイズ・位置を{sizeEditOpen ? '隠す' : '調整'}
-          </button>
+        <div className="text-[10px] text-gray-400">
+          ON/OFF をパネル毎に操作 ／ ⓘ「編集: ○○」をクリックすると編集場所へ移動
         </div>
       </div>
 
@@ -201,6 +186,28 @@ export default function VisibilityControl() {
           位置リセット
         </button>
       </div>
+
+      {/* サイズ・位置の一括開閉バー。パネル一覧の直上に全幅で置き、見つけやすくする。
+          初期設定以降はほぼ触らないため既定は閉じ、必要なときだけ開く。
+          （2026-07-01 顧客FB: ヘッダー右上は分かりにくい→一覧のすぐ上へ移動） */}
+      <button
+        type="button"
+        onClick={() => setSizeEditOpen((v) => !v)}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded border transition-colors ${
+          sizeEditOpen
+            ? 'bg-accent/15 border-accent text-white'
+            : 'bg-gray-700/70 border-gray-600 text-gray-200 hover:bg-gray-700'
+        }`}
+        title="各パネルのサイズ・位置の入力欄をまとめて開閉します（初期設定のときだけ開けばOK）"
+      >
+        <span className="flex items-center gap-2 text-xs font-bold">
+          <span className="text-sm leading-none">{sizeEditOpen ? '▼' : '▶'}</span>
+          各パネルのサイズ・位置を{sizeEditOpen ? '隠す' : '調整'}
+        </span>
+        <span className="text-[10px] text-gray-400 font-normal">
+          {sizeEditOpen ? '調整欄を表示中' : '通常は閉じたままでOK（初期設定時のみ開く）'}
+        </span>
+      </button>
 
       {/* 統合カード（ON/OFF + サイズ + 位置） */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
