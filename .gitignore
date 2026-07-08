@@ -31,3 +31,10 @@ error/
 
 # Claude Code local settings
 .claude/
+
+# Credentials (plaintext server password — never commit)
+hito-xserverpass.txt
+*xserverpass*.txt
+
+# 大学野球配信プラットフォーム（gitignore対象物の集約先・ローカル専用）
+大学野球配信プラットフォーム/

@@ -154,17 +154,22 @@ export interface Visibility {
   ticker: boolean
 }
 
-/** モックアップ準拠の要素デフォルト座標（1920x1080基準） */
+/** 要素デフォルト座標・サイズ（1920x1080基準）。
+ *  2026-06-17 株式会社ひと指定の「おすすめ配置」を初期値として採用。
+ *  per-panel の scale は overlayPositions[id].scale からのみ反映される
+ *  （OverlayPanel/PanelCard とも未設定時は 1.0 にフォールバック）ため、
+ *  ここと initialGameState.overlayPositions の両方に scale を持たせる。
+ *  これにより「初回起動」「位置リセット」のどちらでも推奨配置が再現される。 */
 export const DEFAULT_ELEMENT_POSITIONS: Record<ElementId, OverlayPosition> = {
-  miniScore:        { x: 40,   y: 40   },
+  miniScore:        { x: 40,   y: 40,  scale: 1.6 },
   pinchHitter:      { x: 1100, y: 40   },
-  lineup:           { x: 40,   y: 140  },
-  tournamentHeader: { x: 820,  y: 280  },
-  bigScore:         { x: 820,  y: 420  },
-  inningScoreboard: { x: 40,   y: 800  },
-  statusPanel:      { x: 1600, y: 830  },
-  currentBatter:    { x: 700,  y: 920  },
-  currentPitcher:   { x: 700,  y: 800  },
+  lineup:           { x: 40,   y: 200, scale: 1.6 },
+  tournamentHeader: { x: 550,  y: 350, scale: 1.5 },
+  bigScore:         { x: 550,  y: 800, scale: 0.9 },
+  inningScoreboard: { x: 500,  y: 800, scale: 2.3 },
+  statusPanel:      { x: 1500, y: 830, scale: 1.6 },
+  currentBatter:    { x: 600,  y: 850, scale: 1.5 },
+  currentPitcher:   { x: 600,  y: 850, scale: 1.5 },
   // テロップは baseScale=2 で高さ約2倍になったため、下端が画面外(>1080)に隠れないよう
   // デフォルトYを上げる（下端が約1060pxに収まる）。2026-06-09 顧客フィードバック
   ticker:           { x: 40,   y: 980  },
@@ -338,7 +343,9 @@ export const initialGameState: GameState = {
   mascotImages: {},
   autoChangeEffect: true,
   showWaitingScreen: false,
-  overlayPositions: { ...DEFAULT_OVERLAY_POSITIONS },
+  // 初期配置は「おすすめ配置」（DEFAULT_ELEMENT_POSITIONS）を ElementId キーで採用。
+  // 旧 DEFAULT_OVERLAY_POSITIONS は別キー体系（scoreboard/playLog 等・現行未使用）のため使わない。
+  overlayPositions: { ...DEFAULT_ELEMENT_POSITIONS },
   overlayScale: 1,
   lineupDisplayTeam: 'away',
   batterDisplayTeam: 'away',
