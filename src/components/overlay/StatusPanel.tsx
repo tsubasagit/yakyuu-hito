@@ -1,6 +1,22 @@
 import { useGameStore } from '../../store/useGameStore'
 import { pickTeamLabel } from '../../lib/teamLabel'
 
+/** チーム名セルの自動縮小フォント（省略名は最大5文字想定）。 */
+function labelFontSize(len: number): number {
+  return len >= 4 ? 13 : len === 3 ? 15 : len === 2 ? 17 : 20
+}
+
+/** 左右チームのうち長い方の省略名に合わせた共通セル幅。
+ *  省略名の文字数が左右で違っても、両行のスコア（0）の白枠が縦一直線に揃うよう、
+ *  チーム名セルの幅を左右で統一する（各行が中身に応じて別々に伸びるのを防ぐ）。 */
+function teamLabelCellWidth(a: string, b: string): number {
+  const need = (s: string) => {
+    const len = Array.from(s).length
+    return Math.ceil(len * labelFontSize(len) * 1.06) + 12 // 文字幅＋paddingInline(6×2)
+  }
+  return Math.max(64, need(a), need(b))
+}
+
 export default function StatusPanel() {
   const awayTeam = useGameStore((s) => s.awayTeam)
   const homeTeam = useGameStore((s) => s.homeTeam)
@@ -14,6 +30,8 @@ export default function StatusPanel() {
   const awayLabel = pickTeamLabel(awayTeam, 'A')
   const homeLabel = pickTeamLabel(homeTeam, 'X')
   const halfLabel = currentHalf === 'top' ? 'オモテ' : 'ウラ'
+  // 両行のチーム名セル幅を統一 → スコア（0）の白枠が縦一直線に揃う
+  const labelCellWidth = teamLabelCellWidth(awayLabel, homeLabel)
 
   return (
     <div
@@ -52,6 +70,7 @@ export default function StatusPanel() {
             color={awayTeam.color}
             score={awayTotal}
             attacking={currentHalf === 'top'}
+            cellWidth={labelCellWidth}
             bottomBorder
           />
           <ScoreRow
@@ -59,6 +78,7 @@ export default function StatusPanel() {
             color={homeTeam.color}
             score={homeTotal}
             attacking={currentHalf === 'bottom'}
+            cellWidth={labelCellWidth}
           />
         </div>
         {/* BSO枠を不透明＋上位レイヤーにして、ダイヤ下角のはみ出しをこの枠の下へ隠す。
@@ -93,17 +113,19 @@ function ScoreRow({
   color,
   score,
   attacking,
+  cellWidth,
   bottomBorder,
 }: {
   label: string
   color: string
   score: number
   attacking: boolean
+  cellWidth: number
   bottomBorder?: boolean
 }) {
   const len = Array.from(label).length
-  // 文字数に応じて自動縮小（最大4文字想定）
-  const fontSize = len >= 4 ? 13 : len === 3 ? 15 : len === 2 ? 17 : 20
+  // 文字数に応じて自動縮小（省略名は最大5文字想定）
+  const fontSize = labelFontSize(len)
   return (
     <div className={`flex items-stretch ${bottomBorder ? 'border-b-2 border-black' : ''}`}>
       <div
@@ -120,7 +142,7 @@ function ScoreRow({
           色未設定時は従来の濃紺にフォールバック。2026-06-09 顧客フィードバック③ */}
       <div
         className="flex items-center justify-center font-black border-r-2 border-black text-white tracking-tight"
-        style={{ minWidth: 64, paddingInline: 6, height: 36, fontSize, lineHeight: 1, backgroundColor: color || '#0b1220' }}
+        style={{ width: cellWidth, paddingInline: 6, height: 36, fontSize, lineHeight: 1, backgroundColor: color || '#0b1220' }}
       >
         {label}
       </div>
