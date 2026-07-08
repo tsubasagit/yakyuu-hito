@@ -7,7 +7,6 @@ import {
   Download,
   ExternalLink,
   FileSpreadsheet,
-  Github,
   ListOrdered,
   MailQuestion,
   Maximize2,
@@ -27,7 +26,6 @@ import { LINEUP_CSV_SAMPLE } from '../lib/csvImport'
 
 const HITO_LOGO = 'https://hito-inc.jp/wp-content/uploads/2023/10/header_title_20231020x.png'
 const HITO_SITE = 'https://hito-inc.jp/'
-const REPO_URL = 'https://github.com/tsubasagit/yakyuu-hito'
 
 /** ダウンロード用サンプルCSVの静的ファイルURL（コントロール画面と共通） */
 const SAMPLE_CSV_URL = `${import.meta.env.BASE_URL}lineup_sample.csv`
@@ -265,7 +263,7 @@ export default function HomePage() {
           </div>
 
           <ul className="mt-4 space-y-1.5 text-slate-600 text-sm">
-            <li>・1〜9行目が野手、10行目が投手です（DH制あり／なし／二刀流に対応）。</li>
+            <li>・1〜9行目が野手、10行目が投手です（DH制あり／なしに対応）。</li>
             <li>・<strong className="text-slate-800">守備</strong>は <code className="bg-slate-100 px-1 rounded">投・捕・一・二・三・遊・左・中・右・DH</code> から指定。</li>
             <li>・<strong className="text-slate-800">学年・コメント</strong>は任意（空欄可）。コメントは打者テロップに表示されます。</li>
           </ul>
@@ -293,7 +291,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <FeatureCard icon={<BarChart3 />} title="ミニスコア" desc="左上の小型2行スコア。試合中の常設表示向け。" />
             <FeatureCard icon={<User />} title="現在の打者" desc="打順・守備・名前を中継風ロワーサードで表示。" />
-            <FeatureCard icon={<ListOrdered />} title="スタメン一覧" desc="DH制（あり/なし/二刀流）対応。両チーム並列表示も可能。" />
+            <FeatureCard icon={<ListOrdered />} title="スタメン一覧" desc="DH制（あり/なし）対応。両チーム並列表示も可能。" />
             <FeatureCard icon={<Trophy />} title="大会名" desc="大会名・副題・対戦カード・会場・日付。試合前のオープニング向け。" />
             <FeatureCard icon={<Maximize2 />} title="大型スコア" desc="中継切替時の大判スコア。チーム色フルバンド + 大きな数字。" />
             <FeatureCard icon={<BarChart3 />} title="イニング別スコア" desc="9回基本＋延長15回まで自動拡張。R列強調。" />
@@ -364,7 +362,7 @@ export default function HomePage() {
                 </>
               }
               items={[
-                { label: 'ドック名', value: 'yakyuu-hito' },
+                { label: 'ドック名', value: '大学野球テロップ' },
                 { label: 'URL', value: `${baseUrl}#/control` },
               ]}
             />
@@ -448,17 +446,7 @@ export default function HomePage() {
           </p>
           <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
             <a
-              href={REPO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-[#538bb0] transition-colors"
-            >
-              <Github className="w-3.5 h-3.5" />
-              GitHub
-            </a>
-            <span className="text-slate-300">|</span>
-            <a
-              href={`${REPO_URL}/issues/new`}
+              href="https://hito-inc.jp/contact"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[#538bb0] transition-colors"

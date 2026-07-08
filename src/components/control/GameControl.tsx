@@ -23,11 +23,12 @@ const COLOR_PRESETS: { label: string; hex: string }[] = [
   { label: 'グレー',     hex: '#6b7280' },
 ]
 
-/** DH制の選択肢（試合前ナビで使用） */
+/** DH制の選択肢（試合前ナビで使用）。
+ *  2026-07-08 顧客フィードバック: 二刀流（twoWay）モードは運用不要のため選択肢から削除。
+ *  型・内部ロジックは旧データ互換のため残置するが、UI からは選べない。 */
 const DH_OPTIONS: { key: DhMode; label: string; hint: string }[] = [
   { key: 'dh',     label: 'DHあり（10名）',     hint: '1〜9番=野手、10番=投手専用枠' },
   { key: 'none',   label: 'DHなし（9名）',      hint: '投手も打順に入って打席に立つ' },
-  { key: 'twoWay', label: '二刀流（10名）',     hint: 'DH打者と10番投手が同一選手' },
 ]
 
 /** ControlPage のセクションアンカーへスムーズスクロール */
@@ -114,7 +115,7 @@ export default function GameControl() {
   const awayCheck = validateTeamLineup(awayLineup, currentDhMode)
   const homeCheck = validateTeamLineup(homeLineup, currentDhMode)
   // フルネームのチーム名は両チーム必須。空欄では試合開始できない。
-  // 省略名は任意（未入力ならフルネーム頭4文字を自動採用＝pickTeamLabel）。
+  // 省略名は任意（未入力ならフルネーム頭5文字を自動採用＝pickTeamLabel）。
   // 2026-07-01 顧客FB: チーム名空欄でも開始できてしまう問題
   const awayNameOk = awayTeam.name.trim().length > 0
   const homeNameOk = homeTeam.name.trim().length > 0
@@ -140,7 +141,7 @@ export default function GameControl() {
   }
 
   // ローカル state（スムーズな入力用）。
-  // 2026-07-01 顧客フィードバック⑤: チーム名は「フルネーム」と「省略名（4文字以内）」を分離。
+  // 2026-07-01 顧客フィードバック⑤: チーム名は「フルネーム」と「省略名（表示は5文字まで）」を分離。
   //   - フルネーム（name）: 大会名ヘッダー・打順パネルに表示
   //   - 省略名（shortName）: ミニスコア/BSOパネル/イニングスコアボード/大型スコア等の狭い枠に表示
   const [awayName, setAwayName] = useState(awayTeam.name)
@@ -158,8 +159,13 @@ export default function GameControl() {
   useEffect(() => { setAwayColor(awayTeam.color) }, [awayTeam.color])
   useEffect(() => { setHomeColor(homeTeam.color) }, [homeTeam.color])
 
-  /** 省略名は最大4文字に丸める（全角/絵文字はサロゲート単位で1文字扱い） */
-  const clampShort = (v: string) => Array.from(v).slice(0, 4).join('')
+  // 省略名の入力上限（15文字）と、オーバーレイに表示される文字数（5文字）。
+  // 入力は最大15文字まで許容するが、実際に表示されるのは先頭5文字のみ（pickTeamLabel が丸める）。
+  // 2026-07-08 顧客フィードバック: 入力は長めに許容、表示は5文字までと注意喚起する
+  const SHORT_INPUT_MAX = 15
+  const SHORT_DISPLAY_MAX = 5
+  /** 省略名は最大15文字に丸める（全角/絵文字はサロゲート単位で1文字扱い） */
+  const clampShort = (v: string) => Array.from(v).slice(0, SHORT_INPUT_MAX).join('')
 
   /** ローカル state → ストアに反映（フルネーム + 省略名を別々に保存） */
   const applyTeams = () => {
@@ -224,9 +230,9 @@ export default function GameControl() {
         )}
       </div>
 
-      {/* チーム名: フルネーム + 省略名（4文字以内）を分けて入力。
+      {/* チーム名: フルネーム + 省略名（入力は15文字まで・表示は5文字）を分けて入力。
           フルネーム=大会名/打順表示、省略名=ミニスコア等の狭い枠表示。
-          省略名が空のときはフルネームを4文字に丸めた表示に自動フォールバックする。
+          省略名が空のときはフルネームを5文字に丸めた表示に自動フォールバックする。
           2026-07-01 顧客フィードバック⑤⑥ */}
       <div className="grid grid-cols-2 gap-4">
         {(['away', 'home'] as const).map((team) => {
@@ -238,6 +244,8 @@ export default function GameControl() {
           const setShort = isAway ? setAwayShort : setHomeShort
           // フルネーム未入力なら赤枠で必須を明示（試合開始の必須項目）
           const nameEmpty = nameValue.trim().length === 0
+          // 省略名が表示上限（5文字）を超えているか。超過時は注意喚起を出す（入力自体は許容）。
+          const shortOverLimit = Array.from(shortValue).length > SHORT_DISPLAY_MAX
           return (
             <div key={team} className="space-y-1.5">
               <label className="text-gray-400 text-xs flex items-center gap-1.5">
@@ -254,16 +262,23 @@ export default function GameControl() {
                 onBlur={handleBlur}
               />
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-[10px] whitespace-nowrap shrink-0">省略名（任意・4文字以内）</span>
+                <span className="text-gray-500 text-[10px] whitespace-nowrap shrink-0">省略名（任意・表示は5文字まで）</span>
                 <input
-                  className="flex-1 min-w-0 bg-gray-700 text-white rounded px-3 py-1.5 text-sm"
-                  placeholder={Array.from(nameValue).slice(0, 4).join('') || '例: 帝都'}
-                  maxLength={8}
+                  className={`flex-1 min-w-0 bg-gray-700 text-white rounded px-3 py-1.5 text-sm border ${
+                    shortOverLimit ? 'border-amber-500/70' : 'border-transparent'
+                  }`}
+                  placeholder={Array.from(nameValue).slice(0, SHORT_DISPLAY_MAX).join('') || '例: 帝都'}
+                  maxLength={SHORT_INPUT_MAX}
                   value={shortValue}
                   onChange={(e) => setShort(clampShort(e.target.value))}
                   onBlur={handleBlur}
                 />
               </div>
+              {shortOverLimit && (
+                <p className="text-[10px] text-amber-400/90">
+                  ⚠️ 表示できるのは5文字までです（オーバーレイには先頭「{Array.from(shortValue).slice(0, SHORT_DISPLAY_MAX).join('')}」のみ表示されます）
+                </p>
+              )}
               {nameEmpty && (
                 <p className="text-[10px] text-red-400/90">フルネームを入力してください（未入力だと試合開始できません）</p>
               )}
@@ -391,7 +406,7 @@ export default function GameControl() {
           {/* ① DH制 */}
           <div className="space-y-1.5">
             <div className="text-gray-300 text-xs font-bold">① DH制を選択</div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {DH_OPTIONS.map((opt) => {
                 const active = currentDhMode === opt.key
                 return (
